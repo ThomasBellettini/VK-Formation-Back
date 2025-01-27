@@ -1,9 +1,28 @@
 services:
+  traefik:
+    container_name: traefik
+    image: traefik:latest
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./reverse_proxy/traefik.toml:/traefik.toml
+      - ./reverse_proxy/traefik_secure.toml:/traefik_secure.toml
+      - ./reverse_proxy/acme.json:/acme.json
+    networks:
+      - traefik
+    labels:
+      - "traefik.docker.network=traefik"
   mongo:
     image: mongo:4.0.4
     container_name: mongo
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
     volumes:
       - ./data:/data/db
     restart: unless-stopped
@@ -19,3 +38,9 @@ services:
     depends_on:
       - mongo
     restart: unless-stopped
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true

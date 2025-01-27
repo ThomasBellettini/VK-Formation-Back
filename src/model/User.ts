@@ -1,5 +1,7 @@
 import mongoose, {Document, Schema} from 'mongoose';
 import bcrypt from 'bcrypt';
+import {ILesson} from "./learning/Lesson.js";
+import {IHolyProject} from "./learning/HolyProject";
 
 const saltRounds = 10;
 
@@ -11,6 +13,15 @@ export interface IUser extends Document {
     isConfirmed: boolean;
     confirmationCode: string | null;
     resetCode: string | null;
+
+    xp: number;
+    coin: number;
+
+    lessonsFinished: (mongoose.Types.ObjectId | ILesson)[];
+    holyProjects: {
+        project: mongoose.Types.ObjectId | IHolyProject;
+        resultPercent: number | null;
+    }
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -45,6 +56,30 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         type: String,
         required: false
     },
+    xp: {
+        type: Number,
+        required: false,
+        default: 0
+    },
+    coin: {
+        type: Number,
+        required: false,
+        default: 0
+    },
+    lessonsFinished: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Lesson'
+    }],
+    holyProjects: [{
+        project: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "HolyProject"
+        },
+        resultPercent: {
+            type: Number,
+            default: null
+        }
+    }]
 
 }, {
     timestamps: true

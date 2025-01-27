@@ -68,7 +68,7 @@ class AuthServices {
         errors: err,
         token: null,
         data: {
-          message: "Invalid email or password !",
+          message: err
         },
       };
     }
@@ -142,7 +142,7 @@ class AuthServices {
         errors: err,
         token: null,
         data: {
-          message: "Invalid email or password !",
+          message:err,
         },
       };
     }
