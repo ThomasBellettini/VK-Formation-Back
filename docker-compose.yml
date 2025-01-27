@@ -37,6 +37,11 @@ services:
       - "5002:5002"
     depends_on:
       - mongo
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.vk-back.rule=Host(`vk-back.shurisko.fr`)
+      - traefik.http.routers.vk-back.tls=true
+      - traefik.http.routers.vk-back.tls.certresolver=lets-encrypt
     restart: unless-stopped
     networks:
       - traefik
