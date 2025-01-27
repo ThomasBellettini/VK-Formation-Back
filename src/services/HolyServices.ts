@@ -35,7 +35,23 @@ class HolyServices {
       let user = req.user as IUser;
       let holyProject: IHolyGraph[] = [];
       if (user) {
-
+        const holyProjectDatabase = await HolyProject.find({}).lean();
+        holyProject = holyProjectDatabase.map((iterator) => {
+          return {
+            name: iterator.name,
+            description: iterator.description,
+            level: iterator.level,
+            url: iterator.url,
+            content: iterator.content,
+            cdnVideoContent: iterator.cdnVideoContent,
+            cdnAudioContent: iterator.cdnAudioContent,
+            hasPermission: true,
+            projectDone: false,
+            courses: [],
+            createdAt: iterator.createdAt,
+            updatedAt: iterator.updatedAt
+          };
+        });
       } else {
         const holyProjectDatabase = await HolyProject.find({}).lean();
         holyProject = holyProjectDatabase.map((iterator) => {
@@ -80,7 +96,7 @@ class HolyServices {
 
   async add(req: Request) {
     try {
-      const {name, description, level, url, content, courses} = req.body;
+      const {name, description, url} = req.body;
       if (!name || !description || !url) {
         throw new Error("Missing mandatory fields name, description, url")
       }
