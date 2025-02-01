@@ -18,10 +18,11 @@ export interface IUser extends Document {
     coin: number;
 
     lessonsFinished: (mongoose.Types.ObjectId | ILesson)[];
+
     holyProjects: {
         project: mongoose.Types.ObjectId | IHolyProject;
-        resultPercent: number | null;
-    }
+        resultPercent: number;
+    }[];
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -77,7 +78,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         },
         resultPercent: {
             type: Number,
-            default: null
+            default: 0
         }
     }]
 

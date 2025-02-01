@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import CST from "../server/constants.js";
 import AuthController from "../controller/AuthController.js";
 import HolyController from "../controller/HolyController.js";
+import CourseController from "../controller/CourseController.js";
 
 const router = Router();
 
@@ -105,6 +106,12 @@ router.get("/me", authJwt, AuthController.me)
 
 router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
 router.post("/holygraph/add", authJwt, checkRole("admin"), HolyController.add)
+router.get("/holygraph/info/:id", authJwt, HolyController.info)
+
+router.get("/courses/list", authJwtNotMandatory, CourseController.list)
+router.post("/courses/add", authJwt, checkRole("admin"), CourseController.add)
+router.get("/courses/update/:id", authJwt, checkRole("admin"), CourseController.update)
+router.get("/courses/info/:id", authJwt, CourseController.info)
 
 
 
