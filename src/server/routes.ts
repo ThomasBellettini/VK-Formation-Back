@@ -5,8 +5,12 @@ import CST from "../server/constants.js";
 import AuthController from "../controller/AuthController.js";
 import HolyController from "../controller/HolyController.js";
 import CourseController from "../controller/CourseController.js";
+import LessonController from "../controller/LessonController.js";
+import multer from 'multer';
 
 const router = Router();
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const authJwt = async (req: any, res: Response, next: NextFunction) => {
   try {
@@ -106,12 +110,17 @@ router.get("/me", authJwt, AuthController.me)
 
 router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
 router.post("/holygraph/add", authJwt, checkRole("admin"), HolyController.add)
-router.get("/holygraph/info/:id", authJwt, HolyController.info)
+router.get("/holygraph/info/:url", authJwt, HolyController.info)
 
 router.get("/courses/list", authJwtNotMandatory, CourseController.list)
-router.post("/courses/add", authJwt, checkRole("admin"), CourseController.add)
+router.post("/courses/add", authJwt, checkRole("admin"), upload.fields([{ name: 'image', maxCount: 1 }, { name: 'video', maxCount: 1 }]), CourseController.add)
 router.get("/courses/update/:id", authJwt, checkRole("admin"), CourseController.update)
 router.get("/courses/info/:id", authJwt, CourseController.info)
+
+router.get("/lesson/list", authJwt, checkRole("admin"), LessonController.list)
+router.post("/lesson/add", authJwt, checkRole("admin"), LessonController.add)
+router.get("/lesson/update/:id", authJwt, checkRole("admin"), LessonController.update)
+router.get("/lesson/info/:url", authJwt, LessonController.info)
 
 
 

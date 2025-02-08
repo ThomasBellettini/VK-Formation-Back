@@ -1,5 +1,5 @@
 import HolyProject from "../model/learning/HolyProject.js";
-import {IUser} from "../model/User.js";
+import {IUser} from "../model/User";
 import {Request} from "express";
 import {ICourseBundle} from "../model/learning/CourseBundle.js";
 import mongoose from "mongoose";
@@ -110,14 +110,14 @@ class HolyServices {
     }
   }
 
-  async info(req: Request, id: string) {
+  async info(req: Request, url: string) {
     try {
       //@ts-ignore
       const user = req.user as IUser;
-      const holyProjectDatabase = await HolyProject.findOne({_id: id}).populate("courses").lean();
+      const holyProjectDatabase = await HolyProject.findOne({url: url}).populate("courses").lean();
       if (!holyProjectDatabase) throw new Error("No Project found with this id !");
       const userProject = user.holyProjects.find(hp =>
-        hp.project.toString() === id
+        hp.project.toString() === holyProjectDatabase._id
       );
       let projectDone = false;
       let percent = 0;

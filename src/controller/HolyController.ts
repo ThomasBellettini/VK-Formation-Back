@@ -24,7 +24,7 @@ class HolyController {
   }
 
   public async info(req: Request, res: Response) {
-    const r = await this.service.info(req, req.params.id);
+    const r = await this.service.info(req, req.params.url);
     return res.status(r.statusCode).send(r);
   }
 

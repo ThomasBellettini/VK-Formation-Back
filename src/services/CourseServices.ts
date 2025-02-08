@@ -133,9 +133,9 @@ class CourseServices {
 
   async add(req: Request) {
     try {
-      const {name, description, url, image} = req.body;
-      if (!name || !description || !url || !image) {
-        throw new Error("Missing mandatory fields name, description, url, image")
+      const {title, description, url} = req.body;
+      if (!title || !description || !url) {
+        throw new Error("Missing mandatory fields title, description, url, image")
       }
       let courseBundle = await CourseBundle.create(req.body);
 

@@ -2,6 +2,8 @@ import mongoose, {Document, Schema} from 'mongoose';
 
 export interface ILesson extends Document {
     _id: mongoose.Types.ObjectId;
+    url: string;
+
     title: string;
     description: string;
     content: string;
@@ -19,6 +21,10 @@ const lessonSchema: Schema<ILesson> = new mongoose.Schema({
     title: {
         type: String,
         required: true,
+    },
+    url: {
+        type: String,
+        required: true
     },
     description: {
         type: String,

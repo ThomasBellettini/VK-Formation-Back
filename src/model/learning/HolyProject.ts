@@ -8,6 +8,7 @@ export interface IHolyProject extends Document {
     level: number;
     url: string;
     content: string;
+    evaluationText: string;
 
     cdnVideoContent: string | null;
     cdnAudioContent: string | null;
@@ -44,6 +45,10 @@ const holyProjectSchema: Schema<IHolyProject> = new mongoose.Schema({
     cdnVideoContent: {
         type: String,
         required: false
+    },
+    evaluationText: {
+        type: String,
+        default: ""
     },
     cdnAudioContent: {
         type: String,
