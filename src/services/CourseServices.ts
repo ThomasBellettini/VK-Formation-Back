@@ -93,7 +93,7 @@ class CourseServices {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let courseBundle = await CourseBundle.findOne({_id: id}).populate("lessons").lean();
+      let courseBundle = await CourseBundle.findOne({url: id}).populate("lessons").lean();
       if (!courseBundle) throw new Error("No Course found with this id !");
       let imageLink = StorageCdn.generateSecureLink(courseBundle.image);
 
