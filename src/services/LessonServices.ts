@@ -113,6 +113,12 @@ class LessonServices {
     try {
       let lesson = await Lesson.findOne({_id: id});
       if (!lesson) throw new Error("No Lesson has been found with this ID !");
+      if (req.file) {
+        const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
+        let filePath = `upload/${identifier}`;
+        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, true);
+        req.body.cdnVideoContent = filePath;
+      }
       lesson = await Lesson.findOneAndUpdate({_id: id}, req.body);
 
       return {

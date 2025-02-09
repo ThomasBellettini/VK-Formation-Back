@@ -178,6 +178,12 @@ class CourseServices {
     try {
       let courseBundle = await CourseBundle.findOne({_id: id});
       if (!courseBundle) throw new Error("No Course has been found with this ID !");
+      if (req.file) {
+        const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
+        let filePath = `images/${identifier}`;
+        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, false);
+        req.body.image = filePath;
+      }
       courseBundle = await CourseBundle.findOneAndUpdate({_id: id}, req.body);
 
       return {

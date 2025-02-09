@@ -122,13 +122,13 @@ router.get("/holygraph/info/:url", authJwt, HolyController.info)
 
 router.get("/courses/list", authJwtNotMandatory, CourseController.list)
 router.post("/courses/add", authJwt, checkRole("admin"), upload.single('image'), CourseController.add)
-router.get("/courses/update/:id", authJwt, checkRole("admin"), CourseController.update)
+router.patch("/courses/update/:id", authJwt, checkRole("admin"), upload.single('image'), CourseController.update)
 router.get("/courses/info/:id", authJwt, CourseController.info)
 
-router.get("/lesson/list", authJwt, checkRole("admin"), LessonController.list)
-router.post("/lesson/add", authJwt, checkRole("admin"), upload.single("video"), LessonController.add)
-router.get("/lesson/update/:id", authJwt, checkRole("admin"), LessonController.update)
-router.get("/lesson/info/:url", authJwt, LessonController.info)
+router.get("/lessons/list", authJwt, checkRole("admin"), LessonController.list)
+router.post("/lessons/add", authJwt, checkRole("admin"), upload.single("video"), LessonController.add)
+router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.single("video"), LessonController.update)
+router.get("/lessons/info/:url", authJwt, LessonController.info)
 
 router.get("/resources/show", authJwt, ResourceController.view)
 

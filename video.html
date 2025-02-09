@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming Vidéo - Range Requests</title>
+</head>
+<body>
+<h2>Test Streaming avec Range</h2>
+
+<video id="videoPlayer" controls preload="metadata" crossorigin="anonymous" oncontextmenu="return false;">
+    <source src="http://localhost:5002/v1/api/resources/show?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRob21hc2JlbGxldHRpbmlAb3V0bG9vay5jb20iLCJpYXQiOjE3MzkxMTMzODAsImV4cCI6MTczOTE1NjU4MH0.t4gP36tmAuGKJHx0lGHpU_2r25g-WTXeRJjXH6ijJl8&path=upload/7a31bbdf4fde6c35b84b0ab9d75c6991.mp4" type="video/mp4">
+    Votre navigateur ne supporte pas les vidéos HTML5.
+</video>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const video = document.getElementById("videoPlayer");
+
+        video.addEventListener("loadedmetadata", () => {
+            console.log("🎬 Vidéo chargée, support du streaming activé.");
+        });
+
+        video.addEventListener("progress", () => {
+            console.log("📡 Requête Range envoyée pour le buffering.");
+        });
+
+        video.addEventListener("error", (e) => {
+            console.error("❌ Erreur de lecture vidéo :", e);
+        });
+
+        video.addEventListener("stalled", () => {
+            console.warn("⚠️ La vidéo ne charge plus (possible problème de réseau ou de Range).");
+        });
+    });
+</script>
+</body>
+</html>
