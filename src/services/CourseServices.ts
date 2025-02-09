@@ -1,12 +1,12 @@
-import HolyProject from "../model/learning/HolyProject.js";
 import {IUser} from "../model/User.js";
 import {Request} from "express";
-import CourseBundle, {ICourseBundle} from "../model/learning/CourseBundle.js";
+import CourseBundle from "../model/learning/CourseBundle.js";
 import {ILesson} from "../model/learning/Lesson.js";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 
 interface ICourse {
+    _id: mongoose.Types.ObjectId;
     url: string;
     image: string;
     title: string;
@@ -37,6 +37,7 @@ class CourseServices {
          console.log(imageLink);
          if (!user) {
           return {
+            _id: iterator._id,
             url: iterator.url,
             image: imageLink,
             title: iterator.title,
@@ -53,6 +54,7 @@ class CourseServices {
           let percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
           return {
+            _id: iterator._id,
             url: iterator.url,
             image: imageLink,
             title: iterator.title,
@@ -89,11 +91,11 @@ class CourseServices {
     }
   }
 
-  async info(req: Request, id: string) {
+  async info(req: Request, url: string) {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let courseBundle = await CourseBundle.findOne({url: id}).populate("lessons").lean();
+      let courseBundle = await CourseBundle.findOne({url: url}).populate("lessons").lean();
       if (!courseBundle) throw new Error("No Course found with this id !");
       let imageLink = StorageCdn.generateSecureLink(courseBundle.image);
 
@@ -101,8 +103,8 @@ class CourseServices {
       let totalLessons = courseBundle.lessons.length;
       let completedLessons = courseBundle.lessons.filter(lesson => finishedLessonIds.has(lesson._id.toString())).length;
       let percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-
       let course: ICourse = {
+        _id: courseBundle._id,
         url: courseBundle.url,
         image: imageLink,
         title: courseBundle.title,
@@ -183,6 +185,13 @@ class CourseServices {
         let filePath = `images/${identifier}`;
         filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, false);
         req.body.image = filePath;
+      }
+      if (req.body.lessons) {
+        let lessonID = req.body.lessons;
+        if (!Array.isArray(lessonID)) {
+          lessonID = JSON.parse(lessonID);
+        }
+        req.body.lessons = lessonID.map((id: string) => new mongoose.Types.ObjectId(id));
       }
       courseBundle = await CourseBundle.findOneAndUpdate({_id: id}, req.body);
 

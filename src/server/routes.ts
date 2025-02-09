@@ -123,7 +123,7 @@ router.get("/holygraph/info/:url", authJwt, HolyController.info)
 router.get("/courses/list", authJwtNotMandatory, CourseController.list)
 router.post("/courses/add", authJwt, checkRole("admin"), upload.single('image'), CourseController.add)
 router.patch("/courses/update/:id", authJwt, checkRole("admin"), upload.single('image'), CourseController.update)
-router.get("/courses/info/:id", authJwt, CourseController.info)
+router.get("/courses/info/:url", authJwt, CourseController.info)
 
 router.get("/lessons/list", authJwt, checkRole("admin"), LessonController.list)
 router.post("/lessons/add", authJwt, checkRole("admin"), upload.single("video"), LessonController.add)
