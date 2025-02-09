@@ -1,9 +1,9 @@
 import Lesson from "../model/learning/Lesson.js";
 import User, {IUser} from "../model/User.js";
 import {Request} from "express";
-import CourseBundle, {ICourseBundle} from "../model/learning/CourseBundle.js";
 import {ILesson} from "../model/learning/Lesson.js";
 import mongoose from "mongoose";
+import StorageCdn from "../utils/StorageCdn.js";
 
 class LessonServices {
   constructor() {
@@ -77,6 +77,12 @@ class LessonServices {
       const {description, url, title} = req.body;
       if (!description || !url || !title) {
         throw new Error("Missing mandatory fields description, url, title")
+      }
+      if (req.file) {
+        const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
+        let filePath = `upload/${identifier}`;
+        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, true);
+        req.body.cdnVideoContent = filePath;
       }
       let lesson = await Lesson.create(req.body);
 

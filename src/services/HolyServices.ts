@@ -3,6 +3,7 @@ import {IUser} from "../model/User";
 import {Request} from "express";
 import {ICourseBundle} from "../model/learning/CourseBundle.js";
 import mongoose from "mongoose";
+import StorageCdn from "../utils/StorageCdn.js";
 
 interface IHolyGraph {
     name: string;
@@ -171,6 +172,14 @@ class HolyServices {
       if (!name || !description || !url) {
         throw new Error("Missing mandatory fields name, description, url")
       }
+
+      if (req.file) {
+        const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
+        let filePath = `upload/${identifier}`;
+        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, true);
+        req.body.cdnVideoContent = filePath;
+      }
+
       let holyProject = await HolyProject.create(req.body);
 
       return {

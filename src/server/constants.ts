@@ -16,4 +16,11 @@ export default {
   EMAIL: {
     ADMIN: process.env.EMAIL_ADMIN,
   },
+  STORAGE: {
+    BUNNY_STORAGE_NAME: process.env.BUNNY_STORAGE_NAME,
+    BUNNY_ACCESS_KEY: process.env.BUNNY_ACCESS_KEY,
+    BUNNY_CDN_URL: process.env.BUNNY_CDN_URL,
+    BUNNY_SECURITY_KEY: process.env.BUNNY_SECURITY_KEY,
+    TOKEN_EXPIRATION: process.env.TOKEN_EXPIRATION,
+  }
 };

@@ -4,6 +4,7 @@ import {Request} from "express";
 import CourseBundle, {ICourseBundle} from "../model/learning/CourseBundle.js";
 import {ILesson} from "../model/learning/Lesson.js";
 import mongoose from "mongoose";
+import StorageCdn from "../utils/StorageCdn.js";
 
 interface ICourse {
     url: string;
@@ -32,10 +33,12 @@ class CourseServices {
       let user = req.user as IUser;
       let courseBundle = await CourseBundle.find({}).lean();
        let courses: ICourse[] = courseBundle.map((iterator) => {
-        if (!user) {
+         let imageLink = StorageCdn.generateSecureLink(iterator.image);
+         console.log(imageLink);
+         if (!user) {
           return {
             url: iterator.url,
-            image: iterator.image,
+            image: imageLink,
             title: iterator.title,
             description: iterator.description,
             percent: 0,
@@ -51,7 +54,7 @@ class CourseServices {
 
           return {
             url: iterator.url,
-            image: iterator.image,
+            image: imageLink,
             title: iterator.title,
             description: iterator.description,
             percent,
@@ -92,6 +95,7 @@ class CourseServices {
       let user = req.user as IUser;
       let courseBundle = await CourseBundle.findOne({_id: id}).populate("lessons").lean();
       if (!courseBundle) throw new Error("No Course found with this id !");
+      let imageLink = StorageCdn.generateSecureLink(courseBundle.image);
 
       let finishedLessonIds = new Set(user.lessonsFinished.map(id => id.toString()));
       let totalLessons = courseBundle.lessons.length;
@@ -100,7 +104,7 @@ class CourseServices {
 
       let course: ICourse = {
         url: courseBundle.url,
-        image: courseBundle.image,
+        image: imageLink,
         title: courseBundle.title,
         description: courseBundle.description,
         percent,
@@ -133,9 +137,17 @@ class CourseServices {
 
   async add(req: Request) {
     try {
-      const {title, description, url} = req.body;
-      if (!title || !description || !url) {
-        throw new Error("Missing mandatory fields title, description, url, image")
+      const {title, url} = req.body;
+      if (!title || !url) {
+        throw new Error("Missing mandatory fields title, url, image")
+      }
+      if (req.file) {
+        const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
+        let filePath = `images/${identifier}`;
+        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, false);
+        req.body.image = filePath;
+      } else {
+        throw new Error("Missing image file")
       }
       let courseBundle = await CourseBundle.create(req.body);
 
