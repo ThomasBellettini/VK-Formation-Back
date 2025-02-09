@@ -17,6 +17,10 @@ export interface IUser extends Document {
     xp: number;
     coin: number;
 
+    discordAccess: boolean;
+    discordId: string;
+    discordLinkCode: string;
+
     lessonsFinished: (mongoose.Types.ObjectId | ILesson)[];
 
     holyProjects: {
@@ -80,7 +84,20 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
             type: Number,
             default: 0
         }
-    }]
+    }],
+    discordAccess: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    discordId: {
+        type: String,
+        required: false
+    },
+    discordLinkCode: {
+        type: String,
+        required: false
+    }
 
 }, {
     timestamps: true
