@@ -103,6 +103,21 @@ class CourseServices {
       let totalLessons = courseBundle.lessons.length;
       let completedLessons = courseBundle.lessons.filter(lesson => finishedLessonIds.has(lesson._id.toString())).length;
       let percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+      let lessons = courseBundle.lessons.map((lesson: any) => {
+        let finished = finishedLessonIds.has(lesson._id.toString());
+        return {
+          _id: lesson._id,
+          url: lesson.url,
+          title: lesson.title,
+          description: lesson.description,
+          content: lesson.content,
+          order: lesson.order,
+          cdnVideoContent: lesson.cdnVideoContent,
+          cdnAudioContent: lesson.cdnAudioContent,
+          finished
+        }
+      });
       let course: ICourse = {
         _id: courseBundle._id,
         url: courseBundle.url,
@@ -110,7 +125,8 @@ class CourseServices {
         title: courseBundle.title,
         description: courseBundle.description,
         percent,
-        lessons: courseBundle.lessons,
+        // @ts-ignore
+        lessons: lessons,
         createdAt: courseBundle.createdAt,
         updatedAt: courseBundle.updatedAt
       };
