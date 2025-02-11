@@ -4,11 +4,12 @@ WORKDIR /app
 
 # Installer les dépendances système
 RUN apt-get update && apt-get install -y ffmpeg
-RUN apt-get install -y build-essential
-RUN apt-get install -y python3
+RUN apt-get update && apt-get install -y python3 build-essential
 
 RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
 
 RUN pnpm install --unsafe-perm
 COPY . .
