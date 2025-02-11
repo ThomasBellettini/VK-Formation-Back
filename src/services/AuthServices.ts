@@ -87,6 +87,7 @@ class AuthServices {
         password: password,
         firstname: firstname,
         lastname: lastname,
+        isConfirmed: true,
         confirmationCode:
           Math.random().toString(36) + Math.random().toString(36),
       });

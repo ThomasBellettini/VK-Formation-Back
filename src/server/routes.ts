@@ -8,6 +8,7 @@ import CourseController from "../controller/CourseController.js";
 import LessonController from "../controller/LessonController.js";
 import multer from 'multer';
 import ResourceController from "../controller/ResourceController.js";
+import UserController from "../controller/UserController.js";
 
 const router = Router();
 
@@ -119,6 +120,8 @@ router.post("/login", AuthController.login);
 router.post("/register", authAPI, AuthController.register)
 router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
+
+router.get("/users/list", authJwt, checkRole("admin"), UserController.list)
 
 router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
 router.post("/holygraph/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
