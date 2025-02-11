@@ -21,6 +21,8 @@ export interface IUser extends Document {
     discordId: string;
     discordLinkCode: string;
 
+    lastLogin: Date;
+
     lessonsFinished: (mongoose.Types.ObjectId | ILesson)[];
 
     holyProjects: {
@@ -97,6 +99,11 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     discordLinkCode: {
         type: String,
         required: false
+    },
+    lastLogin: {
+        type: Date,
+        required: false,
+        default: null
     }
 
 }, {

@@ -50,6 +50,8 @@ class AuthServices {
       if (!passwordCompare) throw "Invalid email or password !";
       if (!user.isConfirmed) throw "User not confirmed !";
       let token = generateToken(user.email);
+      user.lastLogin = new Date();
+      await user.save();
 
       return {
         success: true,
