@@ -189,6 +189,13 @@ class HolyServices {
         let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, true);
         req.body.cdnVideoContent = bunnyFilePath;
       }
+      if (req.body.courses) {
+        let coursesID = req.body.courses;
+        if (!Array.isArray(coursesID)) {
+          coursesID = JSON.parse(coursesID);
+        }
+        req.body.courses = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
+      }
 
       let holyProject = await HolyProject.create(req.body);
 
@@ -233,7 +240,7 @@ class HolyServices {
         if (!Array.isArray(coursesID)) {
           coursesID = JSON.parse(coursesID);
         }
-        req.body.lessons = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
+        req.body.courses = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
       }
       holyProject = await HolyProject.findByIdAndUpdate(id, req.body);
 
