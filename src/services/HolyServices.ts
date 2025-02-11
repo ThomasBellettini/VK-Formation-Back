@@ -14,6 +14,8 @@ interface IHolyGraph {
     url: string;
     content: string | null;
 
+    xp: number;
+
     cdnVideoContent: string | null;
     cdnAudioContent: string | null;
 
@@ -66,6 +68,7 @@ class HolyServices {
             hasPermission: true,
             projectDone: projectDone,
             percent: percent,
+            xp: iterator.xpReward,
             courses: iterator.courses,
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
@@ -81,6 +84,7 @@ class HolyServices {
             level: iterator.level,
             url: iterator.url,
             content: null,
+            xp: iterator.xpReward,
             cdnVideoContent: null,
             cdnAudioContent: null,
             hasPermission: false,
@@ -136,6 +140,7 @@ class HolyServices {
         name: holyProjectDatabase.name,
         description: holyProjectDatabase.description,
         level: holyProjectDatabase.level,
+        xp: holyProjectDatabase.xpReward,
         url: holyProjectDatabase.url,
         content: holyProjectDatabase.content,
         cdnVideoContent: holyProjectDatabase.cdnVideoContent,
