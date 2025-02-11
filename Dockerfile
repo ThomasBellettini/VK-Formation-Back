@@ -4,6 +4,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y ffmpeg
 RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
+RUN pnpm approve-builds bcrypt
 RUN pnpm install
 COPY . .
 RUN pnpm run build
