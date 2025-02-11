@@ -13,6 +13,8 @@ interface ICourse {
     description: string | null;
     percent: number;
 
+    duration: number | null;
+
     lessons: (ILesson | mongoose.Types.ObjectId)[];
 
     createdAt?: Date;
@@ -31,14 +33,19 @@ class CourseServices {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let courseBundle = await CourseBundle.find({}).lean();
+      let courseBundle = await CourseBundle.find({}).populate("lessons").lean();
        let courses: ICourse[] = courseBundle.map((iterator) => {
          let imageLink = StorageCdn.generateSecureLink(iterator.image);
-         console.log(imageLink);
+         let duration = 0;
+         for (let lesson of iterator.lessons) {
+           // @ts-ignore
+           if (lesson.duration && lesson.duration > 0) duration += lesson.duration;
+         }
          if (!user) {
           return {
             _id: iterator._id,
             url: iterator.url,
+            duration,
             image: imageLink,
             title: iterator.title,
             description: iterator.description,
@@ -53,6 +60,7 @@ class CourseServices {
           let completedLessons = iterator.lessons.filter(lesson => finishedLessonIds.has(lesson._id.toString())).length;
           let percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
+
           return {
             _id: iterator._id,
             url: iterator.url,
@@ -60,6 +68,7 @@ class CourseServices {
             title: iterator.title,
             description: iterator.description,
             percent,
+            duration,
             lessons: iterator.lessons,
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
