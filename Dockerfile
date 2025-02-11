@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y python3 build-essential
 
 RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts=false
 
 
 RUN pnpm install --unsafe-perm
