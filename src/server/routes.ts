@@ -11,8 +11,12 @@ import ResourceController from "../controller/ResourceController.js";
 
 const router = Router();
 
-const upload = multer({ storage: multer.memoryStorage() });
-
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, '/tmp'),
+    filename: (req, file, cb) => cb(null, Date.now() + '.mp4')
+  })
+});
 const authJwt = async (req: any, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.get("Authorization");
@@ -118,6 +122,7 @@ router.get("/me", authJwt, AuthController.me)
 
 router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
 router.post("/holygraph/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
+router.patch("/holygraph/update/:id", authJwt, checkRole("admin"), upload.single('video'), HolyController.update)
 router.get("/holygraph/info/:url", authJwt, HolyController.info)
 
 router.get("/courses/list", authJwtNotMandatory, CourseController.list)

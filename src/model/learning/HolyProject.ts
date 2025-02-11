@@ -2,6 +2,7 @@ import mongoose, {Document, Schema} from 'mongoose';
 import {ICourseBundle} from "./CourseBundle.js";
 
 export interface IHolyProject extends Document {
+    _id: mongoose.Types.ObjectId;
     name: string;
     description: string;
 

@@ -13,6 +13,8 @@ export interface ILesson extends Document {
     cdnVideoContent: string | null;
     cdnAudioContent: string | null;
 
+    duration: number | null;
+
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -24,7 +26,8 @@ const lessonSchema: Schema<ILesson> = new mongoose.Schema({
     },
     url: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     description: {
         type: String,
@@ -44,6 +47,10 @@ const lessonSchema: Schema<ILesson> = new mongoose.Schema({
     },
     cdnAudioContent: {
         type: String,
+        required: false
+    },
+    duration: {
+        type: Number,
         required: false
     }
 

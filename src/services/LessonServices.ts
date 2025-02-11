@@ -3,9 +3,11 @@ import User, {IUser} from "../model/User.js";
 import {Request} from "express";
 import {ILesson} from "../model/learning/Lesson.js";
 import mongoose from "mongoose";
+import ffmpeg, {FfprobeData} from "fluent-ffmpeg";
 import StorageCdn from "../utils/StorageCdn.js";
 
 class LessonServices {
+
   constructor() {
     this.list = this.list.bind(this);
     this.add = this.add.bind(this);
@@ -81,8 +83,9 @@ class LessonServices {
       if (req.file) {
         const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
         let filePath = `upload/${identifier}`;
-        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, true);
-        req.body.cdnVideoContent = filePath;
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, true);
+        req.body.cdnVideoContent = bunnyFilePath;
+        req.body.duration = duration;
       }
       let lesson = await Lesson.create(req.body);
 
@@ -116,8 +119,9 @@ class LessonServices {
       if (req.file) {
         const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
         let filePath = `upload/${identifier}`;
-        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, true);
-        req.body.cdnVideoContent = filePath;
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, true);
+        req.body.cdnVideoContent = bunnyFilePath;
+        req.body.duration = duration;
       }
       lesson = await Lesson.findOneAndUpdate({_id: id}, req.body);
 

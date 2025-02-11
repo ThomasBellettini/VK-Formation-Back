@@ -162,8 +162,8 @@ class CourseServices {
       if (req.file) {
         const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
         let filePath = `images/${identifier}`;
-        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, false);
-        req.body.image = filePath;
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, false);
+        req.body.image = bunnyFilePath;
       } else {
         throw new Error("Missing image file")
       }
@@ -199,8 +199,8 @@ class CourseServices {
       if (req.file) {
         const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
         let filePath = `images/${identifier}`;
-        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, false);
-        req.body.image = filePath;
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, false);
+        req.body.image = bunnyFilePath;
       }
       if (req.body.lessons) {
         let lessonID = req.body.lessons;

@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 
 interface IHolyGraph {
+    _id: mongoose.Types.ObjectId;
     name: string;
     description: string;
 
@@ -32,6 +33,7 @@ class HolyServices {
     this.list = this.list.bind(this);
     this.add = this.add.bind(this);
     this.info = this.info.bind(this);
+    this.update = this.update.bind(this);
   }
 
   async list(req: Request) {
@@ -43,7 +45,7 @@ class HolyServices {
         const holyProjectDatabase = await HolyProject.find({}).lean();
         holyProject = holyProjectDatabase.map((iterator) => {
           const userProject = user.holyProjects.find(hp =>
-            hp.project.toString() === iterator._id
+            hp.project.toString() === iterator._id.toString()
           );
           let projectDone = false;
           let percent = 0;
@@ -53,6 +55,7 @@ class HolyServices {
           }
 
           return {
+            _id: iterator._id,
             name: iterator.name,
             description: iterator.description,
             level: iterator.level,
@@ -72,6 +75,7 @@ class HolyServices {
         const holyProjectDatabase = await HolyProject.find({}).lean();
         holyProject = holyProjectDatabase.map((iterator) => {
           return {
+            _id: iterator._id,
             name: iterator.name,
             description: iterator.description,
             level: iterator.level,
@@ -118,7 +122,7 @@ class HolyServices {
       const holyProjectDatabase = await HolyProject.findOne({url: url}).populate("courses").lean();
       if (!holyProjectDatabase) throw new Error("No Project found with this id !");
       const userProject = user.holyProjects.find(hp =>
-        hp.project.toString() === holyProjectDatabase._id
+        hp.project.toString() === holyProjectDatabase._id.toString()
       );
       let projectDone = false;
       let percent = 0;
@@ -128,6 +132,7 @@ class HolyServices {
       }
 
       let holyProject: IHolyGraph = {
+        _id: holyProjectDatabase._id,
         name: holyProjectDatabase.name,
         description: holyProjectDatabase.description,
         level: holyProjectDatabase.level,
@@ -176,11 +181,56 @@ class HolyServices {
       if (req.file) {
         const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
         let filePath = `upload/${identifier}`;
-        filePath = await StorageCdn.uploadFile(req.file.buffer, filePath, req.file.originalname, true);
-        req.body.cdnVideoContent = filePath;
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, true);
+        req.body.cdnVideoContent = bunnyFilePath;
       }
 
       let holyProject = await HolyProject.create(req.body);
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "Holy Project created with success",
+          holyProject
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+  async update(req: Request, id: string) {
+    try {
+      let holyProject = await HolyProject.findById(id);
+      if (!holyProject) {
+        throw new Error("No Holy Project found with this id !");
+      }
+
+      if (req.file) {
+        const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
+        let filePath = `upload/${identifier}`;
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, true);
+        req.body.cdnVideoContent = bunnyFilePath;
+      }
+      if (req.body.courses) {
+        let coursesID = req.body.courses;
+        if (!Array.isArray(coursesID)) {
+          coursesID = JSON.parse(coursesID);
+        }
+        req.body.lessons = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
+      }
+      holyProject = await HolyProject.findByIdAndUpdate(id, req.body);
 
       return {
         success: true,

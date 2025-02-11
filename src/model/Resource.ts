@@ -7,6 +7,7 @@ export interface IResource extends Document {
     video: boolean;
 
     originalName: string;
+    duration: number | null;
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -27,6 +28,10 @@ const resourceSchema: Schema<IResource> = new mongoose.Schema({
     originalName: {
         type: String,
         required: true
+    },
+    duration: {
+        type: Number,
+        required: false
     }
 
 }, {
