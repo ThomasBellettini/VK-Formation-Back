@@ -15,7 +15,10 @@ export interface IHolyProject extends Document {
     cdnVideoContent: string | null;
     cdnAudioContent: string | null;
 
-    courses: (mongoose.Types.ObjectId | ICourseBundle)[];
+    externalLink: {
+        url: string;
+        title: string;
+    }[]
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -60,9 +63,18 @@ const holyProjectSchema: Schema<IHolyProject> = new mongoose.Schema({
         type: String,
         required: false
     },
-    courses: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'CourseBundle'
+    externalLink: [{
+        url: {
+            type: String,
+            required: false,
+            default: ""
+
+        },
+        title: {
+            type: String,
+            required: false,
+            default: ""
+        }
     }]
 
 }, {

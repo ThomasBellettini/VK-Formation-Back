@@ -25,7 +25,10 @@ interface IHolyGraph {
 
     percent: number | null;
 
-    courses: (ICourseBundle | mongoose.Types.ObjectId)[];
+    externalLink: {
+      url: string;
+      title: string;
+    }[]
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -49,6 +52,23 @@ class HolyServices {
       let holyProject: IHolyGraph[] = [];
       if (user) {
         const holyProjectDatabase = await HolyProject.find({}).lean();
+        const projectsByLevel = new Map<number, number>();
+        const completedProjectsByLevel = new Map<number, number>();
+
+        holyProjectDatabase.forEach(project => {
+          projectsByLevel.set(project.level, (projectsByLevel.get(project.level) || 0) + 1);
+          const userProject = user.holyProjects.find(hp => hp.project.toString() === project._id.toString());
+          if (userProject && userProject.resultPercent > 1) {
+            completedProjectsByLevel.set(project.level, (completedProjectsByLevel.get(project.level) || 0) + 1);
+          }
+        });
+
+        let maxLevelCompleted = 0;
+        for (const [level, total] of projectsByLevel.entries()) {
+          if ((completedProjectsByLevel.get(level) || 0) >= total) {
+            maxLevelCompleted = Math.max(maxLevelCompleted, level);
+          }
+        }
         holyProject = holyProjectDatabase.map((iterator) => {
           const userProject = user.holyProjects.find(hp =>
             hp.project.toString() === iterator._id.toString()
@@ -69,11 +89,11 @@ class HolyServices {
             content: iterator.content,
             cdnVideoContent: iterator.cdnVideoContent,
             cdnAudioContent: iterator.cdnAudioContent,
-            hasPermission: true,
+            hasPermission: iterator.level <= maxLevelCompleted + 1,
             projectDone: projectDone,
             percent: percent,
             xp: iterator.xpReward,
-            courses: iterator.courses,
+            externalLink: iterator.externalLink,
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
           };
@@ -94,7 +114,7 @@ class HolyServices {
             hasPermission: false,
             projectDone: false,
             percent: null,
-            courses: [],
+            externalLink: [],
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
           };
@@ -127,7 +147,7 @@ class HolyServices {
     try {
       //@ts-ignore
       const user = req.user as IUser;
-      const holyProjectDatabase = await HolyProject.findOne({url: url}).populate("courses").lean();
+      const holyProjectDatabase = await HolyProject.findOne({url: url}).lean();
       if (!holyProjectDatabase) throw new Error("No Project found with this id !");
       const userProject = user.holyProjects.find(hp =>
         hp.project.toString() === holyProjectDatabase._id.toString()
@@ -152,7 +172,7 @@ class HolyServices {
         hasPermission: true,
         projectDone: projectDone,
         percent: percent,
-        courses: holyProjectDatabase.courses,
+        externalLink: holyProjectDatabase.externalLink,
         createdAt: holyProjectDatabase.createdAt,
         updatedAt: holyProjectDatabase.updatedAt
       }
