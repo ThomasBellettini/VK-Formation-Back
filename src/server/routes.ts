@@ -37,11 +37,13 @@ const authJwt = async (req: any, res: Response, next: NextFunction) => {
       algorithms: ['HS256'],
     }) as { email: string };
 
-    const dbUser = await User.findOne({ email: decoded.email });
+    let dbUser = await User.findOne({ email: decoded.email });
     if (!dbUser) {
       res.status(403).send("Access Forbidden");
       return;
     }
+    dbUser.lastLogin = new Date();
+    dbUser = await dbUser.save();
 
     const dbUserWithToken = dbUser.toObject();
     // @ts-ignore
@@ -67,11 +69,13 @@ const authJwtNotMandatory = async (req: any, res: Response, next: NextFunction) 
       algorithms: ['HS256'],
     }) as { email: string };
 
-    const dbUser = await User.findOne({ email: decoded.email });
+    let dbUser = await User.findOne({ email: decoded.email });
     if (!dbUser) {
       res.status(403).send("Access Forbidden");
       return;
     }
+    dbUser.lastLogin = new Date();
+    dbUser = await dbUser.save();
 
     const dbUserWithToken = dbUser.toObject();
     // @ts-ignore
