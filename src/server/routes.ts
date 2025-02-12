@@ -126,7 +126,7 @@ router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
 
 router.get("/users/list", authJwt, checkRole("admin"), UserController.list)
-router.patch("/user/update/:id", authJwt, checkRole("admin"), UserController.list)
+router.patch("/user/update/:id", authJwt, checkRole("admin"), UserController.update)
 
 router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
 router.post("/holygraph/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
