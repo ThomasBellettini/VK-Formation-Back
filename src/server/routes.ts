@@ -126,16 +126,16 @@ router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
 
 router.get("/users/list", authJwt, checkRole("admin"), UserController.list)
-router.get("/user/update/:id", authJwt, checkRole("admin"), UserController.list)
+router.patch("/user/update/:id", authJwt, checkRole("admin"), UserController.list)
 
 router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
 router.post("/holygraph/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
 router.patch("/holygraph/update/:id", authJwt, checkRole("admin"), upload.single('video'), HolyController.update)
 router.get("/holygraph/info/:url", authJwt, HolyController.info)
 
-router.get("/evaluate/add/:url", authJwt, HolyController.generateEvaluation)
+router.post("/evaluate/add/:url", authJwt, HolyController.generateEvaluation)
 router.get("/evaluate/info/:id", authJwt, HolyController.evaluateInfo)
-router.get("/evaluate/update/:id", authJwt, HolyController.evaluateUpdateUser)
+router.patch("/evaluate/update/:id", authJwt, HolyController.evaluateUpdateUser)
 
 router.get("/courses/list", authJwtNotMandatory, CourseController.list)
 router.post("/courses/add", authJwt, checkRole("admin"), upload.single('image'), CourseController.add)
