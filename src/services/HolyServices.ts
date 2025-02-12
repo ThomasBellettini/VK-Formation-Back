@@ -1,4 +1,4 @@
-import HolyProject from "../model/learning/HolyProject.js";
+import HolyProject, {IHolyProject} from "../model/learning/HolyProject.js";
 import User, {IUser} from "../model/User.js";
 import {Request} from "express";
 import {ICourseBundle} from "../model/learning/CourseBundle.js";
@@ -302,7 +302,7 @@ class HolyServices {
       if (!user._id) {
         throw new Error("No user found !");
       }
-      if (user.coin < 0) {
+      if (user.coin < 1) {
         throw new Error("Not enough coin to generate evaluation !");
       }
       let userProject = user.holyProjects.find(hp => hp.project.toString() === holyProject._id.toString());
@@ -313,6 +313,8 @@ class HolyServices {
         user: user._id,
         project: holyProject._id
       });
+      await User.findByIdAndUpdate(user._id, {coin: user.coin - 1});
+
 
       return {
         success: true,
@@ -382,7 +384,9 @@ class HolyServices {
       if (!req.body.percent || req.body.percent < 0) {
         throw new Error("Percent is mandatory and must be greater than 0 !");
       }
-      const evaluation = await Evaluation.findById(id).lean();
+      const evaluation = await Evaluation.findById(id)
+          .populate("project")
+          .lean();
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
@@ -393,12 +397,15 @@ class HolyServices {
       if (user._id.toString() === requestUser._id.toString()) {
         throw new Error("You can't evaluate yourself !");
       }
+      let project = evaluation.project as IHolyProject;
       await Evaluation.findByIdAndUpdate(id, {percent: req.body.percent});
       user.holyProjects.push({
-        project: evaluation.project,
+        project: project._id,
         resultPercent: req.body.percent
       })
+      user.xp += project.xpReward;
       await user.save();
+      await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + 10});
 
       return {
         success: true,
