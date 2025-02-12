@@ -12,6 +12,9 @@ class HolyController {
     this.add = this.add.bind(this);
     this.info = this.info.bind(this);
     this.update = this.update.bind(this);
+    this.generateEvaluation = this.generateEvaluation.bind(this);
+    this.evaluateInfo = this.evaluateInfo.bind(this);
+    this.evaluateUpdateUser = this.evaluateUpdateUser.bind(this);
   }
 
   public async list(req: Request, res: Response) {
@@ -34,6 +37,20 @@ class HolyController {
     return res.status(r.statusCode).send(r);
   }
 
+  public async generateEvaluation(req: Request, res: Response) {
+    const r = await this.service.generateEvaluation(req, req.params.url);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async evaluateInfo(req: Request, res: Response) {
+    const r = await this.service.evaluateInfo(req, req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async evaluateUpdateUser(req: Request, res: Response) {
+    const r = await this.service.evaluateUpdateUser(req, req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
 }
 
 export default new HolyController(holyService);

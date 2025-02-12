@@ -1,9 +1,10 @@
 import HolyProject from "../model/learning/HolyProject.js";
-import {IUser} from "../model/User";
+import User, {IUser} from "../model/User.js";
 import {Request} from "express";
 import {ICourseBundle} from "../model/learning/CourseBundle.js";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
+import Evaluation from "../model/learning/Evaluation.js";
 
 interface IHolyGraph {
     _id: mongoose.Types.ObjectId;
@@ -36,6 +37,9 @@ class HolyServices {
     this.add = this.add.bind(this);
     this.info = this.info.bind(this);
     this.update = this.update.bind(this);
+    this.generateEvaluation = this.generateEvaluation.bind(this);
+    this.evaluateInfo = this.evaluateInfo.bind(this);
+    this.evaluateUpdateUser = this.evaluateUpdateUser.bind(this);
   }
 
   async list(req: Request) {
@@ -251,6 +255,138 @@ class HolyServices {
         data: {
           message: "Holy Project created with success",
           holyProject
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+  async generateEvaluation(req: Request, url: string) {
+    try {
+      const holyProject = await HolyProject.find({url: url}).lean() as IHolyGraph;
+      if (!holyProject) {
+        throw new Error("No Holy Project found with this url !");
+      }
+      // @ts-ignore
+      let user = req.user as IUser;
+      if (!user._id) {
+        throw new Error("No user found !");
+      }
+      if (user.coin < 0) {
+        throw new Error("Not enough coin to generate evaluation !");
+      }
+      let userProject = user.holyProjects.find(hp => hp.project.toString() === holyProject._id.toString());
+      if (userProject?.resultPercent && userProject?.resultPercent > 1) {
+        throw new Error("Project already done !");
+      }
+      let evaluation = await Evaluation.create({
+        user: user._id,
+        project: holyProject._id
+      });
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "Evaluation created with success",
+          evaluation: evaluation._id
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+  async evaluateInfo(req: Request, id: string) {
+    try {
+      // @ts-ignore
+      let requestUser = req.user as IUser;
+      const evaluation = await Evaluation.findById(id).populate("project").lean();
+      if (!evaluation) {
+        throw new Error("No Evaluation found with this id !");
+      }
+      let user = await User.findById(evaluation.user) as IUser;
+      if (!user) {
+        throw new Error("No evaluable user found !");
+      }
+      if (user._id.toString() === requestUser._id.toString()) {
+        throw new Error("You can't evaluate yourself !");
+      }
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          evaluation: evaluation
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+  async evaluateUpdateUser(req: Request, id: string) {
+    try {
+      // @ts-ignore
+      let requestUser = req.user as IUser;
+      if (!req.body.percent || req.body.percent < 0) {
+        throw new Error("Percent is mandatory and must be greater than 0 !");
+      }
+      const evaluation = await Evaluation.findById(id).lean();
+      if (!evaluation) {
+        throw new Error("No Evaluation found with this id !");
+      }
+      let user = await User.findById(evaluation.user) as IUser;
+      if (!user) {
+        throw new Error("No evaluable user found !");
+      }
+      if (user._id.toString() === requestUser._id.toString()) {
+        throw new Error("You can't evaluate yourself !");
+      }
+      await Evaluation.findByIdAndUpdate(id, {percent: req.body.percent});
+      user.holyProjects.push({
+        project: evaluation.project,
+        resultPercent: req.body.percent
+      })
+      await user.save();
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "User has been evaluated with success",
+          evaluation: evaluation
         },
       };
     } catch (err) {

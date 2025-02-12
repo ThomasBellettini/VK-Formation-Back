@@ -6,6 +6,7 @@ import {IHolyProject} from "./learning/HolyProject";
 const saltRounds = 10;
 
 export interface IUser extends Document {
+    _id: mongoose.Types.ObjectId;
     email: string;
     password: string;
     permission: string;
