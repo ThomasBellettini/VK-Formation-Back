@@ -54,7 +54,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     },
     isConfirmed: {
         type: Boolean,
-        default: false
+        default: true
     },
     confirmationCode: {
         type: String,
