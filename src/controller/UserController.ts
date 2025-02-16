@@ -11,6 +11,7 @@ class UserController {
     this.service = service;
     this.list = this.list.bind(this);
     this.update = this.update.bind(this);
+    this.add = this.add.bind(this);
   }
 
   public async list(req: Request, res: any) {
@@ -20,6 +21,11 @@ class UserController {
 
   public async update(req: Request, res: any) {
     const r = await this.service.update(req, req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async add(req: Request, res: any) {
+    const r = await this.service.add(req);
     return res.status(r.statusCode).send(r);
   }
 

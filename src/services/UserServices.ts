@@ -61,6 +61,34 @@ class UserServices {
     }
   }
 
+  async add(req: Request) {
+    try {
+      if (!req.body.email || !req.body.password || !req.body.firstname || !req.body.lastname) {
+        throw new Error("Missing fields");
+      }
+      let user = await User.create(req.body);
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: user,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error, no user found !",
+        },
+      };
+    }
+  }
+
 
 }
 
