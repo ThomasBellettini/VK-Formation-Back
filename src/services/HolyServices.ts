@@ -25,9 +25,9 @@ interface IHolyGraph {
 
     percent: number | null;
 
-    externalLink: {
+   links: {
       url: string;
-      title: string;
+      name: string;
     }[]
 
     createdAt?: Date;
@@ -93,7 +93,7 @@ class HolyServices {
             projectDone: projectDone,
             percent: percent,
             xp: iterator.xpReward,
-            externalLink: iterator.externalLink,
+            links: iterator.links,
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
           };
@@ -114,7 +114,7 @@ class HolyServices {
             hasPermission: false,
             projectDone: false,
             percent: null,
-            externalLink: [],
+            links: [],
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
           };
@@ -172,7 +172,7 @@ class HolyServices {
         hasPermission: true,
         projectDone: projectDone,
         percent: percent,
-        externalLink: holyProjectDatabase.externalLink,
+        links: holyProjectDatabase.links,
         createdAt: holyProjectDatabase.createdAt,
         updatedAt: holyProjectDatabase.updatedAt
       }
