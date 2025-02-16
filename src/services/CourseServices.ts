@@ -17,6 +17,11 @@ interface ICourse {
 
     lessons: (ILesson | mongoose.Types.ObjectId)[];
 
+    links: {
+      name: string;
+      url: string;
+    }[];
+
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -51,6 +56,7 @@ class CourseServices {
             description: iterator.description,
             percent: 0,
             lessons: [],
+            links: [],
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
           }
@@ -69,6 +75,7 @@ class CourseServices {
             description: iterator.description,
             percent,
             duration,
+            links: iterator.links,
             lessons: iterator.lessons,
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt

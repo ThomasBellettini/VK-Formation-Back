@@ -8,8 +8,12 @@ export interface ICourseBundle extends Document {
     image: string;
     title: string;
     description: string;
+    lessons: (ILesson | mongoose.Types.ObjectId)[];
 
-    lessons: (mongoose.Types.ObjectId | ILesson)[];
+    links: {
+        name: string;
+        url: string;
+    }[];
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -36,8 +40,18 @@ const courseBundle: Schema<ICourseBundle> = new mongoose.Schema({
         default: ""
     },
     lessons: [{
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'Lesson'
+    }],
+    links: [{
+        name: {
+            type: String,
+            required: false
+        },
+        url: {
+            type: String,
+            required: false
+        }
     }]
 
 }, {
