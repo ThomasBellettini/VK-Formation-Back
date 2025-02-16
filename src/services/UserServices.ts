@@ -83,7 +83,7 @@ class UserServices {
         statusCode: 500,
         errors: err,
         data: {
-          message: "Error, no user found !",
+          message: "Error in user creation !",
         },
       };
     }
