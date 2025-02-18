@@ -13,8 +13,6 @@ export interface IResource extends Document {
     updatedAt?: Date;
 }
 
-
-
 const resourceSchema: Schema<IResource> = new mongoose.Schema({
     pathFile: {
         type: String,

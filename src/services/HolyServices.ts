@@ -43,6 +43,7 @@ class HolyServices {
     this.generateEvaluation = this.generateEvaluation.bind(this);
     this.evaluateInfo = this.evaluateInfo.bind(this);
     this.evaluateUpdateUser = this.evaluateUpdateUser.bind(this);
+    this.delete = this.delete.bind(this);
   }
 
   async list(req: Request) {
@@ -291,6 +292,38 @@ class HolyServices {
     }
   }
 
+  async delete(id: string) {
+    try {
+      let holyProject = await HolyProject.findById(id);
+      if (!holyProject) {
+        throw new Error("No Holy Project found with this id !");
+      }
+
+     await HolyProject.findByIdAndDelete(id);
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "Holy Project deleted with success"
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+
   async generateEvaluation(req: Request, url: string) {
     try {
       const holyProject = await HolyProject.find({url: url}).lean() as IHolyGraph;
@@ -353,6 +386,9 @@ class HolyServices {
       }
       if (user._id.toString() === requestUser._id.toString()) {
         throw new Error("You can't evaluate yourself !");
+      }
+      if (evaluation.percent && evaluation.percent > 0) {
+        throw new Error("Evaluation already done !");
       }
 
       return {

@@ -128,9 +128,12 @@ router.get("/me", authJwt, AuthController.me)
 router.get("/users/list", authJwt, checkRole("admin"), UserController.list)
 router.patch("/users/update/:id", authJwt, checkRole("admin"), UserController.list)
 router.post("/users/add", authJwt, checkRole("admin"), UserController.add)
+router.delete("/users/delete/:id", authJwt, checkRole("admin"), UserController.delete)
+router.get("/users/info/:id", authJwt, checkRole("admin"), UserController.info)
 
 router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
 router.post("/holygraph/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
+router.delete("/holygraph/delete/:id", authJwt, checkRole("admin"), HolyController.delete)
 router.patch("/holygraph/update/:id", authJwt, checkRole("admin"), upload.single('video'), HolyController.update)
 router.get("/holygraph/info/:url", authJwt, HolyController.info)
 
@@ -142,11 +145,13 @@ router.get("/courses/list", authJwtNotMandatory, CourseController.list)
 router.post("/courses/add", authJwt, checkRole("admin"), upload.single('image'), CourseController.add)
 router.patch("/courses/update/:id", authJwt, checkRole("admin"), upload.single('image'), CourseController.update)
 router.get("/courses/info/:url", authJwt, CourseController.info)
+router.delete("/courses/delete/:id", authJwt, checkRole("admin"), CourseController.delete)
 
 router.get("/lessons/list", authJwt, checkRole("admin"), LessonController.list)
 router.post("/lessons/add", authJwt, checkRole("admin"), upload.single("video"), LessonController.add)
 router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.single("video"), LessonController.update)
 router.get("/lessons/info/:url", authJwt, LessonController.info)
+router.delete("/lessons/delete/:url", authJwt, checkRole("admin"), LessonController.delete)
 
 router.get("/resources/show", authJwt, ResourceController.view)
 

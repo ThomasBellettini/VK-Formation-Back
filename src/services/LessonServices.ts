@@ -13,6 +13,7 @@ class LessonServices {
     this.add = this.add.bind(this);
     this.update = this.update.bind(this);
     this.info = this.info.bind(this);
+    this.delete = this.delete.bind(this);
   }
 
   async list(req: Request) {
@@ -58,6 +59,35 @@ class LessonServices {
         errors: null,
         data: {
           lesson
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+  async delete(id: string) {
+    try {
+      let lesson = await Lesson.findById(id).lean();
+      if (!lesson) throw new Error('No lesson was founded !');
+
+      await Lesson.findByIdAndDelete(id);
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "Success, lesson deleted !",
         },
       };
     } catch (err) {

@@ -32,6 +32,7 @@ class CourseServices {
     this.add = this.add.bind(this);
     this.update = this.update.bind(this);
     this.info = this.info.bind(this);
+    this.delete = this.delete.bind(this);
   }
 
   async list(req: Request) {
@@ -234,6 +235,34 @@ class CourseServices {
         data: {
           message: "Course has been updated with success",
           courseBundle
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+  async delete(id: string) {
+    try {
+      let courseBundle = await CourseBundle.findOne({_id: id});
+      if (!courseBundle) throw new Error("No Course has been found with this ID !");
+      await CourseBundle.findByIdAndDelete(id);
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "Course has been deleted with success",
         },
       };
     } catch (err) {

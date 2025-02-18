@@ -5,6 +5,8 @@ class UserServices {
   constructor() {
     this.list = this.list.bind(this);
     this.update = this.update.bind(this);
+    this.delete = this.delete.bind(this);
+    this.info = this.info.bind(this);
   }
 
   async list() {
@@ -46,6 +48,59 @@ class UserServices {
         errors: null,
         data: {
           users: userDb,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error, no user found !",
+        },
+      };
+    }
+  }
+
+  async delete(id: string) {
+    try {
+      let userDb = await User.findById(id);
+      if (!userDb) throw new Error("No user found !");
+      await User.findByIdAndDelete(id);
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "Succes, user deleted !",
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error, no user found !",
+        },
+      };
+    }
+  }
+
+  async info(id: string) {
+    try {
+      let userDb = await User.findById(id).populate("holyProjects.project").populate("lessonsFinished").lean();
+      if (!userDb) throw new Error("No user found !");
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: userDb
         },
       };
     } catch (err) {
