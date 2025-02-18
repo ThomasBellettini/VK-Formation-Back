@@ -9,6 +9,7 @@ export interface ICourseBundle extends Document {
     title: string;
     description: string;
     lessons: (ILesson | mongoose.Types.ObjectId)[];
+    order: number;
 
     links: {
         name: string;
@@ -52,7 +53,12 @@ const courseBundle: Schema<ICourseBundle> = new mongoose.Schema({
             type: String,
             required: false
         }
-    }]
+    }],
+    order: {
+        type: Number,
+        required: false,
+        default: 0
+    }
 
 }, {
     timestamps: true

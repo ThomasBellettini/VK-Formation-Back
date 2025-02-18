@@ -16,7 +16,7 @@ interface ICourse {
     duration: number | null;
 
     lessons: (ILesson | mongoose.Types.ObjectId)[];
-
+    order: number;
     links: {
       name: string;
       url: string;
@@ -58,6 +58,7 @@ class CourseServices {
             percent: 0,
             lessons: [],
             links: [],
+            order: iterator.order,
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
           }
@@ -75,6 +76,7 @@ class CourseServices {
             title: iterator.title,
             description: iterator.description,
             percent,
+            order: iterator.order,
             duration,
             links: iterator.links,
             lessons: iterator.lessons,
