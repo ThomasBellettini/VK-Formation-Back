@@ -338,10 +338,24 @@ class HolyServices {
       if (user.coin < 1) {
         throw new Error("Not enough coin to generate evaluation !");
       }
+
       let userProject = user.holyProjects.find(hp => hp.project.toString() === holyProject._id.toString());
       if (userProject?.resultPercent && userProject?.resultPercent > 1) {
         throw new Error("Project already done !");
       }
+      let evaluationDB = await Evaluation.findOne({user: user._id});
+        if (evaluationDB) {
+          return {
+            success: true,
+            statusCode: 201,
+            errors: null,
+            data: {
+              message: "Evaluation already exist !",
+              evaluationID: evaluationDB._id
+            },
+          };
+        }
+
       let evaluation = await Evaluation.create({
         user: user._id,
         project: holyProject._id

@@ -126,7 +126,7 @@ router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
 
 router.get("/users/list", authJwt, checkRole("admin"), UserController.list)
-router.patch("/users/update/:id", authJwt, checkRole("admin"), UserController.list)
+router.patch("/users/update/:id", authJwt, checkRole("admin"), UserController.update)
 router.post("/users/add", authJwt, checkRole("admin"), UserController.add)
 router.delete("/users/delete/:id", authJwt, checkRole("admin"), UserController.delete)
 router.get("/users/info/:id", authJwt, checkRole("admin"), UserController.info)
