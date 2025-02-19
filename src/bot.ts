@@ -37,7 +37,6 @@ setInterval(() => {
 
 setInterval(async () => {
     const now = new Date();
-    if (now.getHours() === 21) {
         try {
             console.log(Object.fromEntries(dataTracking));
             await axios.post(`${API_URL}`, Object.fromEntries(dataTracking), {
@@ -51,8 +50,8 @@ setInterval(async () => {
         } catch (err) {
             console.error('Erreur lors de l\'envoi des données :', err);
         }
-    }
-}, 10* 1000);
+
+}, 10 * 60 * 1000);
 
 setInterval(() => {
     const guild = client.guilds.cache.get(GUILD_ID as string);
