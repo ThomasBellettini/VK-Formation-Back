@@ -1,6 +1,7 @@
 import AuthServices from "../services/AuthServices.js";
 import { Request, Response, Express } from "express";
 import UserServices from "../services/UserServices.js";
+import {IUser} from "../model/User";
 
 const userServices = new UserServices();
 
@@ -14,6 +15,7 @@ class UserController {
     this.add = this.add.bind(this);
     this.delete = this.delete.bind(this);
     this.info = this.info.bind(this);
+    this.generateDiscordLink = this.generateDiscordLink.bind(this);
   }
 
   public async list(req: Request, res: any) {
@@ -38,6 +40,12 @@ class UserController {
 
   public async info(req: Request, res: any) {
     const r = await this.service.info(req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async generateDiscordLink(req: Request, res: any) {
+    // @ts-ignore
+    const r = await this.service.generateDiscordLink(req.user as IUser);
     return res.status(r.statusCode).send(r);
   }
 

@@ -124,6 +124,7 @@ router.post("/login", AuthController.login);
 router.post("/register", authAPI, AuthController.register)
 router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
+router.get("/discord", authJwt, UserController.generateDiscordLink)
 
 router.get("/users/list", authJwt, checkRole("admin"), UserController.list)
 router.patch("/users/update/:id", authJwt, checkRole("admin"), UserController.update)
@@ -151,7 +152,7 @@ router.get("/lessons/list", authJwt, checkRole("admin"), LessonController.list)
 router.post("/lessons/add", authJwt, checkRole("admin"), upload.single("video"), LessonController.add)
 router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.single("video"), LessonController.update)
 router.get("/lessons/info/:url", authJwt, LessonController.info)
-router.delete("/lessons/delete/:url", authJwt, checkRole("admin"), LessonController.delete)
+router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
 
 router.get("/resources/show", authJwt, ResourceController.view)
 

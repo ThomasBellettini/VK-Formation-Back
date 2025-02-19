@@ -7,6 +7,7 @@ class UserServices {
     this.update = this.update.bind(this);
     this.delete = this.delete.bind(this);
     this.info = this.info.bind(this);
+    this.generateDiscordLink = this.generateDiscordLink.bind(this);
   }
 
   async list() {
@@ -48,6 +49,39 @@ class UserServices {
         errors: null,
         data: {
           users: userDb,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error, no user found !",
+        },
+      };
+    }
+  }
+
+  async generateDiscordLink(user: IUser) {
+    try {
+      if (user.discordLinkCode !== null && user.discordLinkCode !== "") {
+        throw new Error("Discord link already generated !");
+      }
+      if (!user.discordAccess) {
+        throw new Error("Discord access not granted !");
+      }
+      let link = Math.random().toString(36) + Math.random().toString(36);
+      let editedUser = await User.findByIdAndUpdate(user._id, { discordLinkCode: link });
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          code: link,
+          user: editedUser
         },
       };
     } catch (err) {
