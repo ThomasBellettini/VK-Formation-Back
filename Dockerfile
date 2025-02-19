@@ -14,5 +14,10 @@ RUN pnpm install --frozen-lockfile --ignore-scripts=false
 RUN pnpm install --unsafe-perm
 COPY . .
 RUN pnpm run build
+
 EXPOSE 5002
-CMD ["node", "dist/index.js"]
+EXPOSE 3010
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+CMD ["/entrypoint.sh"]

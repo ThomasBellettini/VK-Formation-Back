@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+import * as process from "node:process";
 config();
 
 export default {
@@ -22,5 +23,8 @@ export default {
     BUNNY_CDN_URL: process.env.BUNNY_CDN_URL,
     BUNNY_SECURITY_KEY: process.env.BUNNY_SECURITY_KEY,
     TOKEN_EXPIRATION: process.env.TOKEN_EXPIRATION,
+  },
+  DISCORD: {
+    MODULE: process.env.DISCORD_MODULE_URL
   }
 };

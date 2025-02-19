@@ -36,6 +36,7 @@ services:
     container_name: app
     ports:
       - "5002:5002"
+      - "3010:3010"
     depends_on:
       - mongo
     labels:

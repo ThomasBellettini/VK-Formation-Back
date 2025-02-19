@@ -9,6 +9,8 @@ import LessonController from "../controller/LessonController.js";
 import multer from 'multer';
 import ResourceController from "../controller/ResourceController.js";
 import UserController from "../controller/UserController.js";
+import DiscordController from "../controller/DiscordController.js";
+import DiscordServices from "../services/DiscordServices";
 
 const router = Router();
 
@@ -155,6 +157,10 @@ router.get("/lessons/info/:url", authJwt, LessonController.info)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
 
 router.get("/resources/show", authJwt, ResourceController.view)
+
+router.post("/discord/upload", authAPI, DiscordController.uploadDailyStat)
+router.get("/discord/stats", authJwt, DiscordController.getStats)
+router.get("/discord/schedule", authJwt, DiscordController.getSchedule)
 
 
 
