@@ -132,11 +132,12 @@ const uploadGlobalStat = async () => {
 }
 
 client.once('ready', async () => {
+    let refreshTime = 30 * 1000;
     await updateEventsCache();
     await updateMessagesCache();
-    setInterval(updateEventsCache, 10 * 60 * 1000);
-    setInterval(updateMessagesCache, 10 * 60 * 1000);
-    setInterval(uploadGlobalStat, 10 * 60 * 1000);
+    setInterval(updateEventsCache, refreshTime);
+    setInterval(updateMessagesCache, refreshTime);
+    setInterval(uploadGlobalStat, refreshTime);
 });
 
 app.get('/discord/schedule', async (req, res) => {

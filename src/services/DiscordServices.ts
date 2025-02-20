@@ -20,9 +20,9 @@ class DiscordServices {
       date.setDate(date.getDate());
       date.setHours(0, 0, 0, 0);
 
-      let messages = 0;
-      let join = 0;
-      let vocal = 0;
+      let messages = (req.body.messages as number) || 0;
+      let join = (req.body.join as number) || 0;
+      let vocal = (req.body.voice as number) || 0;
       if (req.query.full && req.query.full === "true") {
         Object.entries(fullStats).map(async ([key, value]) => {
           let user = await User.findOne({discordId: key});
