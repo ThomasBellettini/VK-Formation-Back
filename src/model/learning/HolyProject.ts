@@ -7,7 +7,7 @@ export interface IHolyProject extends Document {
     description: string;
 
     level: number;
-    xpReward: number;
+    xp: number;
     url: string;
     content: string;
     evaluationText: string;
@@ -37,7 +37,7 @@ const holyProjectSchema: Schema<IHolyProject> = new mongoose.Schema({
         type: Number,
         default: 1
     },
-    xpReward: {
+    xp: {
         type: Number,
         default: 1
     },

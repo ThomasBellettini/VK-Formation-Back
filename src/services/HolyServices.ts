@@ -94,7 +94,7 @@ class HolyServices {
             hasPermission: iterator.level <= maxLevelCompleted + 1,
             projectDone: projectDone,
             percent: percent,
-            xp: iterator.xpReward,
+            xp: iterator.xp,
             links: iterator.links,
             createdAt: iterator.createdAt,
             updatedAt: iterator.updatedAt
@@ -110,7 +110,7 @@ class HolyServices {
             level: iterator.level,
             url: iterator.url,
             content: null,
-            xp: iterator.xpReward,
+            xp: iterator.xp,
             cdnVideoContent: null,
             cdnAudioContent: null,
             hasPermission: false,
@@ -166,7 +166,7 @@ class HolyServices {
         name: holyProjectDatabase.name,
         description: holyProjectDatabase.description,
         level: holyProjectDatabase.level,
-        xp: holyProjectDatabase.xpReward,
+        xp: holyProjectDatabase.xp,
         url: holyProjectDatabase.url,
         content: holyProjectDatabase.content,
         cdnVideoContent: holyProjectDatabase.cdnVideoContent,
@@ -504,7 +504,7 @@ class HolyServices {
         project: project._id,
         resultPercent: req.body.percent
       })
-      user.xp += project.xpReward;
+      user.xp += project.xp;
       await user.save();
       await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + 10});
 
