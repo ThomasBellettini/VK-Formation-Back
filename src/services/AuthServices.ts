@@ -49,7 +49,7 @@ class AuthServices {
       let passwordCompare = await user.comparePassword(password);
       if (!passwordCompare) throw "Invalid email or password !";
       if (!user.isConfirmed) throw "User not confirmed !";
-      let token = generateToken(user.email);
+      let token = generateToken(user.email, user.permission);
 
       return {
         success: true,
@@ -121,7 +121,7 @@ class AuthServices {
       const user = await User.findOne({ confirmationCode: confirmationCode });
       if (!user) throw "Invalid confirmationCode !";
       if (user.isConfirmed) throw "User already confirmed !";
-      let token = generateToken(user.email);
+      let token = generateToken(user.email, user.permission);
       user.isConfirmed = true;
       user.confirmationCode = null;
       await user.save();
