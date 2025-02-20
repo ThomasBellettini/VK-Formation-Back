@@ -16,6 +16,7 @@ class HolyController {
     this.evaluateInfo = this.evaluateInfo.bind(this);
     this.evaluateUpdateUser = this.evaluateUpdateUser.bind(this);
     this.delete = this.delete.bind(this);
+    this.hasEvaluationLink = this.hasEvaluationLink.bind(this);
   }
 
   public async list(req: Request, res: Response) {
@@ -39,7 +40,12 @@ class HolyController {
   }
 
   public async generateEvaluation(req: Request, res: Response) {
-    const r = await this.service.generateEvaluation(req, req.params.url);
+    const r = await this.service.generateEvaluation(req, req.body.project);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async hasEvaluationLink(req: Request, res: Response) {
+    const r = await this.service.hasEvaluationLink(req, req.params.url);
     return res.status(r.statusCode).send(r);
   }
 

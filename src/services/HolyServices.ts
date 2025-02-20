@@ -44,6 +44,7 @@ class HolyServices {
     this.evaluateInfo = this.evaluateInfo.bind(this);
     this.evaluateUpdateUser = this.evaluateUpdateUser.bind(this);
     this.delete = this.delete.bind(this);
+    this.hasEvaluationLink = this.hasEvaluationLink.bind(this);
   }
 
   async list(req: Request) {
@@ -323,9 +324,59 @@ class HolyServices {
     }
   }
 
+  async hasEvaluationLink(req: Request, url: string) {
+    try {
+      if (!url) {
+        throw new Error("Url is mandatory !");
+      }
+      const holyProject = await HolyProject.find({url: url}).lean() as IHolyGraph;
+      if (!holyProject) {
+        throw new Error("No Holy Project found with this url !");
+      }
+      // @ts-ignore
+      let user = req.user as IUser;
+
+      let evaluationDB = await Evaluation.findOne({user: user._id});
+      if (evaluationDB) {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {
+            exist: true,
+            evaluationID: evaluationDB._id
+          },
+        };
+      } else {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {
+            exist: false
+          },
+        };
+      }
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
 
   async generateEvaluation(req: Request, url: string) {
     try {
+      if (!url) {
+        throw new Error("Url is mandatory !");
+      }
       const holyProject = await HolyProject.find({url: url}).lean() as IHolyGraph;
       if (!holyProject) {
         throw new Error("No Holy Project found with this url !");
