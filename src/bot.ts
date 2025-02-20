@@ -132,7 +132,7 @@ const uploadGlobalStat = async () => {
 }
 
 client.once('ready', async () => {
-    let refreshTime = 2 * 60 * 1000;
+    let refreshTime = 30 * 1000;
     await updateEventsCache();
     await updateMessagesCache();
     setInterval(updateEventsCache, refreshTime);
