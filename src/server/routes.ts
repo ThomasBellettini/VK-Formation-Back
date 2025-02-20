@@ -140,11 +140,11 @@ router.delete("/holygraph/delete/:id", authJwt, checkRole("admin"), HolyControll
 router.patch("/holygraph/update/:id", authJwt, checkRole("admin"), upload.single('video'), HolyController.update)
 router.get("/holygraph/info/:url", authJwt, HolyController.info)
 
-router.get("/evaluate/info/:id", authJwt, HolyController.evaluateInfo)
-router.patch("/evaluate/update/:id", authJwt, HolyController.evaluateUpdateUser)
+router.get("/evaluation/info/:id", authJwt, HolyController.evaluateInfo)
+router.patch("/evaluation/update/:id", authJwt, HolyController.evaluateUpdateUser)
 
-router.get("/evaluate/link/info/:url", authJwt, HolyController.hasEvaluationLink)
-router.post("/evaluate/link/add", authJwt, HolyController.generateEvaluation)
+router.get("/evaluation/link/info/:url", authJwt, HolyController.hasEvaluationLink)
+router.post("/evaluation/link/add", authJwt, HolyController.generateEvaluation)
 
 router.get("/courses/list", authJwtNotMandatory, CourseController.list)
 router.post("/courses/add", authJwt, checkRole("admin"), upload.single('image'), CourseController.add)
