@@ -65,7 +65,7 @@ setInterval(() => {
             channel.members.forEach(member => {
                 if (!member.voice.mute) {
                     dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1);
-                    globalDataTracking.set("voice", (dataTracking.get("voice") || 0) + 1);
+                    globalDataTracking.set("voice", (globalDataTracking.get("voice") || 0) + 1);
                 }
             });
         }
@@ -74,13 +74,13 @@ setInterval(() => {
 
 client.on('messageCreate', (message) => {
     if (!message.author.bot) {
-        globalDataTracking.set("messages", (dataTracking.get("messages") || 0) + 1);
+        globalDataTracking.set("messages", (globalDataTracking.get("messages") || 0) + 1);
         dataTracking.set(message.author.id, (dataTracking.get(message.author.id) || 0) + 1);
     }
 });
 
 client.on('guildMemberAdd', () => {
-    globalDataTracking.set("join", (dataTracking.get("join") || 0) + 1);
+    globalDataTracking.set("join", (globalDataTracking.get("join") || 0) + 1);
 });
 
 const updateEventsCache = async () => {
@@ -132,7 +132,7 @@ const uploadGlobalStat = async () => {
 }
 
 client.once('ready', async () => {
-    let refreshTime = 30 * 1000;
+    let refreshTime = 2 * 60 * 1000;
     await updateEventsCache();
     await updateMessagesCache();
     setInterval(updateEventsCache, refreshTime);
