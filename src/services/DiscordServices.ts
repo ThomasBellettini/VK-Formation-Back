@@ -17,36 +17,35 @@ class DiscordServices {
     try {
       let fullStats = req.body;
       let date = new Date();
-      date.setDate(date.getDate() - 1);
+      date.setDate(date.getDate());
       date.setHours(0, 0, 0, 0);
 
       let messages = 0;
       let join = 0;
       let vocal = 0;
-
-      Object.entries(fullStats).map(async ([key, value]) => {
-        if (!key.includes("global")) {
+      if (req.query.full && req.query.full === "true") {
+        Object.entries(fullStats).map(async ([key, value]) => {
           let user = await User.findOne({discordId: key});
           if (user) {
-            //TODO Algo de give de point en fonction du temps de vocal
+            //TODO Mettre a jour les coins en fonction des points
           }
-        } else {
-          if (key === "join_global")
-            join = value as number;
-          if (key === "message_global")
-            messages = value as number;
-          if (key === "voice_global")
-            vocal = value as number;
-        }
-      });
-
-       await DiscordStats.create({
+        });
+      } else {
+        let discordStats = await DiscordStats.findOne({date: date});
+        if (!discordStats) {
+          await DiscordStats.create({
             date: date,
             totalMessages: messages,
             totalVocal: vocal,
             totalNewMembers: join,
-        });
-
+          });
+        } else {
+          discordStats.totalMessages += messages;
+          discordStats.totalVocal += vocal;
+          discordStats.totalNewMembers += join;
+          await discordStats.save();
+        }
+      }
 
       return {
         success: true,

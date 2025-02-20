@@ -26,6 +26,7 @@ const client = new Client({
 });
 
 let dataTracking = new Map<string, number>();
+let globalDataTracking = new Map<string, number>();
 
 if (fs.existsSync(DATA_FILE)) {
     dataTracking = new Map(JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8')));
@@ -33,13 +34,14 @@ if (fs.existsSync(DATA_FILE)) {
 
 setInterval(() => {
     fs.writeFileSync(DATA_FILE, JSON.stringify(Array.from(dataTracking.entries())));
-}, 60 * 60 * 1000);
+}, 60 * 10 * 1000);
 
 setInterval(async () => {
     const now = new Date();
+    if (now.getHours() == 23) {
         try {
             console.log(Object.fromEntries(dataTracking));
-            await axios.post(`${API_URL}`, Object.fromEntries(dataTracking), {
+            await axios.post(`${API_URL}?full=true`, Object.fromEntries(dataTracking), {
                 headers: {
                     'X-VK-TOKEN': process.env.API_KEY
                 }
@@ -50,8 +52,9 @@ setInterval(async () => {
         } catch (err) {
             console.error('Erreur lors de l\'envoi des données :', err);
         }
+    }
 
-}, 10 * 60 * 1000);
+}, 60 * 60 * 1000);
 
 setInterval(() => {
     const guild = client.guilds.cache.get(GUILD_ID as string);
@@ -62,21 +65,22 @@ setInterval(() => {
             channel.members.forEach(member => {
                 if (!member.voice.mute) {
                     dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1);
-                    dataTracking.set("voice_global", (dataTracking.get(member.id) || 0) + 1);
+                    globalDataTracking.set("voice", (dataTracking.get("voice") || 0) + 1);
                 }
             });
         }
     });
-}, 1 * 1000);
+}, 60 * 1000);
 
 client.on('messageCreate', (message) => {
     if (!message.author.bot) {
-        dataTracking.set("message_global", (dataTracking.get("message_global") || 0) + 1);
+        globalDataTracking.set("messages", (dataTracking.get("messages") || 0) + 1);
+        dataTracking.set(message.author.id, (dataTracking.get(message.author.id) || 0) + 1);
     }
 });
 
 client.on('guildMemberAdd', () => {
-    dataTracking.set("join_global", (dataTracking.get("join_global") || 0) + 1);
+    globalDataTracking.set("join", (dataTracking.get("join") || 0) + 1);
 });
 
 const updateEventsCache = async () => {
@@ -114,11 +118,25 @@ const updateMessagesCache = async () => {
     }
 };
 
+const uploadGlobalStat = async () => {
+    try {
+        await axios.post(`${API_URL}`, Object.fromEntries(globalDataTracking), {
+            headers: {
+                'X-VK-TOKEN': process.env.API_KEY
+            }
+        });
+        globalDataTracking.clear();
+    } catch (err) {
+        console.error('Erreur lors de l\'envoi des données :', err);
+    }
+}
+
 client.once('ready', async () => {
     await updateEventsCache();
     await updateMessagesCache();
     setInterval(updateEventsCache, 10 * 60 * 1000);
     setInterval(updateMessagesCache, 10 * 60 * 1000);
+    setInterval(uploadGlobalStat, 10 * 60 * 1000);
 });
 
 app.get('/discord/schedule', async (req, res) => {
