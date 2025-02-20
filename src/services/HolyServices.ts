@@ -222,7 +222,8 @@ class HolyServices {
         }
         req.body.courses = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
       }
-
+      if (req.body.links)
+        req.body.links = JSON.parse(req.body.links);
       let holyProject = await HolyProject.create(req.body);
 
       return {
@@ -268,7 +269,9 @@ class HolyServices {
         }
         req.body.courses = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
       }
-      holyProject = await HolyProject.findByIdAndUpdate(id, req.body);
+      if (req.body.links)
+        req.body.links = JSON.parse(req.body.links);
+      holyProject = await HolyProject.findByIdAndUpdate(id, req.body, {new: true});
 
       return {
         success: true,

@@ -186,6 +186,10 @@ class CourseServices {
       } else {
         throw new Error("Missing image file")
       }
+      if (req.body.lessons)
+        req.body.lessons = JSON.parse(req.body.lessons);
+      if (req.body.links)
+        req.body.links = JSON.parse(req.body.links);
       let courseBundle = await CourseBundle.create(req.body);
 
       return {
@@ -221,14 +225,11 @@ class CourseServices {
         let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, false);
         req.body.image = bunnyFilePath;
       }
-      if (req.body.lessons) {
-        let lessonID = req.body.lessons;
-        if (!Array.isArray(lessonID)) {
-          lessonID = JSON.parse(lessonID);
-        }
-        req.body.lessons = lessonID.map((id: string) => new mongoose.Types.ObjectId(id));
-      }
-      courseBundle = await CourseBundle.findOneAndUpdate({_id: id}, req.body);
+      if (req.body.lessons)
+        req.body.lessons = JSON.parse(req.body.lessons);
+      if (req.body.links)
+        req.body.links = JSON.parse(req.body.links);
+      courseBundle = await CourseBundle.findOneAndUpdate({_id: id}, req.body, {new: true});
 
       return {
         success: true,
