@@ -10,7 +10,6 @@ import multer from 'multer';
 import ResourceController from "../controller/ResourceController.js";
 import UserController from "../controller/UserController.js";
 import DiscordController from "../controller/DiscordController.js";
-import DiscordServices from "../services/DiscordServices";
 
 const router = Router();
 
@@ -167,7 +166,5 @@ router.get("/discord/schedule", authJwt, DiscordController.getSchedule)
 router.post("/discord/link", authAPI, UserController.linkDiscord)
 router.get("/discord/user/:id", authAPI, UserController.userByDiscord)
 router.post("/discord/buy", authAPI, UserController.makeTransaction)
-
-
 
 export default router;
