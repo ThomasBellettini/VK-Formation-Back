@@ -16,6 +16,9 @@ class UserController {
     this.delete = this.delete.bind(this);
     this.info = this.info.bind(this);
     this.generateDiscordLink = this.generateDiscordLink.bind(this);
+    this.linkDiscord = this.linkDiscord.bind(this);
+    this.userByDiscord = this.userByDiscord.bind(this);
+    this.makeTransaction = this.makeTransaction.bind(this);
   }
 
   public async list(req: Request, res: any) {
@@ -46,6 +49,21 @@ class UserController {
   public async generateDiscordLink(req: Request, res: any) {
     // @ts-ignore
     const r = await this.service.generateDiscordLink(req.user as IUser);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async linkDiscord(req: Request, res: any) {
+    const r = await this.service.linkDiscord(req);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async userByDiscord(req: Request, res: any) {
+    const r = await this.service.userByDiscord(req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async makeTransaction(req: Request, res: any) {
+    const r = await this.service.makeTransaction(req.body.id, req.body.cost, req.body.order);
     return res.status(r.statusCode).send(r);
   }
 

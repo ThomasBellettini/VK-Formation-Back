@@ -1,5 +1,6 @@
 import User, { IUser } from "../model/User.js";
 import {Request} from "express";
+import Transaction from "../model/Transaction.js";
 
 class UserServices {
   constructor() {
@@ -8,6 +9,9 @@ class UserServices {
     this.delete = this.delete.bind(this);
     this.info = this.info.bind(this);
     this.generateDiscordLink = this.generateDiscordLink.bind(this);
+    this.linkDiscord = this.linkDiscord.bind(this);
+    this.userByDiscord = this.userByDiscord.bind(this);
+    this.makeTransaction = this.makeTransaction.bind(this);
   }
 
   async list() {
@@ -123,10 +127,19 @@ class UserServices {
     }
   }
 
-  async make(discordID: string) {
+  async makeTransaction(discordID: string, cost: number, order: string) {
     try {
       let userDb = await User.findOne({discordId: discordID});
       if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
+      if (userDb.coin < cost) throw new Error("Pas assez d'argent !");
+      userDb.coin -= cost;
+
+      await Transaction.create({
+        user: userDb._id,
+        order: order,
+        cost: cost
+      })
+      await userDb.save();
 
       return {
         success: true,

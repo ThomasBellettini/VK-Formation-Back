@@ -164,6 +164,10 @@ router.post("/discord/upload", authAPI, DiscordController.uploadDailyStat)
 router.get("/discord/stats", authJwt, DiscordController.getStats)
 router.get("/discord/schedule", authJwt, DiscordController.getSchedule)
 
+router.post("/discord/link", authAPI, UserController.linkDiscord)
+router.get("/discord/user/:id", authAPI, UserController.userByDiscord)
+router.post("/discord/buy", authAPI, UserController.makeTransaction)
+
 
 
 export default router;
