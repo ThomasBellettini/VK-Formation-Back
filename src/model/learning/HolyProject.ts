@@ -70,7 +70,7 @@ const holyProjectSchema: Schema<IHolyProject> = new mongoose.Schema({
             default: ""
 
         },
-        title: {
+        name: {
             type: String,
             required: false,
             default: ""

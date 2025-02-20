@@ -41,6 +41,10 @@ class UserServices {
     try {
       let userDb = await User.findById(id);
       if (!userDb) throw new Error("No user found !");
+      if (req.body.holyProjects)
+        req.body.holyProjects = JSON.parse(req.body.holyProjects);
+      if (req.body.lessonsFinished)
+        req.body.lessonsFinished = JSON.parse(req.body.lessonsFinished);
       userDb = await User.findByIdAndUpdate(id, req.body);
 
       return {
