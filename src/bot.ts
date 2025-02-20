@@ -3,8 +3,8 @@ import express from 'express';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'path';
-import { linkCommand } from 'bot/CommandLink.js';
-import { meCommand } from 'bot/CommandMe.js';
+import { linkCommand } from './bot/CommandLink.js';
+import { meCommand } from './bot/CommandMe.js';
 import { config } from "dotenv";
 config();
 
@@ -134,23 +134,27 @@ const uploadGlobalStat = async () => {
     }
 }
 
-const rest = new REST({ version: '10' }).setToken(TOKEN as string);
-(async () => {
-    try {
-        await rest.put(Routes.applicationCommands(CLIENT_ID as string), { body: linkCommand.data.toJSON() });
-        await rest.put(Routes.applicationCommands(CLIENT_ID as string), { body: meCommand.data.toJSON() });
-    } catch (error) {
-        console.error('Erreur lors du déploiement de la commande:', error);
-    }
-})();
+
 
 client.once('ready', async () => {
+    const rest = new REST({ version: '10' }).setToken(TOKEN as string);
+    await (async () => {
+        try {
+            await rest.put(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON()]});
+        } catch (error) {
+            console.error('Erreur lors du déploiement de la commande:', error);
+        }
+    })();
+
     let refreshTime = 30 * 1000;
     await updateEventsCache();
     await updateMessagesCache();
     setInterval(updateEventsCache, refreshTime);
     setInterval(updateMessagesCache, refreshTime);
     setInterval(uploadGlobalStat, refreshTime);
+
+    const commands = await rest.get(Routes.applicationCommands(CLIENT_ID as string));
+    console.log(commands);
 });
 
 app.get('/discord/schedule', async (req, res) => {
