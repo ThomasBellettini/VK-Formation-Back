@@ -41,10 +41,6 @@ class UserServices {
     try {
       let userDb = await User.findById(id);
       if (!userDb) throw new Error("No user found !");
-      if (req.body.holyProjects)
-        req.body.holyProjects = JSON.parse(req.body.holyProjects);
-      if (req.body.lessonsFinished)
-        req.body.lessonsFinished = JSON.parse(req.body.lessonsFinished);
       userDb = await User.findByIdAndUpdate(id, req.body);
 
       return {
@@ -63,6 +59,91 @@ class UserServices {
         errors: err,
         data: {
           message: "Error, no user found !",
+        },
+      };
+    }
+  }
+
+  async linkDiscord(req: Request) {
+    try {
+      let {code, discordID} = req.body;
+      if (!code || !discordID) {
+        throw new Error("Il manque des informations !");
+      }
+      let userDb = await User.findOne({discordLinkCode: discordID});
+      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à ce code !");
+      userDb.discordId = discordID;
+      userDb.discordLinkCode = "";
+      await userDb.save();
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: userDb
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: err,
+        },
+      };
+    }
+  }
+
+  async userByDiscord(discordID: string) {
+    try {
+      let userDb = await User.findOne({discordId: discordID});
+      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: userDb
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: err,
+        },
+      };
+    }
+  }
+
+  async make(discordID: string) {
+    try {
+      let userDb = await User.findOne({discordId: discordID});
+      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: userDb
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: err,
         },
       };
     }
