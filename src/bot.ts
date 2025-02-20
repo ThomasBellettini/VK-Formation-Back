@@ -1,12 +1,15 @@
-import { Client, GatewayIntentBits } from 'discord.js';
+import {Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 import express from 'express';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'path';
+import { linkCommand } from 'bot/CommandLink.js';
+import { meCommand } from 'bot/CommandMe.js';
 import { config } from "dotenv";
 config();
 
 const TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
 const DATA_FILE = path.join('./data.json');
 const PORT = 3010;
@@ -130,6 +133,16 @@ const uploadGlobalStat = async () => {
         console.error('Erreur lors de l\'envoi des données :', err);
     }
 }
+
+const rest = new REST({ version: '10' }).setToken(TOKEN as string);
+(async () => {
+    try {
+        await rest.put(Routes.applicationCommands(CLIENT_ID as string), { body: linkCommand.data.toJSON() });
+        await rest.put(Routes.applicationCommands(CLIENT_ID as string), { body: meCommand.data.toJSON() });
+    } catch (error) {
+        console.error('Erreur lors du déploiement de la commande:', error);
+    }
+})();
 
 client.once('ready', async () => {
     let refreshTime = 30 * 1000;

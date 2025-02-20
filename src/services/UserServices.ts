@@ -70,13 +70,14 @@ class UserServices {
 
   async linkDiscord(req: Request) {
     try {
-      let {code, discordID} = req.body;
-      if (!code || !discordID) {
+      let {code, discordId} = req.body;
+      if (!code || !discordId) {
         throw new Error("Il manque des informations !");
       }
-      let userDb = await User.findOne({discordLinkCode: discordID});
+      let userDb = await User.findOne({discordLinkCode: code});
       if (!userDb) throw new Error("Aucun utilisateur trouvé lié à ce code !");
-      userDb.discordId = discordID;
+
+      userDb.discordId = discordId;
       userDb.discordLinkCode = "";
       await userDb.save();
 
@@ -88,14 +89,14 @@ class UserServices {
           user: userDb
         },
       };
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
       return {
         success: false,
         statusCode: 500,
         errors: err,
         data: {
-          message: err,
+          message: err.message,
         },
       };
     }
@@ -114,14 +115,14 @@ class UserServices {
           user: userDb
         },
       };
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
       return {
         success: false,
         statusCode: 500,
         errors: err,
         data: {
-          message: err,
+          message: err.message,
         },
       };
     }
@@ -131,12 +132,12 @@ class UserServices {
     try {
       let userDb = await User.findOne({discordId: discordID});
       if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
-      if (userDb.coin < cost) throw new Error("Pas assez d'argent !");
+      if (userDb.coin < cost) throw new Error("Vous n'avez pas assez de valek coins !");
       userDb.coin -= cost;
 
       await Transaction.create({
         user: userDb._id,
-        order: order,
+        productName: order,
         cost: cost
       })
       await userDb.save();
@@ -149,14 +150,14 @@ class UserServices {
           user: userDb
         },
       };
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
       return {
         success: false,
         statusCode: 500,
         errors: err,
         data: {
-          message: err,
+          message: err.message,
         },
       };
     }
@@ -164,7 +165,7 @@ class UserServices {
 
   async generateDiscordLink(user: IUser) {
     try {
-      if (user.discordLinkCode !== null && user.discordLinkCode !== "") {
+      if (user.discordLinkCode !== undefined && user.discordLinkCode !== "") {
         throw new Error("Discord link already generated !");
       }
       if (!user.discordAccess) {
@@ -182,14 +183,14 @@ class UserServices {
           user: editedUser
         },
       };
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
       return {
         success: false,
         statusCode: 500,
-        errors: err,
+        errors: err.message,
         data: {
-          message: "Error, no user found !",
+          message: err.message
         },
       };
     }
@@ -206,7 +207,7 @@ class UserServices {
         statusCode: 201,
         errors: null,
         data: {
-          message: "Succes, user deleted !",
+          message: "Success, user deleted !",
         },
       };
     } catch (err) {

@@ -1,0 +1,37 @@
+import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
+import axios from 'axios';
+import { config } from "dotenv";
+config();
+
+export const linkCommand = {
+    data: new SlashCommandBuilder()
+        .setName('link')
+        .setDescription('Permet de lier son compte à celui de la formation !')
+        .addStringOption(option =>
+            option.setName('code')
+                .setDescription('Code de liaison, à récupérer sur la section profil du site de formation')
+                .setRequired(true)
+        ),
+    async execute(interaction: ChatInputCommandInteraction) {
+        const code = interaction.options.getString('code');
+        try {
+            const response = await axios.post(`${process.env.API_URL}/discord/link`, {
+                discordID: interaction.user.id,
+                code: code
+            }, {
+                headers: {
+                    'X-VK-TOKEN': process.env.API_KEY
+                }
+            });
+            if (response.status === 201) {
+                await interaction.reply({ content: `Félicitation, vous venez de lier votre compte discord à votre compte de formation ayant pour email ${response.data.data.user.email}`, ephemeral: true });
+            } else {
+                await interaction.reply({ content: `Erreur, ${response.data.message}`, ephemeral: true });
+            }
+        } catch (error) {
+            console.error(error);
+            // @ts-ignore
+            await interaction.reply({ content: `Erreur lors de la requête : ${error.message}`, ephemeral: true });
+        }
+    }
+};
