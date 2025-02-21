@@ -42,7 +42,7 @@ export const shopCommand = {
             let row = new ActionRowBuilder<ButtonBuilder>();
 
             items.forEach((item: Item, index: number) => {
-                embed.addFields({ name: item.name, value: `💰 Prix: ${item.cost} Valeks Coins`, inline: true });
+                embed.addFields({ name: item.name, value: `💰 ${item.cost} VC`, inline: true });
 
                 const button = new ButtonBuilder()
                     .setCustomId(`${item._id}`)
