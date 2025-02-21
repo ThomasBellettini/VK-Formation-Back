@@ -98,7 +98,7 @@ client.on('interactionCreate', async (interaction) => {
             await shopCommand.execute(interaction as ChatInputCommandInteraction);
         }
     } else if (interaction.isButton()) {
-        await buttonHandler.execute(interaction);
+        await buttonHandler.execute(interaction, client);
 
     }
 

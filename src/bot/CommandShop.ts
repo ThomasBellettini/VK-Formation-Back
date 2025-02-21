@@ -4,10 +4,13 @@ import {
     EmbedBuilder,
     ActionRowBuilder,
     ButtonStyle,
+    PermissionFlagsBits,
+    Client,
     ButtonBuilder, ButtonInteraction
 } from 'discord.js';
 import axios from 'axios';
 import { config } from "dotenv";
+import * as process from "node:process";
 config();
 
 interface Item {
@@ -70,7 +73,7 @@ export const shopCommand = {
 };
 
 export const buttonHandler = {
-    async execute(interaction: ButtonInteraction) {
+    async execute(interaction: ButtonInteraction, client: Client) {
         if (!interaction.isButton()) return;
 
         const itemId = interaction.customId;
@@ -84,6 +87,41 @@ export const buttonHandler = {
                 }
             }).then(async response => {
                if (response.data?.success) {
+                   let userFormation = response.data?.data.user;
+                   const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID as string);
+                   let item = response.data?.data.item as Item;
+                   let user = interaction.user;
+                   let supportRole = ["1342583824546009269", "1153324733094428732"];
+                   let permissionOverwrites = [];
+
+                   if (!guild) {
+                       return interaction.reply({ content: "❌ Erreur de configuration, veuillez contacter un administrateur !", ephemeral: true });
+                   }
+
+                   supportRole.forEach(role => {
+                       permissionOverwrites.push({
+                           id: role,
+                           allow: [PermissionFlagsBits.Administrator]
+                       });
+                   })
+                   permissionOverwrites.push({
+                          id: guild.roles.everyone.id,
+                          deny: [PermissionFlagsBits.ViewChannel]
+                   });
+                   permissionOverwrites.push({
+                       id: user.id,
+                       allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                   });
+                   const channelName = `${user.username}-${item.name}`;
+
+                   const newChannel = await guild.channels.create({
+                       name: channelName,
+                       type: 0,
+                       parent: process.env.DISCORD_CATEGORY_ID,
+                       permissionOverwrites: permissionOverwrites
+                   });
+
+                   await newChannel.send(`🚀 **${user.username}** (${userFormation.email}) à acheté contre ${item.cost}VK, l'item ${item.name} !`);
                    return interaction.reply({ content: "✅ Achat effectué avec succès !", ephemeral: true });
                }
             }).catch(error => {
