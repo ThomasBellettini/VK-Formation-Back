@@ -4,6 +4,7 @@ export interface IDiscord extends Document {
     _id: mongoose.Types.ObjectId;
 
     shopItems: {
+        _id: mongoose.Types.ObjectId;
         name: string;
         cost: number;
     }[];

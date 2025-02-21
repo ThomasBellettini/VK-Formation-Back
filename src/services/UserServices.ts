@@ -1,6 +1,7 @@
 import User, { IUser } from "../model/User.js";
 import {Request} from "express";
 import Transaction from "../model/Transaction.js";
+import {getOrCreateDiscordData} from "../model/Discord";
 
 class UserServices {
   constructor() {
@@ -128,17 +129,22 @@ class UserServices {
     }
   }
 
-  async makeTransaction(discordID: string, cost: number, order: string) {
+  async makeTransaction(discordID: string, orderID: string) {
     try {
       let userDb = await User.findOne({discordId: discordID});
       if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
-      if (userDb.coin < cost) throw new Error("Vous n'avez pas assez de valek coins !");
-      userDb.coin -= cost;
+      let discordData = await getOrCreateDiscordData();
+      const item = discordData.shopItems.find(item => item._id.toString() === orderID);
+      if (!item) {
+        throw new Error("Aucun item trouvé avec cet id !");
+      }
+      if (userDb.coin < item.cost) throw new Error("Vous n'avez pas assez de valek coins !");
+      userDb.coin -= item.cost;
 
       await Transaction.create({
         user: userDb._id,
-        productName: order,
-        cost: cost
+        productName: item.name,
+        cost: item.cost
       })
       await userDb.save();
 

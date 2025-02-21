@@ -71,6 +71,8 @@ class DiscordServices {
 
   async getStats(req: Request) {
     try {
+      // @ts-ignore
+      let user = req.user as IUser;
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setHours(0, 0, 0, 0);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -90,23 +92,30 @@ class DiscordServices {
         };
       })
       let response;
-      //@ts-ignore
-      if (req.user as IUser) {
+      if (user) {
         let response = await axios.get(`${CST.DISCORD.MODULE}/discord/messages`);
-        response = response.data;
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {
+            dailyDiscordStats: formattedStats,
+            lastAnnouncements: response
+          },
+        };
       } else {
-        response = [];
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {
+            dailyDiscordStats: formattedStats,
+            lastAnnouncements: []
+          },
+        };
       }
 
-      return {
-        success: true,
-        statusCode: 201,
-        errors: null,
-        data: {
-          dailyDiscordStats: formattedStats,
-          lastAnnouncements: response
-        },
-      };
+
     } catch (err) {
       console.log(err);
       return {

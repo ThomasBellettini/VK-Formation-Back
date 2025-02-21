@@ -63,7 +63,7 @@ class UserController {
   }
 
   public async makeTransaction(req: Request, res: any) {
-    const r = await this.service.makeTransaction(req.body.id, req.body.cost, req.body.order);
+    const r = await this.service.makeTransaction(req.body.discordId, req.body.itemId);
     return res.status(r.statusCode).send(r);
   }
 

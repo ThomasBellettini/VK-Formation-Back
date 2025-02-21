@@ -5,6 +5,7 @@ import axios from 'axios';
 import path from 'path';
 import { linkCommand } from './bot/CommandLink.js';
 import { meCommand } from './bot/CommandMe.js';
+import {buttonHandler, shopCommand} from './bot/CommandShop.js';
 import { config } from "dotenv";
 config();
 
@@ -96,6 +97,13 @@ client.on('interactionCreate', async (interaction) => {
         await meCommand.execute(interaction as ChatInputCommandInteraction);
     } else if (command === 'link') {
         await linkCommand.execute(interaction as ChatInputCommandInteraction);
+    } else if (command === 'shop') {
+        await shopCommand.execute(interaction as ChatInputCommandInteraction);
+    }
+
+
+    if (interaction.isButton()) {
+        await buttonHandler.execute(interaction);
     }
 });
 
@@ -154,7 +162,7 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN as string);
     await (async () => {
         try {
-            await rest.put(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON()]});
+            await rest.put(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON(), shopCommand.data.toJSON() ]});
         } catch (error) {
             console.error('Erreur lors du déploiement de la commande:', error);
         }
