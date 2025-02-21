@@ -153,6 +153,7 @@ class UserServices {
         statusCode: 201,
         errors: null,
         data: {
+          item: item,
           user: userDb
         },
       };
