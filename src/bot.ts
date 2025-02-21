@@ -45,7 +45,7 @@ setInterval(async () => {
     if (now.getHours() == 23) {
         try {
             console.log(Object.fromEntries(dataTracking));
-            await axios.post(`${API_URL}?full=true`, Object.fromEntries(dataTracking), {
+            await axios.post(`${API_URL}/discord/upload?full=true`, Object.fromEntries(dataTracking), {
                 headers: {
                     'X-VK-TOKEN': process.env.API_KEY
                 }
@@ -137,7 +137,7 @@ const updateMessagesCache = async () => {
 const uploadGlobalStat = async () => {
     try {
         console.log(Object.fromEntries(globalDataTracking));
-        await axios.post(`${API_URL}`, Object.fromEntries(globalDataTracking), {
+        await axios.post(`${API_URL}/discord/upload`, Object.fromEntries(globalDataTracking), {
             headers: {
                 'X-VK-TOKEN': process.env.API_KEY
             }
