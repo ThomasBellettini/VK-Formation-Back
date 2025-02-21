@@ -14,7 +14,7 @@ class AuthServices {
 
   async me(user: IUser) {
     try {
-      let userDb = await User.findOne({ email: user.email });
+      let userDb = await User.findOne({ email: user.email }).populate("lessonsFinished").populate("holyProjects.project");
       if (!userDb) throw "No user found !";
       let userData = userDb.toObject();
 

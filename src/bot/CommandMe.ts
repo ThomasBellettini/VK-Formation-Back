@@ -25,13 +25,13 @@ export const meCommand = {
                     .setTitle("📜 Informations de ton profil")
                     .setThumbnail(userAvatar)
                     .addFields(
-                        { name: `📧 Email: ${email || "Non renseigné"}`, value: '** **', inline: false },
-                        { name: `🪙 Coins: ${coin}`, value: `** **`, inline: false },
-                        { name: `⭐ XP: ${xp}`, value: `** **`, inline: false },
-                        { name: `📌 Projets: ${holyProjects.length}`, value: `** **`, inline: false },
-                        { name: `📚 Leçons terminées: ${lessonsFinished.length}`, value: `** **`, inline: true }
+                        { name: `📧 Email:`, value: `${email || "Non renseigné"}`, inline: false },
+                        { name: `🪙 Valek Coins`, value: `${coin} VK`, inline: false },
+                        { name: `⭐ Experience`, value: `${xp} XP`, inline: false },
+                        { name: `📌 Projets terminés`, value: `${holyProjects.length} projet(s) terminé(s)`, inline: false },
+                        { name: `📚 Leçons terminées`, value: `${lessonsFinished.length} leçon(s) terminée(s)`, inline: false }
                     )
-                    .setFooter({ text: "Généré via la commande /me" });
+                    .setFooter({ text: "Valek-Studio.fr" });
                 await interaction.reply({ embeds: [embed], ephemeral: true });
             }).catch(error => {
                 return interaction.reply({ content: "❌ Erreur, " + error.response.data.data.message, ephemeral: true });

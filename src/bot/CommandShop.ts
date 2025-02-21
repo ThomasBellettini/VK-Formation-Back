@@ -121,7 +121,7 @@ export const buttonHandler = {
                        permissionOverwrites: permissionOverwrites
                    });
 
-                   await newChannel.send(`🚀 **${user.username}** (${userFormation.email}) à acheté contre ${item.cost}VK, l'item ${item.name} !`);
+                   await newChannel.send(`🚀 **${user.tag}** (${userFormation.email}) à acheté \`${item.name}\` contre ${item.cost}VK !`);
                    return interaction.reply({ content: "✅ Achat effectué avec succès !", ephemeral: true });
                }
             }).catch(error => {
