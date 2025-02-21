@@ -75,7 +75,7 @@ class UserServices {
         throw new Error("Il manque des informations !");
       }
       let userDb = await User.findOne({discordLinkCode: code});
-      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à ce code !");
+      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à ce code, vous pouvez trouver votre code sur votre page profil !");
 
       userDb.discordId = discordId;
       userDb.discordLinkCode = "";
@@ -105,7 +105,7 @@ class UserServices {
   async userByDiscord(discordID: string) {
     try {
       let userDb = await User.findOne({discordId: discordID});
-      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
+      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id, pour lier votre compte utilisez /me !");
 
       return {
         success: true,
