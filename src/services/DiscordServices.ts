@@ -98,7 +98,7 @@ class DiscordServices {
         errors: null,
         data: {
           dailyDiscordStats: formattedStats,
-          lastAnnouncements: response
+          lastAnnouncements: response?.data?.data
         },
       };
 
