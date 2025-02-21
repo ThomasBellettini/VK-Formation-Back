@@ -407,7 +407,7 @@ class HolyServices {
       if (userProject?.resultPercent && userProject?.resultPercent > 1) {
         throw new Error("Project already done !");
       }
-      let evaluationDB = await Evaluation.findOne({user: user._id});
+      let evaluationDB = await Evaluation.findOne({user: user._id, project: holyProject._id});
         if (evaluationDB) {
           return {
             success: true,
