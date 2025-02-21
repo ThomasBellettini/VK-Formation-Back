@@ -338,8 +338,18 @@ class HolyServices {
       }
       // @ts-ignore
       let user = req.user as IUser;
-
       let evaluationDB = await Evaluation.findOne({user: user._id, project: holyProject._id});
+      if (evaluationDB && !evaluationDB.project) {
+        await Evaluation.findByIdAndDelete(evaluationDB._id);
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {
+            exist: false
+          },
+        }
+      }
       if (evaluationDB) {
         return {
           success: true,
