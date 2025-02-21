@@ -45,7 +45,6 @@ setInterval(async () => {
     const now = new Date();
     if (now.getHours() == 23) {
         try {
-            console.log(Object.fromEntries(dataTracking));
             await axios.post(`${API_URL}/discord/upload?full=true`, Object.fromEntries(dataTracking), {
                 headers: {
                     'X-VK-TOKEN': process.env.API_KEY
@@ -85,7 +84,6 @@ client.on('messageCreate', (message) => {
 });
 
 client.on('guildMemberAdd', () => {
-    console.log("New member !");
     globalDataTracking.set("join", (globalDataTracking.get("join") || 0) + 1);
 });
 
@@ -144,7 +142,6 @@ const updateMessagesCache = async () => {
 
 const uploadGlobalStat = async () => {
     try {
-        console.log(Object.fromEntries(globalDataTracking));
         await axios.post(`${API_URL}/discord/upload`, Object.fromEntries(globalDataTracking), {
             headers: {
                 'X-VK-TOKEN': process.env.API_KEY
