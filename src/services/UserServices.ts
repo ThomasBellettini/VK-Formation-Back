@@ -75,7 +75,7 @@ class UserServices {
         throw new Error("Il manque des informations !");
       }
       let userDb = await User.findOne({discordLinkCode: code});
-      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à ce code, vous pouvez trouver votre code sur votre page profil !");
+      if (!userDb) throw new Error("Aucun utilisateur trouvé avec ce code. Vous pouvez trouvez votre code de laision directement sur votre page profil !");
 
       userDb.discordId = discordId;
       userDb.discordLinkCode = "";
