@@ -332,7 +332,7 @@ class HolyServices {
       if (!url) {
         throw new Error("Url is mandatory !");
       }
-      const holyProject = await HolyProject.find({url: url}).lean() as IHolyGraph;
+      const holyProject = await HolyProject.findOne({url: url}) as IHolyGraph;
       if (!holyProject) {
         throw new Error("No Holy Project found with this url !");
       }
@@ -343,7 +343,7 @@ class HolyServices {
         await Evaluation.findByIdAndDelete(evaluationDB._id);
         return {
           success: true,
-          statusCode: 201,
+          statusCode: 200,
           errors: null,
           data: {
             exist: false
