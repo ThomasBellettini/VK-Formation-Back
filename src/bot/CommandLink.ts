@@ -15,19 +15,19 @@ export const linkCommand = {
     async execute(interaction: ChatInputCommandInteraction) {
         const code = interaction.options.getString('code');
         try {
-            const response = await axios.post(`${process.env.API_URL}/discord/link`, {
+            axios.post(`${process.env.API_URL}/discord/link`, {
                 discordID: interaction.user.id,
                 code: code
             }, {
                 headers: {
                     'X-VK-TOKEN': process.env.API_KEY
                 }
+            }).then(async response => {
+                if (response.status === 201)
+                    await interaction.reply({ content: `Félicitation, vous venez de lier votre compte discord à votre compte de formation ayant pour email ${response.data.data.user.email}`, ephemeral: true });
+                }).catch(error => {
+                return interaction.reply({ content: "❌ Erreur, " + error.response.data.data.message, ephemeral: true });
             });
-            if (response.status === 201) {
-                await interaction.reply({ content: `Félicitation, vous venez de lier votre compte discord à votre compte de formation ayant pour email ${response.data.data.user.email}`, ephemeral: true });
-            } else {
-                await interaction.reply({ content: `Erreur, ${response.data.message}`, ephemeral: true });
-            }
         } catch (error) {
             console.error(error);
             // @ts-ignore
