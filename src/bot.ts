@@ -1,4 +1,4 @@
-import {Client, GatewayIntentBits, REST, Routes } from 'discord.js';
+import {ChatInputCommandInteraction, Client, GatewayIntentBits, REST, Routes} from 'discord.js';
 import express from 'express';
 import fs from 'fs';
 import axios from 'axios';
@@ -86,6 +86,17 @@ client.on('messageCreate', (message) => {
 client.on('guildMemberAdd', () => {
     console.log("New member !");
     globalDataTracking.set("join", (globalDataTracking.get("join") || 0) + 1);
+});
+
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isCommand()) return;
+
+    const command = interaction.commandName;
+    if (command === 'me') {
+        await meCommand.execute(interaction as ChatInputCommandInteraction);
+    } else if (command === 'link') {
+        await linkCommand.execute(interaction as ChatInputCommandInteraction);
+    }
 });
 
 const updateEventsCache = async () => {
