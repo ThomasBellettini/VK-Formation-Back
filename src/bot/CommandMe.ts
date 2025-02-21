@@ -27,11 +27,11 @@ export const meCommand = {
                     .setTitle("📜 Informations de ton profil")
                     .setThumbnail(userAvatar)
                     .addFields(
-                        { name: "📧 Email", value: email || "Non renseigné", inline: false },
-                        { name: "🪙 Coins", value: `${coin}`, inline: true },
-                        { name: "⭐ XP", value: `${xp}`, inline: true },
-                        { name: "📌 Projets", value: `${holyProjects.length}`, inline: true },
-                        { name: "📚 Leçons terminées", value: `${lessonsFinished.length}`, inline: true }
+                        { name: `📧 Email: ${email || "Non renseigné"}`, value: '** **', inline: false },
+                        { name: `🪙 Coins: ${coin}`, value: `** **`, inline: false },
+                        { name: `⭐ XP: ${xp}`, value: `** **`, inline: false },
+                        { name: `📌 Projets: ${holyProjects.length}`, value: `** **`, inline: false },
+                        { name: `📚 Leçons terminées: ${lessonsFinished.length}`, value: `** **`, inline: true }
                     )
                     .setFooter({ text: "Généré via la commande /me" });
 
@@ -39,9 +39,6 @@ export const meCommand = {
             }).catch(error => {
                 return interaction.reply({ content: "❌ Erreur, " + error.response.data.data.message, ephemeral: true });
             })
-
-
-
         } catch (error: any) {
             await interaction.reply({ content: "❌ Erreur, De configuration", ephemeral: true });
         }
