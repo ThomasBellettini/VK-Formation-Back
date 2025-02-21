@@ -91,16 +91,28 @@ class DiscordServices {
           totalNewMembers: stat.totalNewMembers
         };
       })
-      let response = await axios.get(`${CST.DISCORD.MODULE}/discord/messages`);
-      return {
-        success: true,
-        statusCode: 201,
-        errors: null,
-        data: {
-          dailyDiscordStats: formattedStats,
-          lastAnnouncements: response?.data?.data
-        },
-      };
+      if (user) {
+        let response = await axios.get(`${CST.DISCORD.MODULE}/discord/messages`);
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {
+            dailyDiscordStats: formattedStats,
+            lastAnnouncements: response?.data.data
+          },
+        };
+      } else {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {
+            dailyDiscordStats: formattedStats,
+            lastAnnouncements: []
+          },
+        };
+      }
 
 
     } catch (err) {
