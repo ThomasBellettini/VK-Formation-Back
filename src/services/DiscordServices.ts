@@ -99,7 +99,7 @@ class DiscordServices {
           errors: null,
           data: {
             dailyDiscordStats: formattedStats,
-            lastAnnouncements: response?.data.data
+            lastAnnouncements: response?.data
           },
         };
       } else {
