@@ -1,11 +1,9 @@
 import User, { IUser } from "../model/User.js";
-import { generateToken } from "../utils/JWTUtils.js";
-import mongoose from "mongoose";
 import DiscordStats from "../model/DiscordStats.js";
 import { Request } from "express";
 import CST from "../server/constants.js";
 import axios from "axios";
-import {getOrCreateDiscordData} from "../model/Discord";
+import {getOrCreateDiscordData} from "../model/Discord.js";
 
 class DiscordServices {
   constructor() {
