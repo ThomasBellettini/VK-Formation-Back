@@ -390,7 +390,7 @@ class HolyServices {
       if (!url) {
         throw new Error("Url is mandatory !");
       }
-      const holyProject = await HolyProject.find({url: url}).lean() as IHolyGraph;
+      const holyProject = await HolyProject.findOne({url: url}) as IHolyGraph;
       if (!holyProject) {
         throw new Error("No Holy Project found with this url !");
       }
@@ -433,7 +433,7 @@ class HolyServices {
         errors: null,
         data: {
           message: "Evaluation created with success",
-          evaluation: evaluation._id
+          evaluationID: evaluation._id
         },
       };
     } catch (err) {
