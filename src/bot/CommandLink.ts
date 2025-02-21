@@ -16,7 +16,7 @@ export const linkCommand = {
         const code = interaction.options.getString('code');
         try {
             axios.post(`${process.env.API_URL}/discord/link`, {
-                discordID: interaction.user.id,
+                discordId: interaction.user.id,
                 code: code
             }, {
                 headers: {
