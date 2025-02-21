@@ -88,21 +88,22 @@ client.on('guildMemberAdd', () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isCommand()) return;
-
-    const command = interaction.commandName;
-    if (command === 'me') {
-        await meCommand.execute(interaction as ChatInputCommandInteraction);
-    } else if (command === 'link') {
-        await linkCommand.execute(interaction as ChatInputCommandInteraction);
-    } else if (command === 'shop') {
-        await shopCommand.execute(interaction as ChatInputCommandInteraction);
-    }
-
-
-    if (interaction.isButton()) {
+    if (interaction.isCommand()) {
+        const command = interaction.commandName;
+        if (command === 'me') {
+            await meCommand.execute(interaction as ChatInputCommandInteraction);
+        } else if (command === 'link') {
+            await linkCommand.execute(interaction as ChatInputCommandInteraction);
+        } else if (command === 'shop') {
+            await shopCommand.execute(interaction as ChatInputCommandInteraction);
+        }
+    } else if (interaction.isButton()) {
         await buttonHandler.execute(interaction);
+
     }
+
+
+
 });
 
 const updateEventsCache = async () => {

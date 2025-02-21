@@ -61,7 +61,7 @@ export const shopCommand = {
                 actionRows.push(row);
             }
 
-            await interaction.reply({ embeds: [embed], components: actionRows });
+            await interaction.reply({ embeds: [embed], components: actionRows, ephemeral: true });
 
         } catch (error) {
             await interaction.reply({ content: "❌ Erreur de configuration", ephemeral: true });
