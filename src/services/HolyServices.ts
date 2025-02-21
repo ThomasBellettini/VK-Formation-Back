@@ -333,8 +333,6 @@ class HolyServices {
         throw new Error("Url is mandatory !");
       }
       const holyProject = await HolyProject.findOne({url: url}) as IHolyGraph;
-      const holyProjectDebug = await HolyProject.findOne({url: url}).lean() as IHolyGraph;
-      console.log(JSON.stringify(holyProjectDebug));
       if (!holyProject) {
         throw new Error("No Holy Project found with this url !");
       }
