@@ -13,6 +13,8 @@ class DiscordController {
     this.uploadDailyStat = this.uploadDailyStat.bind(this);
     this.getStats = this.getStats.bind(this);
     this.getSchedule = this.getSchedule.bind(this);
+    this.getShopItems = this.getShopItems.bind(this);
+    this.updateShopItems = this.updateShopItems.bind(this);
   }
 
   public async uploadDailyStat(req: Request, res: any) {
@@ -21,12 +23,22 @@ class DiscordController {
   }
 
   public async getStats(req: Request, res: any) {
-    const r = await this.service.getStats();
+    const r = await this.service.getStats(req);
     return res.status(r.statusCode).send(r);
   }
 
   public async getSchedule(req: Request, res: any) {
     const r = await this.service.getSchedule();
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async updateShopItems(req: Request, res: any) {
+    const r = await this.service.updateShopItems(req);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async getShopItems(req: Request, res: any) {
+    const r = await this.service.getShopItems();
     return res.status(r.statusCode).send(r);
   }
 }

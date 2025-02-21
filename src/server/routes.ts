@@ -160,8 +160,11 @@ router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonControll
 router.get("/resources/show", authJwt, ResourceController.view)
 
 router.post("/discord/upload", authAPI, DiscordController.uploadDailyStat)
-router.get("/discord/stats", authJwt, DiscordController.getStats)
-router.get("/discord/schedule", authJwt, DiscordController.getSchedule)
+router.get("/discord/stats", authJwtNotMandatory, DiscordController.getStats)
+router.get("/discord/schedule", DiscordController.getSchedule)
+
+router.get("/discord/items/list", DiscordController.getShopItems)
+router.patch("/discord/items/update", authJwt, checkRole("admin"), DiscordController.updateShopItems)
 
 router.post("/discord/link", authAPI, UserController.linkDiscord)
 router.get("/discord/user/:id", authAPI, UserController.userByDiscord)

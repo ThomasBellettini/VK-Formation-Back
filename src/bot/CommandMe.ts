@@ -19,9 +19,7 @@ export const meCommand = {
                 if (!userData) {
                     return await interaction.reply({ content: "Impossible de récupérer les données utilisateur.", ephemeral: true });
                 }
-
                 const { email, xp, coin, holyProjects, lessonsFinished } = userData;
-
                 const embed = new EmbedBuilder()
                     .setColor("#6f3eda")
                     .setTitle("📜 Informations de ton profil")
@@ -34,7 +32,6 @@ export const meCommand = {
                         { name: `📚 Leçons terminées: ${lessonsFinished.length}`, value: `** **`, inline: true }
                     )
                     .setFooter({ text: "Généré via la commande /me" });
-
                 await interaction.reply({ embeds: [embed], ephemeral: true });
             }).catch(error => {
                 return interaction.reply({ content: "❌ Erreur, " + error.response.data.data.message, ephemeral: true });

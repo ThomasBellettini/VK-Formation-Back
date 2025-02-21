@@ -5,12 +5,15 @@ import DiscordStats from "../model/DiscordStats.js";
 import { Request } from "express";
 import CST from "../server/constants.js";
 import axios from "axios";
+import {getOrCreateDiscordData} from "../model/Discord";
 
 class DiscordServices {
   constructor() {
     this.uploadDailyStat = this.uploadDailyStat.bind(this);
     this.getStats = this.getStats.bind(this);
     this.getSchedule = this.getSchedule.bind(this);
+    this.updateShopItems = this.updateShopItems.bind(this);
+    this.getShopItems = this.getShopItems.bind(this);
   }
 
   async uploadDailyStat(req: Request) {
@@ -68,7 +71,7 @@ class DiscordServices {
     }
   }
 
-  async getStats() {
+  async getStats(req: Request) {
     try {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -87,8 +90,15 @@ class DiscordServices {
           totalVocal: stat.totalVocal,
           totalNewMembers: stat.totalNewMembers
         };
-      });
-      let response = await axios.get(`${CST.DISCORD.MODULE}/discord/messages`);
+      })
+      let response;
+      //@ts-ignore
+      if (req.user as IUser) {
+        let response = await axios.get(`${CST.DISCORD.MODULE}/discord/messages`);
+        response = response.data;
+      } else {
+        response = [];
+      }
 
       return {
         success: true,
@@ -96,7 +106,7 @@ class DiscordServices {
         errors: null,
         data: {
           dailyDiscordStats: formattedStats,
-          lastAnnouncements: response.data
+          lastAnnouncements: response
         },
       };
     } catch (err) {
@@ -122,6 +132,59 @@ class DiscordServices {
         errors: null,
         data: {
           events: response.data
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message: err
+        },
+      };
+    }
+  }
+
+  async getShopItems() {
+    try {
+      let discordData = await getOrCreateDiscordData();
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          items: discordData.shopItems
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message: err
+        },
+      };
+    }
+  }
+
+  async updateShopItems(req: Request) {
+    try {
+      let discordData = await getOrCreateDiscordData();
+      discordData.shopItems = req.body.items;
+      await discordData.save();
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          items: req.body.items ? req.body.items : []
         },
       };
     } catch (err) {
