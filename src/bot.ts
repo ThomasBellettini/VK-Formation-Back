@@ -24,7 +24,8 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers
     ]
 });
 
@@ -83,6 +84,7 @@ client.on('messageCreate', (message) => {
 });
 
 client.on('guildMemberAdd', () => {
+    console.log("New member !");
     globalDataTracking.set("join", (globalDataTracking.get("join") || 0) + 1);
 });
 
@@ -123,6 +125,7 @@ const updateMessagesCache = async () => {
 
 const uploadGlobalStat = async () => {
     try {
+        console.log(Object.fromEntries(globalDataTracking));
         await axios.post(`${API_URL}`, Object.fromEntries(globalDataTracking), {
             headers: {
                 'X-VK-TOKEN': process.env.API_KEY
