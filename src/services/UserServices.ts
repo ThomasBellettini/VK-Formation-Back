@@ -1,7 +1,7 @@
 import User, { IUser } from "../model/User.js";
 import {Request} from "express";
 import Transaction from "../model/Transaction.js";
-import {getOrCreateDiscordData} from "../model/Discord";
+import {getOrCreateDiscordData} from "../model/Discord.js";
 
 class UserServices {
   constructor() {
