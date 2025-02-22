@@ -48,9 +48,7 @@ class AuthController {
   public async register(req: Request, res: Response) {
     const r = await this.service.register(
         req.body.email,
-        req.body.password,
-        req.body.firstname,
-        req.body.lastname,
+        req.body.password
     );
     return res.status(r.statusCode).send(r);
   }

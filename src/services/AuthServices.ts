@@ -74,9 +74,9 @@ class AuthServices {
     }
   }
 
-  async register(email: string, password: string, firstname: string, lastname: string) {
+  async register(email: string, password: string) {
     try {
-      if (!email || !password || !firstname || !lastname) {
+      if (!email || !password) {
         throw "Missing data ! Fields Required: email, password, firstname, lastname";
       }
       const user = await User.findOne({ email: email });
@@ -85,8 +85,6 @@ class AuthServices {
       let newUser = await User.create({
         email: email,
         password: password,
-        firstname: firstname,
-        lastname: lastname,
         isConfirmed: true,
         confirmationCode:
           Math.random().toString(36) + Math.random().toString(36),
