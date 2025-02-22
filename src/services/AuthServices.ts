@@ -77,7 +77,7 @@ class AuthServices {
   async register(email: string, password: string) {
     try {
       if (!email || !password) {
-        throw "Missing data ! Fields Required: email, password, firstname, lastname";
+        throw "Missing data ! Fields Required: email, password";
       }
       const user = await User.findOne({ email: email });
       if (user) throw "User already exist !";
