@@ -23,7 +23,7 @@ services:
       - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+      MONGO_INITDB_ROOT_PASSWORD: LmNbGv4y*7%7
     volumes:
       - ./data:/data/db
     restart: unless-stopped
@@ -34,13 +34,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: app
-    ports:
-      - "3010:3010"
     depends_on:
       - mongo
     labels:
       - traefik.enable=true
-      - traefik.http.routers.vk-back.rule=Host(`vk-back.shurisko.fr`)
+      - traefik.http.routers.vk-back.rule=Host(`test-back.valekstudio.com`)
       - traefik.http.routers.vk-back.tls=true
       - traefik.http.routers.vk-back.tls.certresolver=lets-encrypt
       - traefik.http.services.vk-back.loadbalancer.server.port=5002
