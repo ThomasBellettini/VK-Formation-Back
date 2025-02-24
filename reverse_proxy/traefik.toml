@@ -10,6 +10,12 @@
       scheme = "https"
   [entryPoints.websecure]
     address = ":443"
+    [entryPoints.websecure.transport]
+      [entryPoints.websecure.transport.respondingTimeouts]
+        idleTimeout = 0s
+        readTimeout = 0s
+        writeTimeout = 0s
+
   [entryPoints.calls]
     address = ":8443/udp"
 
