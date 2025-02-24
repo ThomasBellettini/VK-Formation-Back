@@ -258,7 +258,7 @@ class UserServices {
 
   async add(req: Request) {
     try {
-      if (!req.body.email || !req.body.password || !req.body.firstname || !req.body.lastname) {
+      if (!req.body.email || !req.body.password) {
         throw new Error("Missing fields");
       }
       let user = await User.create(req.body);
