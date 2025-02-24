@@ -44,6 +44,9 @@ services:
       - traefik.http.routers.vk-back.tls=true
       - traefik.http.routers.vk-back.tls.certresolver=lets-encrypt
       - traefik.http.services.vk-back.loadbalancer.server.port=5002
+      - traefik.http.services.vk-back.loadbalancer.server.forwardingTimeouts.readTimeout=6000s
+      - traefik.http.services.vk-back.loadbalancer.server.forwardingTimeouts.writeTimeout=6000s
+      - traefik.http.services.vk-back.loadbalancer.server.forwardingTimeouts.idleTimeout=6000s
     restart: unless-stopped
     networks:
       - traefik

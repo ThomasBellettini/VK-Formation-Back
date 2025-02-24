@@ -13,6 +13,7 @@ interface IHolyGraph {
 
     level: number;
     url: string;
+    evaluationText: string;
     content: string | null;
 
     xp: number;
@@ -86,6 +87,7 @@ class HolyServices {
             _id: iterator._id,
             name: iterator.name,
             description: iterator.description,
+            evaluationText: iterator.evaluationText,
             level: iterator.level,
             url: iterator.url,
             content: iterator.content,
@@ -110,6 +112,7 @@ class HolyServices {
             level: iterator.level,
             url: iterator.url,
             content: null,
+            evaluationText: "",
             xp: iterator.xp,
             cdnVideoContent: null,
             cdnAudioContent: null,
@@ -169,6 +172,7 @@ class HolyServices {
         xp: holyProjectDatabase.xp,
         url: holyProjectDatabase.url,
         content: holyProjectDatabase.content,
+        evaluationText: holyProjectDatabase.evaluationText,
         cdnVideoContent: holyProjectDatabase.cdnVideoContent,
         cdnAudioContent: holyProjectDatabase.cdnAudioContent,
         hasPermission: true,
