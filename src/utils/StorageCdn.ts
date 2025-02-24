@@ -6,6 +6,7 @@ import Resource from "../model/Resource.js";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import ffmpeg, {FfprobeData} from "fluent-ffmpeg";
+import * as https from "node:https";
 
 dotenv.config();
 
@@ -43,35 +44,47 @@ class StorageCdn {
      */
     async uploadFile(path: string, destinationPath: string, originalName: string, isVideo: boolean): Promise<IStreamResponse> {
         try {
-            let findResource = await Resource.findOne({ originalName: originalName }).lean();
+            let findResource = await Resource.findOne({ originalName }).lean();
             if (findResource) {
                 console.log(`Fichier déjà présent sur BunnyCDN : ${destinationPath}`);
-                return {bunnyFilePath: findResource.pathFile, duration: findResource.duration ? findResource.duration : 0};
+                return { bunnyFilePath: findResource.pathFile, duration: findResource.duration || 0 };
             }
-            let duration: number = await new Promise<number>((resolve, reject) => {
+
+            let duration: number = await new Promise<number>((resolve) => {
                 if (!path || !isVideo) {
                     resolve(0);
                 } else {
-                    ffmpeg.ffprobe(path, (err: any, metadata: FfprobeData) => {
+                    ffmpeg.ffprobe(path, (err, metadata) => {
                         if (err) {
                             console.error(err);
                             resolve(0);
                         } else {
-                            // @ts-ignore
-                            resolve(metadata.format.duration);
+                            resolve(metadata.format.duration || 0);
                         }
                     });
                 }
             });
-            const url = `https://storage.bunnycdn.com/${this.storageZoneName}/${destinationPath}`;
-            const fileBuffer = fs.readFileSync(path);
+            const fileStream = fs.createReadStream(path);
 
-            await axios.put(url, fileBuffer, {
+            const options = {
+                method: 'PUT',
+                host: 'storage.bunnycdn.com',
+                path: `/${this.storageZoneName}/${destinationPath}`,
                 headers: {
                     AccessKey: this.accessKey,
                     'Content-Type': 'application/octet-stream',
                 },
+            };
+
+            await new Promise((resolve, reject) => {
+                const req = https.request(options, (res) => {
+                    res.on('data', (chunk) => {});
+                    res.on('end', resolve);
+                });
+                req.on('error', reject);
+                fileStream.pipe(req);
             });
+
             await Resource.create({
                 pathFile: destinationPath,
                 video: isVideo,
@@ -79,12 +92,13 @@ class StorageCdn {
                 originalName,
             });
 
-            return {bunnyFilePath: destinationPath, duration: duration};
-        } catch (error: Error | any) {
+            return { bunnyFilePath: destinationPath, duration };
+        } catch (error: any) {
             console.error(`Erreur upload BunnyCDN:`, error.response?.data || error.message);
             throw new Error("Upload vers BunnyCDN échoué");
         }
     }
+
 
     /**
      * Genere un lien sécurisé pour accéder à un fichier sur BunnyCDN
