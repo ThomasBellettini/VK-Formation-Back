@@ -15,7 +15,7 @@ const router = Router();
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, '/tmp'),
+    destination: (req, file, cb) => cb(null, '/tmp/'),
     filename: (req, file, cb) => cb(null, Date.now() + '.mp4')
   }),
   limits: { fileSize: Infinity }
