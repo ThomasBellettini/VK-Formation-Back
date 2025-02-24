@@ -36,6 +36,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: app
+    ports:
+      - "5002:5002"
     depends_on:
       - mongo
     labels:
