@@ -137,18 +137,18 @@ class StorageCdn {
             };
 
             if (!rangeHeader || rangeHeader === "bytes=0-") {
-                rangeHeader = "bytes=0-9999999";
+                rangeHeader = "bytes=0-999999";
             }
 
             const [startStr, endStr] = rangeHeader.replace(/bytes=/, "").split("-");
             const start = parseInt(startStr, 10);
-            let end = endStr ? parseInt(endStr, 10) : start + 9999999; // 🔥 Limite à 1 Mo max
+            let end = endStr ? parseInt(endStr, 10) : start + 999999;
 
             if (isNaN(start) || start < 0 || start >= fileSize) {
                 throw new Error("Invalid start range");
             }
 
-            end = Math.min(start + 9999999, fileSize - 1);
+            end = Math.min(start + 999999, fileSize - 1);
             const chunkSize = (end - start) + 1;
 
             const response = await axios.get(secureUrl, {
