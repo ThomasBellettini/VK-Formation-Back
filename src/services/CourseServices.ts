@@ -39,7 +39,7 @@ class CourseServices {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let courseBundle = await CourseBundle.find({}).populate("lessons").lean();
+      let courseBundle = await CourseBundle.find({}).populate("lessons").sort({order: 1}).lean();
        let courses: ICourse[] = courseBundle.map((iterator) => {
          let imageLink = StorageCdn.generateSecureLink(iterator.image);
          let duration = 0;
@@ -114,7 +114,10 @@ class CourseServices {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let courseBundle = await CourseBundle.findOne({url: url}).populate("lessons").lean();
+      let courseBundle = await CourseBundle.findOne({url: url}).populate({
+        path: "lessons",
+        options: { sort: { order: 1 } }
+      }).lean();
       if (!courseBundle) throw new Error("No Course found with this id !");
       let imageLink = StorageCdn.generateSecureLink(courseBundle.image);
 
