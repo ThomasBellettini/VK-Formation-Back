@@ -12,13 +12,9 @@
   [entryPoints.websecure]
     address = ":443"
     [entryPoints.websecure.transport.respondingTimeouts]
-      idleTimeout = "600s"
-      readTimeout = "600s"
-      writeTimeout = "600s"
-
-
-  [entryPoints.calls]
-    address = ":8443/udp"
+      idleTimeout = "6000s"
+      readTimeout = "6000s"
+      writeTimeout = "6000s"
 
 [api]
   dashboard = true
