@@ -162,6 +162,7 @@ const updateMessagesCache = async () => {
 
         const messages = await channel.messages.fetch({ limit: 10 });
         const filteredMessages = messages.filter(msg => !msg.author.bot).first(3);
+        cachedMessages = [];
         for (const msg of filteredMessages) {
             let content = await formatDiscordMessage(msg.content, guild);
             cachedMessages.push({
