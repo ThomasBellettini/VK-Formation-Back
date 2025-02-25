@@ -15,6 +15,7 @@ interface IHolyGraph {
     url: string;
     evaluationText: string;
     content: string | null;
+    linkedProjectId: string;
 
     xp: number;
 
@@ -90,6 +91,7 @@ class HolyServices {
             evaluationText: iterator.evaluationText,
             level: iterator.level,
             url: iterator.url,
+            linkedProjectId: iterator.linkedProjectId,
             content: iterator.content,
             cdnVideoContent: iterator.cdnVideoContent,
             cdnAudioContent: iterator.cdnAudioContent,
@@ -117,6 +119,7 @@ class HolyServices {
             cdnVideoContent: null,
             cdnAudioContent: null,
             hasPermission: false,
+            linkedProjectId: iterator.linkedProjectId,
             projectDone: false,
             percent: null,
             links: [],
@@ -167,6 +170,7 @@ class HolyServices {
       let holyProject: IHolyGraph = {
         _id: holyProjectDatabase._id,
         name: holyProjectDatabase.name,
+        linkedProjectId: holyProjectDatabase.linkedProjectId,
         description: holyProjectDatabase.description,
         level: holyProjectDatabase.level,
         xp: holyProjectDatabase.xp,
