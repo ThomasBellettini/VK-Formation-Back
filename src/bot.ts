@@ -19,23 +19,34 @@ const API_URL = process.env.API_URL;
 let cachedEvents: { title: string; description: string; dates: (string | undefined)[]; }[] = [];
 let cachedMessages: { author: string; authorImage: string; date: string; content: string; }[] = [];
 
-function formatDiscordMessage(content: string, guild: any): string {
-    content = content.replace(/<@!?(\d+)>/g, (match, userId) => {
-        const user = guild.members.cache.get(userId);
-        return user ? `@${user.user.username}` : match;
-    });
+async function formatDiscordMessage(content: string, guild: any): Promise<string> {
+    const userMentions = content.match(/<@!?(\d+)>/g) || [];
+    for (const mention of userMentions) {
+        const userId = mention.replace(/[<@!>]/g, '');
+        try {
+            const user = guild.members.cache.get(userId) || await guild.members.fetch(userId);
+            if (user) content = content.replace(mention, `@${user.user.username}`);
+        } catch {
+        }
+    }
 
-    content = content.replace(/<@&(\d+)>/g, (match, roleId) => {
+    const roleMentions = content.match(/<@&(\d+)>/g) || [];
+    for (const mention of roleMentions) {
+        const roleId = mention.replace(/[<@&>]/g, '');
         const role = guild.roles.cache.get(roleId);
-        return role ? `@${role.name}` : match;
-    });
+        if (role) content = content.replace(mention, `@${role.name}`);
+    }
 
-    content = content.replace(/<#(\d+)>/g, (match, channelId) => {
+    const channelMentions = content.match(/<#(\d+)>/g) || [];
+    for (const mention of channelMentions) {
+        const channelId = mention.replace(/[<#>]/g, '');
         const channel = guild.channels.cache.get(channelId);
-        return channel ? `#${channel.name}` : match;
-    });
+        if (channel) content = content.replace(mention, `#${channel.name}`);
+    }
 
     content = content.replace(/<a?:\w+:\d+>/g, '');
+
+    content = content.replace(/(\*{1,3}|_{1,3}|~{2,})/g, '');
 
     return content.trim();
 }
@@ -151,12 +162,15 @@ const updateMessagesCache = async () => {
 
         const messages = await channel.messages.fetch({ limit: 10 });
         const filteredMessages = messages.filter(msg => !msg.author.bot).first(3);
-        cachedMessages = filteredMessages.map(msg => ({
-            author: msg.author.username,
-            authorImage: msg.author.displayAvatarURL(),
-            date: msg.createdAt.toISOString(),
-            content: formatDiscordMessage(msg.content, guild)
-        }));
+        for (const msg of filteredMessages) {
+            let content = await formatDiscordMessage(msg.content, guild);
+            cachedMessages.push({
+                author: msg.author.username,
+                authorImage: msg.author.displayAvatarURL(),
+                date: msg.createdAt.toISOString(),
+                content: content
+            })
+        }
     } catch (err) {
         console.error('Erreur lors de la récupération des messages :', err);
     }
