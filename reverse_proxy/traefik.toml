@@ -12,9 +12,10 @@
   [entryPoints.websecure]
     address = ":443"
     [entryPoints.websecure.transport.respondingTimeouts]
-      idleTimeout = "0s"
-      readTimeout = "0s"
-      writeTimeout = "0s"
+      idleTimeout = "600s"
+      readTimeout = "600s"
+      writeTimeout = "600s"
+
 
   [entryPoints.calls]
     address = ":8443/udp"
