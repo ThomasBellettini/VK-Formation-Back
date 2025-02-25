@@ -21,29 +21,12 @@ class LessonController {
   }
 
   public async add(req: Request, res: Response) {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    const keepAlive = setInterval(() => {
-      res.write("data: still processing...\n\n");
-    }, 5000);
-
     const r = await this.service.add(req);
-    clearInterval(keepAlive);
-    res.status(r.statusCode).send(r);
+    return res.status(r.statusCode).send(r);
   }
 
   public async update(req: Request, res: Response) {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    const keepAlive = setInterval(() => {
-      res.write("data: still processing...\n\n");
-    }, 5000);
     const r = await this.service.update(req, req.params.id);
-    clearInterval(keepAlive);
     return res.status(r.statusCode).send(r);
   }
 

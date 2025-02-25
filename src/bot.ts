@@ -19,6 +19,27 @@ const API_URL = process.env.API_URL;
 let cachedEvents: { title: string; description: string; dates: (string | undefined)[]; }[] = [];
 let cachedMessages: { author: string; authorImage: string; date: string; content: string; }[] = [];
 
+function formatDiscordMessage(content: string, guild: any): string {
+    content = content.replace(/<@!?(\d+)>/g, (match, userId) => {
+        const user = guild.members.cache.get(userId);
+        return user ? `@${user.user.username}` : match;
+    });
+
+    content = content.replace(/<@&(\d+)>/g, (match, roleId) => {
+        const role = guild.roles.cache.get(roleId);
+        return role ? `@${role.name}` : match;
+    });
+
+    content = content.replace(/<#(\d+)>/g, (match, channelId) => {
+        const channel = guild.channels.cache.get(channelId);
+        return channel ? `#${channel.name}` : match;
+    });
+
+    content = content.replace(/<a?:\w+:\d+>/g, '');
+
+    return content.trim();
+}
+
 const app = express();
 const client = new Client({
     intents: [
@@ -134,7 +155,7 @@ const updateMessagesCache = async () => {
             author: msg.author.username,
             authorImage: msg.author.displayAvatarURL(),
             date: msg.createdAt.toISOString(),
-            content: msg.content
+            content: formatDiscordMessage(msg.content, guild)
         }));
     } catch (err) {
         console.error('Erreur lors de la récupération des messages :', err);
