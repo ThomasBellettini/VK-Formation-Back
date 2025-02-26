@@ -208,12 +208,6 @@ client.once('ready', async () => {
     setInterval(updateEventsCache, refreshTime);
     setInterval(updateMessagesCache, refreshTime);
     setInterval(uploadGlobalStat, refreshTime);
-
-    const commands = await rest.get(Routes.applicationCommands(CLIENT_ID as string));
-    // @ts-ignore
-    for (const command of commands) {
-        await rest.delete(`${Routes.applicationCommands(CLIENT_ID as string)}/${command.id}`);
-    }
 });
 
 app.get('/discord/schedule', async (req, res) => {
