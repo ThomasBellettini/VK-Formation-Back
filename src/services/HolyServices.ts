@@ -11,7 +11,7 @@ interface IHolyGraph {
     name: string;
     description: string;
 
-    level: number;
+    level: number | null;
     url: string;
     evaluationText: string;
     content: string | null;
@@ -83,19 +83,28 @@ class HolyServices {
             percent = userProject?.resultPercent;
             projectDone = percent > 1;
           }
+          let hasPermission = false;
+          if (iterator.linkedProjectId) {
+            let hasMakeProject = user.holyProjects.find(hp =>
+                hp.project.toString() === iterator.linkedProjectId.toString()
+            );
+            if (hasMakeProject) {
+              hasPermission = true;
+            }
+          }
 
           return {
             _id: iterator._id,
             name: iterator.name,
             description: iterator.description,
             evaluationText: iterator.evaluationText,
-            level: iterator.level,
+            level: (iterator.linkedProjectId ? null : iterator.level),
             url: iterator.url,
             linkedProjectId: iterator.linkedProjectId,
             content: iterator.content,
             cdnVideoContent: iterator.cdnVideoContent,
             cdnAudioContent: iterator.cdnAudioContent,
-            hasPermission: iterator.level <= maxLevelCompleted + 1,
+            hasPermission: (iterator.linkedProjectId ? hasPermission : iterator.level <= maxLevelCompleted + 1),
             projectDone: projectDone,
             percent: percent,
             xp: iterator.xp,
@@ -111,7 +120,7 @@ class HolyServices {
             _id: iterator._id,
             name: iterator.name,
             description: iterator.description,
-            level: iterator.level,
+            level: (iterator.linkedProjectId ? null : iterator.level),
             url: iterator.url,
             content: null,
             evaluationText: "",
