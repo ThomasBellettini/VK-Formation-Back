@@ -124,6 +124,7 @@ const checkRole = (role: string) => async (req: any, res: Response, next: NextFu
 
 router.post("/login", AuthController.login);
 router.post("/register", authAPI, AuthController.register)
+router.post("/register/webhook/fcuaimvsdqicchpknzzzqotc", AuthController.registerWebhook)
 router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
 router.get("/discord", authJwt, UserController.generateDiscordLink)

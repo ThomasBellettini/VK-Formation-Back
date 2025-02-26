@@ -15,6 +15,7 @@ class AuthController {
     this.accountConfirmation = this.accountConfirmation.bind(this);
     this.forgotPassword = this.forgotPassword.bind(this);
     this.resetPassword = this.resetPassword.bind(this);
+    this.registerWebhook = this.registerWebhook.bind(this);
   }
 
   public async me(req: Request, res: any) {
@@ -49,6 +50,13 @@ class AuthController {
     const r = await this.service.register(
         req.body.email,
         req.body.password
+    );
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async registerWebhook(req: Request, res: Response) {
+    const r = await this.service.registerWebhook(
+        req.body.data.customer.email
     );
     return res.status(r.statusCode).send(r);
   }

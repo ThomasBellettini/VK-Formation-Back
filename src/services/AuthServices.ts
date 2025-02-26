@@ -7,6 +7,7 @@ class AuthServices {
     this.me = this.me.bind(this);
     this.login = this.login.bind(this);
     this.register = this.register.bind(this);
+    this.registerWebhook = this.registerWebhook.bind(this);
     this.accountConfirmation = this.accountConfirmation.bind(this);
     this.resetPassword = this.resetPassword.bind(this);
     this.forgotPassword = this.forgotPassword.bind(this);
@@ -88,6 +89,44 @@ class AuthServices {
         isConfirmed: true,
         confirmationCode:
           Math.random().toString(36) + Math.random().toString(36),
+      });
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: newUser,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error in user creation !",
+        },
+      };
+    }
+  }
+
+  async registerWebhook(email: string) {
+    try {
+      if (!email ) {
+        throw "Missing data ! Fields Required: email, password";
+      }
+      const user = await User.findOne({ email: email });
+      if (user) throw "User already exist !";
+      let password = Math.random().toString(36) + Math.random().toString(36);
+
+      let newUser = await User.create({
+        email: email,
+        password: password,
+        isConfirmed: true,
+        confirmationCode:
+            Math.random().toString(36) + Math.random().toString(36),
       });
 
       return {
