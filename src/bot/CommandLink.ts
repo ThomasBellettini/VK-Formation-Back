@@ -16,6 +16,7 @@ export const linkCommand = {
         const code = interaction.options.getString('code');
         try {
             const member = await interaction.guild?.members.fetch(interaction.user.id);
+            if (!member) return interaction.reply({ content: "❌ Erreur, impossible de récupérer le membre, contactez un administrateur", ephemeral: true });
             const roleId = "1286734787377102888";
             axios.post(`${process.env.API_URL}/discord/link`, {
                 discordId: interaction.user.id,
