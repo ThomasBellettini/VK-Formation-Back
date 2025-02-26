@@ -196,7 +196,7 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN as string);
     await (async () => {
         try {
-            await rest.put(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON(), shopCommand.data.toJSON() ]});
+            await rest.put(Routes.applicationCommands(CLIENT_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON(), shopCommand.data.toJSON() ]});
         } catch (error) {
             console.error('Erreur lors du déploiement de la commande:', error);
         }
