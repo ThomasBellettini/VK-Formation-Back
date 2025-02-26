@@ -1,6 +1,7 @@
 import User, { IUser } from "../model/User.js";
 import { generateToken } from "../utils/JWTUtils.js";
 import mongoose from "mongoose";
+import {Request} from "express";
 
 class AuthServices {
   constructor() {
@@ -112,10 +113,14 @@ class AuthServices {
     }
   }
 
-  async registerWebhook(email: string) {
+  async registerWebhook(req: Request) {
     try {
+      if (!req.body.data || !req.body.data.customer) {
+        throw "Missing data ! Fields Required: email";
+      }
+      let email = req.body.data.customer.email;
       if (!email ) {
-        throw "Missing data ! Fields Required: email, password";
+        throw "Missing data ! Fields Required: email";
       }
       const user = await User.findOne({ email: email });
       if (user) throw "User already exist !";

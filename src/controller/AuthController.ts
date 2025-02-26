@@ -56,7 +56,7 @@ class AuthController {
 
   public async registerWebhook(req: Request, res: Response) {
     const r = await this.service.registerWebhook(
-        req.body.data.customer.email
+        req.body
     );
     return res.status(r.statusCode).send(r);
   }
