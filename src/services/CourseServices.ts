@@ -14,7 +14,7 @@ interface ICourse {
     description: string | null;
     percent: number;
     duration: number | null;
-    lessons: (ILesson)[] | null;
+    lessons: string[] | null;
 
     folders: (IFolder | mongoose.Types.ObjectId)[];
     order: number;
@@ -66,7 +66,7 @@ class CourseServices {
 
           for (let lesson of folder.lessons as ILesson[]) {
             if (!lesson) continue;
-            lessons.push(lesson);
+            lessons.push(lesson._id.toString());
             if (lesson.duration && lesson.duration > 0) {
               duration += lesson.duration;
             }
@@ -79,13 +79,13 @@ class CourseServices {
           let finishedLessonIds = new Set(user.lessonsFinished.map(id => id.toString()));
 
           lessons.forEach((lesson) => {
-            if (finishedLessonIds.has(lesson._id.toString())) {
+            if (finishedLessonIds.has(lesson)) {
               completedLessons++;
             }
           })
 
           percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-        } else lessons = [];
+        }
 
         return {
           _id: course._id,
