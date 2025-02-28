@@ -55,6 +55,7 @@ class CourseServices {
         let totalLessons = 0;
         let completedLessons = 0;
         let lessons = [];
+        console.log(course.folders);
         for (let folder of course.folders as IFolder[]) {
           if (!folder || !folder.lessons) continue;
 
