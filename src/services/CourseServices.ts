@@ -56,6 +56,7 @@ class CourseServices {
           .lean();
       let courses: ICourse[] = courseBundle.map((course) => {
         if (!course.folders) course.folders = [];
+        let folderID = [];
         let imageLink = StorageCdn.generateSecureLink(course.image);
         let duration = 0;
         let totalLessons = 0;
@@ -63,6 +64,7 @@ class CourseServices {
         let lessons = [];
         for (let folder of course.folders as IFolder[]) {
           if (!folder || !folder.lessons) continue;
+          folderID.push(folder._id);
 
           for (let lesson of folder.lessons as ILesson[]) {
             if (!lesson) continue;
@@ -98,7 +100,7 @@ class CourseServices {
           lessons: lessons,
           order: course.order,
           links: course.links,
-          folders: [],
+          folders: folderID,
           createdAt: course.createdAt,
           updatedAt: course.updatedAt
         };
