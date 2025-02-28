@@ -41,15 +41,20 @@ class CourseServices {
       let user = req.user as IUser;
 
       let courseBundle = await CourseBundle.find({})
-          .populate("folders")
           .populate({
             path: "folders",
-            populate: { path: "lessons" }
+            model: "Folder",
+            options: { sort: { order: 1 } }, // Trie les folders par order
+            populate: {
+              path: "lessons",
+              model: "Lesson",
+              options: { sort: { order: 1 } }, // Trie les lessons par order
+            }
           })
           .sort({ order: 1 })
           .lean();
-
       let courses: ICourse[] = courseBundle.map((course) => {
+        if (!course.folders) course.folders = [];
         let imageLink = StorageCdn.generateSecureLink(course.image);
         let duration = 0;
         let totalLessons = 0;
@@ -121,14 +126,20 @@ class CourseServices {
       // @ts-ignore
       let user = req.user as IUser;
       let courseBundle = await CourseBundle.findOne({ url: url })
-          .populate("folders", { sort: { order: 1 } })
           .populate({
-            path: "folders.lessons",
-            options: { sort: { order: 1 } }
+            path: "folders",
+            model: "Folder",
+            options: { sort: { order: 1 } }, // Trie les folders par order
+            populate: {
+              path: "lessons",
+              model: "Lesson",
+              options: { sort: { order: 1 } }, // Trie les lessons par order
+            }
           })
           .lean();
 
       if (!courseBundle) throw new Error("No Course found with this ID!");
+      if (!courseBundle.folders) courseBundle.folders = [];
 
       let imageLink = StorageCdn.generateSecureLink(courseBundle.image);
 
