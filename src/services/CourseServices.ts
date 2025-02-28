@@ -98,7 +98,7 @@ class CourseServices {
           lessons: lessons,
           order: course.order,
           links: course.links,
-          folders: course.folders,
+          folders: [],
           createdAt: course.createdAt,
           updatedAt: course.updatedAt
         };
