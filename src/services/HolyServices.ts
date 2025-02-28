@@ -164,16 +164,46 @@ class HolyServices {
     try {
       //@ts-ignore
       const user = req.user as IUser;
-      const holyProjectDatabase = await HolyProject.findOne({url: url}).lean();
+      const holyProjectDatabase = await HolyProject.findOne({ url: url }).lean();
       if (!holyProjectDatabase) throw new Error("No Project found with this id !");
+
       const userProject = user.holyProjects.find(hp =>
-        hp.project.toString() === holyProjectDatabase._id.toString()
+          hp.project.toString() === holyProjectDatabase._id.toString()
       );
+
       let projectDone = false;
       let percent = 0;
       if (userProject) {
         percent = userProject?.resultPercent;
         projectDone = percent > 1;
+      }
+
+      const holyProjectList = await HolyProject.find({}).lean();
+      const projectsByLevel = new Map<number, number>();
+      const completedProjectsByLevel = new Map<number, number>();
+
+      holyProjectList.forEach(project => {
+        projectsByLevel.set(project.level, (projectsByLevel.get(project.level) || 0) + 1);
+        const userProject = user.holyProjects.find(hp => hp.project.toString() === project._id.toString());
+        if (userProject && userProject.resultPercent >= 80) {
+          completedProjectsByLevel.set(project.level, (completedProjectsByLevel.get(project.level) || 0) + 1);
+        }
+      });
+
+      let maxLevelCompleted = 0;
+      for (const [level, total] of projectsByLevel.entries()) {
+        if ((completedProjectsByLevel.get(level) || 0) >= total) {
+          maxLevelCompleted = Math.max(maxLevelCompleted, level);
+        }
+      }
+
+      let hasPermission = false;
+      if (holyProjectDatabase.linkedProjectId) {
+        hasPermission = user.holyProjects.some(hp =>
+            hp.project.toString() === holyProjectDatabase.linkedProjectId.toString()
+        );
+      } else {
+        hasPermission = holyProjectDatabase.level <= maxLevelCompleted + 1;
       }
 
       let holyProject: IHolyGraph = {
@@ -188,14 +218,13 @@ class HolyServices {
         evaluationText: holyProjectDatabase.evaluationText,
         cdnVideoContent: holyProjectDatabase.cdnVideoContent,
         cdnAudioContent: holyProjectDatabase.cdnAudioContent,
-        hasPermission: true,
+        hasPermission: hasPermission,
         projectDone: projectDone,
         percent: percent,
         links: holyProjectDatabase.links,
         createdAt: holyProjectDatabase.createdAt,
         updatedAt: holyProjectDatabase.updatedAt
-      }
-
+      };
 
       return {
         success: true,
@@ -213,7 +242,7 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }

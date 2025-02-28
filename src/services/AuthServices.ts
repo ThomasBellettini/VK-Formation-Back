@@ -130,6 +130,7 @@ class AuthServices {
         email: email,
         password: password,
         isConfirmed: true,
+        resetCode: Math.random().toString(36) + Math.random().toString(36),
         confirmationCode:
             Math.random().toString(36) + Math.random().toString(36),
       });

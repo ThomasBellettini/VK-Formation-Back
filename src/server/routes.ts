@@ -125,6 +125,8 @@ const checkRole = (role: string) => async (req: any, res: Response, next: NextFu
 
 router.post("/login", AuthController.login);
 router.post("/register", authAPI, AuthController.register)
+router.post("/forgot", AuthController.forgotPassword)
+router.patch("/forgot", AuthController.resetPassword)
 
 router.post("/register/webhook/fcuaimvsdqicchpknzzzqotc", AuthController.registerWebhook)
 
