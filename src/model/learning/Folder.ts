@@ -3,10 +3,7 @@ import {ILesson} from "./Lesson.js";
 
 export interface IFolder extends Document {
     _id: mongoose.Types.ObjectId;
-
-    url: string;
-    image: string;
-    name: string;
+    title: string;
     lessons: (ILesson | mongoose.Types.ObjectId)[];
     order: number;
 
@@ -17,16 +14,7 @@ export interface IFolder extends Document {
 
 
 const folderSchema: Schema<IFolder> = new mongoose.Schema({
-    url: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    image: {
-        type: String,
-        required: true
-    },
-    name: {
+    title: {
         type: String,
         required: true
     },

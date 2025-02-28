@@ -13,10 +13,9 @@ interface ICourse {
     title: string;
     description: string | null;
     percent: number;
-
     duration: number | null;
 
-    folder: (IFolder | mongoose.Types.ObjectId)[];
+    folders: (IFolder | mongoose.Types.ObjectId)[];
     order: number;
     links: {
       name: string;
@@ -40,62 +39,68 @@ class CourseServices {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let courseBundle = await CourseBundle.find({}).populate("lessons").sort({order: 1}).lean();
-       let courses: ICourse[] = courseBundle.map((iterator) => {
-         let imageLink = StorageCdn.generateSecureLink(iterator.image);
-         let duration = 0;
-         for (let lesson of iterator.lessons) {
-           // @ts-ignore
-           if (lesson.duration && lesson.duration > 0) duration += lesson.duration;
-         }
-         if (!user) {
-          return {
-            _id: iterator._id,
-            url: iterator.url,
-            duration,
-            image: imageLink,
-            title: iterator.title,
-            description: iterator.description,
-            percent: 0,
-            lessons: [],
-            links: [],
-            order: iterator.order,
-            createdAt: iterator.createdAt,
-            updatedAt: iterator.updatedAt
+
+      let courseBundle = await CourseBundle.find({})
+          .populate({
+            path: "folders",
+            populate: { path: "lessons" }
+          })
+          .sort({ order: 1 })
+          .lean();
+
+      let courses: ICourse[] = courseBundle.map((course) => {
+        let imageLink = StorageCdn.generateSecureLink(course.image);
+        let duration = 0;
+        let totalLessons = 0;
+        let completedLessons = 0;
+        let lessons = [];
+        for (let folder of course.folders as IFolder[]) {
+          if (!folder || !folder.lessons) continue;
+
+          for (let lesson of folder.lessons as ILesson[]) {
+            if (!lesson) continue;
+            lessons.push(lesson);
+            if (lesson.duration && lesson.duration > 0) {
+              duration += lesson.duration;
+            }
+            totalLessons++;
           }
-        } else {
-          let finishedLessonIds = new Set(user.lessonsFinished.map(id => id.toString()));
-          let totalLessons = iterator.lessons.length;
-          let completedLessons = iterator.lessons.filter(lesson => finishedLessonIds.has(lesson._id.toString())).length;
-          let percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-
-
-          return {
-            _id: iterator._id,
-            url: iterator.url,
-            image: imageLink,
-            title: iterator.title,
-            description: iterator.description,
-            percent,
-            order: iterator.order,
-            duration,
-            links: iterator.links,
-            lessons: iterator.lessons,
-            createdAt: iterator.createdAt,
-            updatedAt: iterator.updatedAt
-          };
         }
 
+        let percent = 0;
+        if (user) {
+          let finishedLessonIds = new Set(user.lessonsFinished.map(id => id.toString()));
 
-      })
+          lessons.forEach((lesson) => {
+            if (finishedLessonIds.has(lesson._id.toString())) {
+              completedLessons++;
+            }
+          })
+
+          percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+        }
+
+        return {
+          _id: course._id,
+          url: course.url,
+          image: imageLink,
+          title: course.title,
+          description: course.description,
+          percent,
+          duration,
+          order: course.order,
+          links: course.links,
+          folders: course.folders, // Garde les folders si besoin
+          createdAt: course.createdAt,
+          updatedAt: course.updatedAt
+        };
+      });
 
       return {
         success: true,
         statusCode: 201,
         errors: null,
-        data: {
-          courses
-        },
+        data: { courses },
       };
     } catch (err) {
       console.log(err);
@@ -104,9 +109,7 @@ class CourseServices {
         statusCode: 500,
         errors: err,
         token: null,
-        data: {
-          message:err,
-        },
+        data: { message: err },
       };
     }
   }
@@ -115,41 +118,67 @@ class CourseServices {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let courseBundle = await CourseBundle.findOne({url: url}).populate({
-        path: "lessons",
-        options: { sort: { order: 1 } }
-      }).lean();
-      if (!courseBundle) throw new Error("No Course found with this id !");
+      let courseBundle = await CourseBundle.findOne({ url: url })
+          .populate({
+            path: "folders",
+            populate: {
+              path: "lessons",
+              options: { sort: { order: 1 } }
+            },
+            options: { sort: { order: 1 } }
+          })
+          .lean();
+
+      if (!courseBundle) throw new Error("No Course found with this ID!");
+
       let imageLink = StorageCdn.generateSecureLink(courseBundle.image);
 
       let finishedLessonIds = new Set(user.lessonsFinished.map(id => id.toString()));
-      let totalLessons = courseBundle.lessons.length;
-      let completedLessons = courseBundle.lessons.filter(lesson => finishedLessonIds.has(lesson._id.toString())).length;
+      let totalLessons = 0;
+      let completedLessons = 0;
+      let duration = 0;
+
+      let folders = courseBundle.folders.map((folder: any) => {
+        let folderLessons = folder.lessons.map((lesson: any) => {
+          let finished = finishedLessonIds.has(lesson._id.toString());
+          if (lesson.duration && lesson.duration > 0) duration += lesson.duration;
+          totalLessons++;
+          if (finished) completedLessons++;
+
+          return {
+            _id: lesson._id,
+            url: lesson.url,
+            title: lesson.title,
+            description: lesson.description,
+            content: lesson.content,
+            order: lesson.order,
+            cdnVideoContent: lesson.cdnVideoContent,
+            cdnAudioContent: lesson.cdnAudioContent,
+            finished
+          };
+        });
+
+        return {
+          _id: folder._id,
+          title: folder.title,
+          order: folder.order,
+          lessons: folderLessons
+        };
+      });
+
       let percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
-      let lessons = courseBundle.lessons.map((lesson: any) => {
-        let finished = finishedLessonIds.has(lesson._id.toString());
-        return {
-          _id: lesson._id,
-          url: lesson.url,
-          title: lesson.title,
-          description: lesson.description,
-          content: lesson.content,
-          order: lesson.order,
-          cdnVideoContent: lesson.cdnVideoContent,
-          cdnAudioContent: lesson.cdnAudioContent,
-          finished
-        }
-      });
       let course: ICourse = {
         _id: courseBundle._id,
         url: courseBundle.url,
         image: imageLink,
+        order: courseBundle.order,
+        links: courseBundle.links,
         title: courseBundle.title,
         description: courseBundle.description,
         percent,
-        // @ts-ignore
-        lessons: lessons,
+        duration,
+        folders: folders as IFolder[],
         createdAt: courseBundle.createdAt,
         updatedAt: courseBundle.updatedAt
       };
@@ -158,9 +187,7 @@ class CourseServices {
         success: true,
         statusCode: 201,
         errors: null,
-        data: {
-          course
-        },
+        data: { course },
       };
     } catch (err) {
       console.log(err);
@@ -169,9 +196,7 @@ class CourseServices {
         statusCode: 500,
         errors: err,
         token: null,
-        data: {
-          message:err,
-        },
+        data: { message: err },
       };
     }
   }

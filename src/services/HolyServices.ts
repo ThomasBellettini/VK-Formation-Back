@@ -420,8 +420,8 @@ class HolyServices {
         throw new Error("Not enough coin to generate evaluation !");
       }
 
-      let userProject = user.holyProjects.find(hp => hp.project.toString() === holyProject._id.toString());
-      if (userProject?.resultPercent && userProject?.resultPercent > 1) {
+      let userProject = user.holyProjects.find(hp => hp.project.toString() === holyProject._id.toString() && hp.resultPercent > 80);
+      if (userProject?.resultPercent) {
         throw new Error("Project already done !");
       }
       let evaluationDB = await Evaluation.findOne({user: user._id, project: holyProject._id});
@@ -529,14 +529,14 @@ class HolyServices {
         throw new Error("You can't evaluate yourself !");
       }
       let project = evaluation.project as IHolyProject;
-      await Evaluation.findByIdAndUpdate(id, {percent: req.body.percent});
+      await Evaluation.findByIdAndDelete(id);
       user.holyProjects.push({
         project: project._id,
         resultPercent: req.body.percent
       })
       user.xp += project.xp;
       await user.save();
-      await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + 10});
+      await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + 1});
 
       return {
         success: true,

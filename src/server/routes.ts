@@ -10,6 +10,7 @@ import multer from 'multer';
 import ResourceController from "../controller/ResourceController.js";
 import UserController from "../controller/UserController.js";
 import DiscordController from "../controller/DiscordController.js";
+import FolderController from "../controller/FolderController.js";
 
 const router = Router();
 
@@ -124,7 +125,9 @@ const checkRole = (role: string) => async (req: any, res: Response, next: NextFu
 
 router.post("/login", AuthController.login);
 router.post("/register", authAPI, AuthController.register)
+
 router.post("/register/webhook/fcuaimvsdqicchpknzzzqotc", AuthController.registerWebhook)
+
 router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
 router.get("/discord", authJwt, UserController.generateDiscordLink)
@@ -146,6 +149,11 @@ router.patch("/evaluation/update/:id", authJwt, HolyController.evaluateUpdateUse
 
 router.get("/evaluation/link/info/:url", authJwt, HolyController.hasEvaluationLink)
 router.post("/evaluation/link/add", authJwt, HolyController.generateEvaluation)
+
+router.get("/sub-modules/list", authJwt,  checkRole("admin"), FolderController.list)
+router.post("/sub-modules/add", authJwt, checkRole("admin"), upload.single('image'), FolderController.add)
+router.patch("/sub-modules/update/:id", authJwt, checkRole("admin"), upload.single('image'), FolderController.update)
+router.delete("/sub-modules/delete/:id", authJwt, checkRole("admin"), FolderController.delete)
 
 router.get("/courses/list", authJwtNotMandatory, CourseController.list)
 router.post("/courses/add", authJwt, checkRole("admin"), upload.single('image'), CourseController.add)
