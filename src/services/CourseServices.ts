@@ -270,6 +270,8 @@ class CourseServices {
         req.body.lessons = JSON.parse(req.body.lessons);
       if (req.body.links)
         req.body.links = JSON.parse(req.body.links);
+      if (req.body.folders)
+        req.body.folders = JSON.parse(req.body.folders);
       courseBundle = await CourseBundle.findOneAndUpdate({_id: id}, req.body, {new: true});
 
       return {
