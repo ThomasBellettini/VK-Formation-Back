@@ -43,7 +43,8 @@ const courseBundle: Schema<ICourseBundle> = new mongoose.Schema({
     },
     folders: [{
         type: Schema.Types.ObjectId,
-        ref: 'Folder'
+        ref: 'Folder',
+        default: []
     }],
     links: [{
         name: {
