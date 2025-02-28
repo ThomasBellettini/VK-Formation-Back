@@ -115,8 +115,12 @@ class AuthServices {
 
   async registerWebhook(req: Request) {
     try {
+      let fullAccess = false;
       if (!req.body.data || !req.body.data.customer) {
         throw "Missing data ! Fields Required: email";
+      }
+      if (req.query.discord && req.query.discord === "true") {
+        fullAccess = true;
       }
       let email = req.body.data.customer.email;
       if (!email ) {
@@ -131,8 +135,7 @@ class AuthServices {
         password: password,
         isConfirmed: true,
         resetCode: Math.random().toString(36) + Math.random().toString(36),
-        confirmationCode:
-            Math.random().toString(36) + Math.random().toString(36),
+        discordAccess: fullAccess
       });
 
       return {
