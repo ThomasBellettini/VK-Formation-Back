@@ -1,5 +1,6 @@
 import mongoose, {Document, Schema} from 'mongoose';
 import {ILesson} from "./Lesson.js";
+import {IFolder} from "./Folder.js";
 
 export interface ICourseBundle extends Document {
     _id: mongoose.Types.ObjectId;
@@ -8,7 +9,7 @@ export interface ICourseBundle extends Document {
     image: string;
     title: string;
     description: string;
-    lessons: (ILesson | mongoose.Types.ObjectId)[];
+    folders: (IFolder | mongoose.Types.ObjectId)[];
     order: number;
 
     links: {
@@ -40,9 +41,9 @@ const courseBundle: Schema<ICourseBundle> = new mongoose.Schema({
         type: String,
         default: ""
     },
-    lessons: [{
+    folders: [{
         type: Schema.Types.ObjectId,
-        ref: 'Lesson'
+        ref: 'Folder'
     }],
     links: [{
         name: {

@@ -4,6 +4,7 @@ import CourseBundle from "../model/learning/CourseBundle.js";
 import {ILesson} from "../model/learning/Lesson.js";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
+import {IFolder} from "../model/learning/Folder.js";
 
 interface ICourse {
     _id: mongoose.Types.ObjectId;
@@ -15,7 +16,7 @@ interface ICourse {
 
     duration: number | null;
 
-    lessons: (ILesson | mongoose.Types.ObjectId)[];
+    folder: (IFolder | mongoose.Types.ObjectId)[];
     order: number;
     links: {
       name: string;
