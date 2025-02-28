@@ -41,6 +41,7 @@ class CourseServices {
       let user = req.user as IUser;
 
       let courseBundle = await CourseBundle.find({})
+          .populate("folders")
           .populate({
             path: "folders",
             populate: { path: "lessons" }
@@ -119,12 +120,9 @@ class CourseServices {
       // @ts-ignore
       let user = req.user as IUser;
       let courseBundle = await CourseBundle.findOne({ url: url })
+          .populate("folders", { sort: { order: 1 } })
           .populate({
-            path: "folders",
-            populate: {
-              path: "lessons",
-              options: { sort: { order: 1 } }
-            },
+            path: "folders.lessons",
             options: { sort: { order: 1 } }
           })
           .lean();
