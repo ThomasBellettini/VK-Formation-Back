@@ -99,7 +99,8 @@ class DiscordServices {
           errors: null,
           data: {
             dailyDiscordStats: formattedStats,
-            lastAnnouncements: response?.data
+            lastAnnouncements: response?.data,
+            link: (user.discordAccess ? "https://discord.gg/8W3yyPzKs6" : null)
           },
         };
       } else {
@@ -109,7 +110,8 @@ class DiscordServices {
           errors: null,
           data: {
             dailyDiscordStats: formattedStats,
-            lastAnnouncements: []
+            lastAnnouncements: [],
+            link: null
           },
         };
       }
