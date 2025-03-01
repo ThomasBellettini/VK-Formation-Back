@@ -200,15 +200,16 @@ client.once('ready', async () => {
     await (async () => {
         try {
             await rest.put(Routes.applicationCommands(CLIENT_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON(), shopCommand.data.toJSON(), viewCommand.data.toJSON() ]});
+            await rest.put(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string), {body: [ viewCommand.data.toJSON() ]});
         } catch (error) {
             console.error('Erreur lors du déploiement de la commande:', error);
         }
 
-        const commands = await rest.get(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string));
-        // @ts-ignore
-        for (const command of commands) {
-            await rest.delete(`${Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string)}/${command.id}`);
-        }
+        // const commands = await rest.get(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string));
+        // // @ts-ignore
+        // for (const command of commands) {
+        //     await rest.delete(`${Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string)}/${command.id}`);
+        // }
     })();
 
     let refreshTime = 30 * 1000;
