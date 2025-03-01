@@ -26,10 +26,14 @@ export const linkCommand = {
                     'X-VK-TOKEN': process.env.API_KEY
                 }
             }).then(async response => {
-                if (response.status === 201)
+                if (response.status === 201) {
                     await member.roles.add(roleId);
-                    await interaction.reply({ content: `Félicitation, vous venez de lier votre compte discord à votre compte de formation ayant pour email ${response.data.data.user.email}`, ephemeral: true });
-                }).catch(error => {
+                    await interaction.reply({
+                        content: `Félicitation, vous venez de lier votre compte discord à votre compte de formation ayant pour email ${response.data.data.user.email}`,
+                        ephemeral: true
+                    });
+                }
+            }).catch(error => {
                 return interaction.reply({ content: "❌ Erreur, " + error.response.data.data.message, ephemeral: true });
             });
         } catch (error) {
