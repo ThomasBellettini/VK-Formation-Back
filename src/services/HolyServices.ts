@@ -60,8 +60,9 @@ class HolyServices {
         const completedProjectsByLevel = new Map<number, number>();
 
         holyProjectDatabase.forEach(project => {
-          projectsByLevel.set(project.level, (projectsByLevel.get(project.level) || 0) + 1);
-          const userProject = user.holyProjects.find(hp =>  hp.project.toString() === project._id.toString() && hp.resultPercent > 80);
+          if (!project.linkedProjectId)
+            projectsByLevel.set(project.level, (projectsByLevel.get(project.level) || 0) + 1);
+          const userProject = user.holyProjects.find(hp =>  hp.project.toString() === project._id.toString() && hp.resultPercent >= 80);
           if (userProject) {
             completedProjectsByLevel.set(project.level, (completedProjectsByLevel.get(project.level) || 0) + 1);
           }
@@ -75,7 +76,7 @@ class HolyServices {
         }
         holyProject = holyProjectDatabase.map((iterator) => {
           const userProject = user.holyProjects.filter(hp =>
-            hp.project.toString() === iterator._id.toString()
+            hp.project.toString() === iterator._id.toString() && hp.resultPercent >= 80
           );
           let projectDone = false;
           let percent = 0;
@@ -90,7 +91,7 @@ class HolyServices {
           let hasPermission = false;
           if (iterator.linkedProjectId) {
             let hasMakeProject = user.holyProjects.find(hp =>
-                hp.project.toString() === iterator.linkedProjectId.toString()
+                hp.project.toString() === iterator.linkedProjectId.toString() && hp.resultPercent >= 80
             );
             if (hasMakeProject) {
               hasPermission = true;
@@ -192,7 +193,7 @@ class HolyServices {
 
       holyProjectList.forEach(project => {
         projectsByLevel.set(project.level, (projectsByLevel.get(project.level) || 0) + 1);
-        const userProject = user.holyProjects.find(hp =>  hp.project.toString() === project._id.toString() && hp.resultPercent > 80);
+        const userProject = user.holyProjects.find(hp =>  hp.project.toString() === project._id.toString() && hp.resultPercent >= 80);
         if (userProject) {
           completedProjectsByLevel.set(project.level, (completedProjectsByLevel.get(project.level) || 0) + 1);
         }
