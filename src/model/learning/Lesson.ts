@@ -15,6 +15,11 @@ export interface ILesson extends Document {
 
     duration: number | null;
 
+    links: {
+        url: string;
+        name: string;
+    }[]
+
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -52,7 +57,20 @@ const lessonSchema: Schema<ILesson> = new mongoose.Schema({
     duration: {
         type: Number,
         required: false
-    }
+    },
+    links: [{
+        url: {
+            type: String,
+            required: false,
+            default: ""
+
+        },
+        name: {
+            type: String,
+            required: false,
+            default: ""
+        }
+    }]
 
 }, {
     timestamps: true

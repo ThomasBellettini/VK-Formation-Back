@@ -117,6 +117,8 @@ class LessonServices {
         req.body.cdnVideoContent = bunnyFilePath;
         req.body.duration = duration;
       }
+      if (req.body.links)
+        req.body.links = JSON.parse(req.body.links);
       let lesson = await Lesson.create(req.body);
 
       return {
@@ -153,6 +155,8 @@ class LessonServices {
         req.body.cdnVideoContent = bunnyFilePath;
         req.body.duration = duration;
       }
+      if (req.body.links)
+        req.body.links = JSON.parse(req.body.links);
       lesson = await Lesson.findOneAndUpdate({_id: id}, req.body);
 
       return {
