@@ -91,7 +91,10 @@ class AuthServices {
         isConfirmed: true,
         confirmationCode:
           Math.random().toString(36) + Math.random().toString(36),
+        resetCode: Math.random().toString(36) + Math.random().toString(36),
       });
+
+        await sendTemplateEmail(1, {vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`}, newUser.email);
 
       return {
         success: true,
