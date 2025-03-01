@@ -42,7 +42,7 @@ services:
       - mongo
     labels:
       - traefik.enable=true
-      - traefik.http.routers.vk-back.rule=Host(`test-back.valekstudio.com`)
+      - traefik.http.routers.vk-back.rule=Host(`api.valekstudio.com`)
       - traefik.http.routers.vk-back.tls=true
       - traefik.http.routers.vk-back.tls.certresolver=lets-encrypt
       - traefik.http.services.vk-back.loadbalancer.server.port=5002
