@@ -60,11 +60,12 @@ class HolyServices {
         const completedProjectsByLevel = new Map<number, number>();
 
         holyProjectDatabase.forEach(project => {
-          if (!project.linkedProjectId)
+          if (!project.linkedProjectId) {
             projectsByLevel.set(project.level, (projectsByLevel.get(project.level) || 0) + 1);
-          const userProject = user.holyProjects.find(hp =>  hp.project.toString() === project._id.toString() && hp.resultPercent >= 80);
-          if (userProject) {
-            completedProjectsByLevel.set(project.level, (completedProjectsByLevel.get(project.level) || 0) + 1);
+            const userProject = user.holyProjects.find(hp => hp.project.toString() === project._id.toString() && hp.resultPercent >= 80);
+            if (userProject) {
+              completedProjectsByLevel.set(project.level, (completedProjectsByLevel.get(project.level) || 0) + 1);
+            }
           }
         });
 
@@ -192,10 +193,12 @@ class HolyServices {
       const completedProjectsByLevel = new Map<number, number>();
 
       holyProjectList.forEach(project => {
-        projectsByLevel.set(project.level, (projectsByLevel.get(project.level) || 0) + 1);
-        const userProject = user.holyProjects.find(hp =>  hp.project.toString() === project._id.toString() && hp.resultPercent >= 80);
-        if (userProject) {
-          completedProjectsByLevel.set(project.level, (completedProjectsByLevel.get(project.level) || 0) + 1);
+        if (!project.linkedProjectId) {
+          projectsByLevel.set(project.level, (projectsByLevel.get(project.level) || 0) + 1);
+          const userProject = user.holyProjects.find(hp => hp.project.toString() === project._id.toString() && hp.resultPercent >= 80);
+          if (userProject) {
+            completedProjectsByLevel.set(project.level, (completedProjectsByLevel.get(project.level) || 0) + 1);
+          }
         }
       });
 
