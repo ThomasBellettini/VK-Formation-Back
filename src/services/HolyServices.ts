@@ -5,6 +5,7 @@ import {ICourseBundle} from "../model/learning/CourseBundle.js";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 import Evaluation from "../model/learning/Evaluation.js";
+import * as process from "node:process";
 
 interface IHolyGraph {
     _id: mongoose.Types.ObjectId;
@@ -487,7 +488,7 @@ class HolyServices {
         user: user._id,
         project: holyProject._id
       });
-      await User.findByIdAndUpdate(user._id, {coin: user.coin - 1});
+      await User.findByIdAndUpdate(user._id, {coin: user.coin - (holyProject.cost || 1)});
 
 
       return {
