@@ -15,6 +15,7 @@ export interface IHolyProject extends Document {
 
     cdnVideoContent: string | null;
     cdnAudioContent: string | null;
+    cost: number;
 
     links: {
         url: string;
@@ -80,7 +81,12 @@ const holyProjectSchema: Schema<IHolyProject> = new mongoose.Schema({
             required: false,
             default: ""
         }
-    }]
+    }],
+    cost: {
+        type: Number,
+        required: false,
+        default: 10
+    }
 
 }, {
     timestamps: true

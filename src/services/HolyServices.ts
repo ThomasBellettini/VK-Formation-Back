@@ -26,6 +26,7 @@ interface IHolyGraph {
     projectDone: boolean;
 
     percent: number | null;
+    cost: number;
 
    links: {
       url: string;
@@ -106,6 +107,7 @@ class HolyServices {
             evaluationText: iterator.evaluationText,
             level: (iterator.linkedProjectId ? null : iterator.level),
             url: iterator.url,
+            cost: iterator.cost,
             linkedProjectId: iterator.linkedProjectId,
             content: iterator.content,
             cdnVideoContent: iterator.cdnVideoContent,
@@ -133,6 +135,7 @@ class HolyServices {
             xp: iterator.xp,
             cdnVideoContent: null,
             cdnAudioContent: null,
+            cost: iterator.cost,
             hasPermission: false,
             linkedProjectId: iterator.linkedProjectId,
             projectDone: false,
@@ -227,6 +230,7 @@ class HolyServices {
         level: holyProjectDatabase.level,
         xp: holyProjectDatabase.xp,
         url: holyProjectDatabase.url,
+        cost: holyProjectDatabase.cost,
         content: holyProjectDatabase.content,
         evaluationText: holyProjectDatabase.evaluationText,
         cdnVideoContent: holyProjectDatabase.cdnVideoContent,
@@ -458,7 +462,7 @@ class HolyServices {
       if (!user._id) {
         throw new Error("No user found !");
       }
-      if (user.coin < 1) {
+      if (user.coin < (holyProject.cost || 1)) {
         throw new Error("Not enough coin to generate evaluation !");
       }
 
@@ -557,7 +561,7 @@ class HolyServices {
       if (!req.body.percent || req.body.percent < 0) {
         throw new Error("Percent is mandatory and must be greater than 0 !");
       }
-      const evaluation = await Evaluation.findById(id)
+      let evaluation = await Evaluation.findById(id)
           .populate("project")
           .lean();
       if (!evaluation) {
@@ -578,8 +582,9 @@ class HolyServices {
       })
       if (req.body.percent >= 80)
         user.xp += project.xp;
+      let cost = project.cost || 1;
       await user.save();
-      await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + 1});
+      await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + cost});
 
       return {
         success: true,
