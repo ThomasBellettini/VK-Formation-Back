@@ -32,7 +32,7 @@ export const viewCommand = {
                 holyProjects = holyProjects.filter((project: any) => project.resultPercent >= 80);
                 const embed = new EmbedBuilder()
                     .setColor("#6f3eda")
-                    .setTitle(`📜 Informations du profil de ${mentionedUser.username}`)
+                    .setTitle(`📜 Informations du profil de ${mentionedUser.displayName}`)
                     .setThumbnail(userAvatar)
                     .addFields(
                         { name: `📧 Email:`, value: `${email || "Non renseigné"}`, inline: false },
