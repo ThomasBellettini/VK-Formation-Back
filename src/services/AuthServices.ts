@@ -2,6 +2,7 @@ import User, { IUser } from "../model/User.js";
 import { generateToken } from "../utils/JWTUtils.js";
 import mongoose from "mongoose";
 import {Request} from "express";
+import {sendTemplateEmail} from "../utils/BrevoUtils.js";
 
 class AuthServices {
   constructor() {
@@ -138,6 +139,8 @@ class AuthServices {
         discordAccess: fullAccess
       });
 
+      await sendTemplateEmail(1, {vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`}, newUser.email);
+
       return {
         success: true,
         statusCode: 201,
@@ -205,6 +208,7 @@ class AuthServices {
 
       user.resetCode = Math.random().toString(36) + Math.random().toString(36);
       await user.save();
+      await sendTemplateEmail(2, {vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${user.resetCode}`}, user.email);
 
       return {
         success: true,
