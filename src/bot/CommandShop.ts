@@ -125,6 +125,7 @@ export const buttonHandler = {
                    return interaction.reply({ content: "✅ Achat effectué avec succès !", ephemeral: true });
                }
             }).catch(error => {
+                console.log(error);
                 return interaction.reply({ content: "❌ Erreur, " + error.response?.data?.data?.message || error.message, ephemeral: true });
             })
         } catch (error) {
