@@ -91,7 +91,7 @@ export const buttonHandler = {
                    const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID as string);
                    let item = response.data?.data.item as Item;
                    let user = interaction.user;
-                   let supportRole = ["1342583824546009269", "1153324733094428732"];
+                   let supportRole = ["1018989669393899610", "1098544186015367198"];
                    let permissionOverwrites = [];
 
                    if (!guild) {
