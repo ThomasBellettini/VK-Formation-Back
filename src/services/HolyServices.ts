@@ -567,7 +567,8 @@ class HolyServices {
         project: project._id,
         resultPercent: req.body.percent
       })
-      user.xp += project.xp;
+      if (req.body.percent >= 80)
+        user.xp += project.xp;
       await user.save();
       await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + 1});
 
