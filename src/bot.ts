@@ -5,6 +5,7 @@ import axios from 'axios';
 import path from 'path';
 import { linkCommand } from './bot/CommandLink.js';
 import { meCommand } from './bot/CommandMe.js';
+import { viewCommand } from './bot/CommandView.js';
 import {buttonHandler, shopCommand} from './bot/CommandShop.js';
 import { config } from "dotenv";
 config();
@@ -128,6 +129,8 @@ client.on('interactionCreate', async (interaction) => {
             await linkCommand.execute(interaction as ChatInputCommandInteraction);
         } else if (command === 'shop') {
             await shopCommand.execute(interaction as ChatInputCommandInteraction);
+        } else if (command === 'view') {
+            await viewCommand.execute(interaction as ChatInputCommandInteraction);
         }
     } else if (interaction.isButton()) {
         await buttonHandler.execute(interaction, client);
@@ -196,9 +199,15 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN as string);
     await (async () => {
         try {
-            await rest.put(Routes.applicationCommands(CLIENT_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON(), shopCommand.data.toJSON() ]});
+            await rest.put(Routes.applicationCommands(CLIENT_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON(), shopCommand.data.toJSON(), viewCommand.data.toJSON() ]});
         } catch (error) {
             console.error('Erreur lors du déploiement de la commande:', error);
+        }
+
+        const commands = await rest.get(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string));
+        // @ts-ignore
+        for (const command of commands) {
+            await rest.delete(`${Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string)}/${command.id}`);
         }
     })();
 

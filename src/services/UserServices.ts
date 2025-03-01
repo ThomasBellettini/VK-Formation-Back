@@ -105,8 +105,8 @@ class UserServices {
 
   async userByDiscord(discordID: string) {
     try {
-      let userDb = await User.findOne({discordId: discordID});
-      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id, pour lier votre compte utilisez /me !");
+      let userDb = await User.findOne({discordId: discordID}).populate("holyProjects");
+      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
 
       return {
         success: true,

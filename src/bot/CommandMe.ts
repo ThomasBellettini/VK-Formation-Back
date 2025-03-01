@@ -19,7 +19,8 @@ export const meCommand = {
                 if (!userData) {
                     return await interaction.reply({ content: "Impossible de récupérer les données utilisateur.", ephemeral: true });
                 }
-                const { email, xp, coin, holyProjects, lessonsFinished } = userData;
+                let { email, xp, coin, holyProjects, lessonsFinished } = userData;
+                holyProjects = holyProjects.filter((project: any) => project.resultPercent >= 80);
                 const embed = new EmbedBuilder()
                     .setColor("#6f3eda")
                     .setTitle("📜 Informations de ton profil")
@@ -31,7 +32,7 @@ export const meCommand = {
                         { name: `📌 Projets terminés`, value: `${holyProjects.length} projet(s) terminé(s)`, inline: false },
                         { name: `📚 Leçons terminées`, value: `${lessonsFinished.length} leçon(s) terminée(s)`, inline: false }
                     )
-                    .setFooter({ text: "Valek-Studio.fr" });
+                    .setFooter({ text: "valekstudio.com" });
                 await interaction.reply({ embeds: [embed], ephemeral: true });
             }).catch(error => {
                 return interaction.reply({ content: "❌ Erreur, " + error.response.data.data.message, ephemeral: true });
