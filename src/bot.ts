@@ -101,7 +101,12 @@ setInterval(() => {
         if (channel.isVoiceBased()) {
             channel.members.forEach(member => {
                 if (!member.voice.mute) {
-                    dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1);
+                    let hasRole = member.roles.cache.has("1024829882569596959");
+                    let actualPoint = dataTracking.get(member.id) || 0;
+                    if (!hasRole && actualPoint < 18050)
+                        dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1);
+                    else if (hasRole && actualPoint < 27075)
+                        dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1.5);
                     globalDataTracking.set("voice", (globalDataTracking.get("voice") || 0) + 1);
                 }
             });
@@ -109,10 +114,17 @@ setInterval(() => {
     });
 }, 1000);
 
-client.on('messageCreate', (message) => {
+client.on('messageCreate', async (message) => {
     if (!message.author.bot) {
+        if (!message.member) return console.log('Member not found');
         globalDataTracking.set("messages", (globalDataTracking.get("messages") || 0) + 1);
-        dataTracking.set(message.author.id, (dataTracking.get(message.author.id) || 0) + 1);
+        let member = message.member;
+        let hasRole = member.roles.cache.has("1024829882569596959");
+        let actualPoint = dataTracking.get(member.id) || 0;
+        if (!hasRole && actualPoint < 18050)
+            dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1);
+        else if (hasRole && actualPoint < 27075)
+            dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1.5);
     }
 });
 

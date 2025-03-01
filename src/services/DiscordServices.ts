@@ -26,9 +26,16 @@ class DiscordServices {
       let vocal = (req.body.voice as number) || 0;
       if (req.query.full && req.query.full === "true") {
         Object.entries(fullStats).map(async ([key, value]) => {
-          let user = await User.findOne({discordId: key});
+          let user = await User.findOne({ discordId: key }) as IUser;
           if (user) {
-            //TODO Mettre a jour les coins en fonction des points
+            let points = value as number || 0;
+            let additionalVK = points * 0.0277;
+            let newVK = 0;
+            if (additionalVK > 100) {
+              newVK =  additionalVK + (Math.random() * 40 - 20);
+            }
+            user.coin = user.coin + newVK;
+            await user.save();
           }
         });
       } else {
