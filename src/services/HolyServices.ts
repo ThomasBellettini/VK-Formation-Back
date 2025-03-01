@@ -167,15 +167,19 @@ class HolyServices {
       const holyProjectDatabase = await HolyProject.findOne({ url: url }).lean();
       if (!holyProjectDatabase) throw new Error("No Project found with this id !");
 
-      const userProject = user.holyProjects.find(hp =>
+      const userProject = user.holyProjects.filter(hp =>
           hp.project.toString() === holyProjectDatabase._id.toString()
       );
 
       let projectDone = false;
       let percent = 0;
       if (userProject) {
-        percent = userProject?.resultPercent;
-        projectDone = percent > 1;
+        for (const project of userProject) {
+          if (project.resultPercent > percent) {
+            percent = project?.resultPercent;
+            projectDone = percent > 80;
+          }
+        }
       }
 
       const holyProjectList = await HolyProject.find({}).lean();
