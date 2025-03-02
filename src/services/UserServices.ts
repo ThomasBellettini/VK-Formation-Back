@@ -19,7 +19,8 @@ class UserServices {
     try {
       let userDb = await User.find({})
           .populate("holyProjects.project")
-          .populate("lessonsFinished");
+          .populate("lessonsFinished")
+          .sort({ permission: { $eq: ["$permission", "admin"] } ? -1 : 1 });
 
       return {
         success: true,
