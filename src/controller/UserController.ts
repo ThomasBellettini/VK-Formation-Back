@@ -22,7 +22,7 @@ class UserController {
   }
 
   public async list(req: Request, res: any) {
-    const r = await this.service.list();
+    const r = await this.service.list(req);
     return res.status(r.statusCode).send(r);
   }
 
