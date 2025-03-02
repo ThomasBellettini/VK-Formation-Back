@@ -2,6 +2,7 @@ import User, { IUser } from "../model/User.js";
 import {Request} from "express";
 import Transaction from "../model/Transaction.js";
 import {getOrCreateDiscordData} from "../model/Discord.js";
+import * as sea from "node:sea";
 
 class UserServices {
   constructor() {
@@ -20,11 +21,17 @@ class UserServices {
       let limit = Number(req.query.limit) || 20;
       let page = Number(req.query.page) || 1;
       let userDb: IUser[] = [];
+      let search = req.query.search;
+      let filter: any = {};
 
-      userDb = await User.find({})
+      if (search) {
+        filter.email = { $regex: search, $options: "i" };
+      }
+
+      userDb = await User.find(filter)
           .populate("holyProjects.project")
           .populate("lessonsFinished")
-          .sort({ permission: -1 })
+          .sort({permission: {$eq: ["$permission", "admin"]} ? 1 : -1})
           .skip((page - 1) * limit)
           .limit(limit);
 
