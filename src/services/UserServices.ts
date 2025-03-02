@@ -40,7 +40,7 @@ class UserServices {
         statusCode: 201,
         errors: null,
         data: {
-          total: await User.countDocuments({}),
+          total: await User.countDocuments(filter),
           users: userDb,
         },
       };
