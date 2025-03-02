@@ -45,14 +45,11 @@ class CourseServices {
           .populate({
             path: "folders",
             model: "Folder",
-            options: { sort: { order: 1 } }, // Trie les folders par order
             populate: {
               path: "lessons",
               model: "Lesson",
-              options: { sort: { order: 1 } }, // Trie les lessons par order
             }
           })
-          .sort({ order: 1 })
           .lean();
       let courses: ICourse[] = courseBundle.map((course) => {
         if (!course.folders) course.folders = [];
