@@ -209,7 +209,7 @@ class AuthServices {
       }
       const user = await User.findOne({ email: email });
       if (!user) throw "No user found !";
-      if (user.resetCode && user.resetCode !== "") throw "Reset code already sent !";
+      // if (user.resetCode && user.resetCode !== "") throw "Reset code already sent !";
 
       user.resetCode = Math.random().toString(36) + Math.random().toString(36);
       await user.save();
