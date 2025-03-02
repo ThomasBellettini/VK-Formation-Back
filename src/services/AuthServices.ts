@@ -49,7 +49,6 @@ class AuthServices {
       }
       const user = await User.findOne({ email: email });
       if (!user) throw "Invalid email or password !";
-      if (user.permission !== "admin") throw "Not authorized !"; //TODO DEGAGER
 
       let passwordCompare = await user.comparePassword(password);
       if (!passwordCompare) throw "Invalid email or password !";
