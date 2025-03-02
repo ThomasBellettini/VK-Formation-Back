@@ -15,18 +15,25 @@ class UserServices {
     this.makeTransaction = this.makeTransaction.bind(this);
   }
 
-  async list() {
+  async list(req: Request) {
     try {
-      let userDb = await User.find({})
+      let limit = Number(req.query.limit) || 20;
+      let page = Number(req.query.page) || 1;
+      let userDb: IUser[] = [];
+
+      userDb = await User.find({})
           .populate("holyProjects.project")
           .populate("lessonsFinished")
-          .sort({ permission: { $eq: ["$permission", "admin"] } ? 1 : -1 });
+          .sort({ permission: -1 })
+          .skip((page - 1) * limit)
+          .limit(limit);
 
       return {
         success: true,
         statusCode: 201,
         errors: null,
         data: {
+          total: await User.countDocuments({}),
           users: userDb,
         },
       };
