@@ -38,3 +38,5 @@ services:
 networks:
   internal:
     external: false
+  traefik:
+    external: true
