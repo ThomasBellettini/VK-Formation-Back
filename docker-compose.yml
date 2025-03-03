@@ -25,7 +25,7 @@ services:
     depends_on:
       - mongo
     volumes:
-      - ./data/:/app/
+      - ./data:/app/data/
     labels:
       - traefik.enable=true
       - traefik.http.routers.vk-back.rule=Host(`api.valekstudio.com`)

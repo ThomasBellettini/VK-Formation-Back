@@ -13,7 +13,7 @@ config();
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
-const DATA_FILE = path.join('./data.json');
+const DATA_FILE = path.join('./data/data.json');
 const PORT = 3010;
 const API_URL = process.env.API_URL;
 
