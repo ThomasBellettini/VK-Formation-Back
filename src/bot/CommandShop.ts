@@ -45,7 +45,7 @@ export const shopCommand = {
             let row = new ActionRowBuilder<ButtonBuilder>();
 
             items.forEach((item: Item, index: number) => {
-                embed.addFields({ name: item.name, value: `💰 ${item.cost} VC`, inline: true });
+                embed.addFields({ name: item.name, value: `💰 ${item.cost} VK Coins`, inline: true });
 
                 const button = new ButtonBuilder()
                     .setCustomId(`${item._id}`)
@@ -121,7 +121,7 @@ export const buttonHandler = {
                        permissionOverwrites: permissionOverwrites
                    });
 
-                   await newChannel.send(`🚀 **${user.tag}** (${userFormation.email}) à acheté \`${item.name}\` contre ${item.cost}VK !`);
+                   await newChannel.send(`🚀 **${user.tag}** (${userFormation.email}) à acheté \`${item.name}\` contre ${item.cost}VK Coins !`);
                    return interaction.reply({ content: "✅ Achat effectué avec succès !", ephemeral: true });
                }
             }).catch(error => {
