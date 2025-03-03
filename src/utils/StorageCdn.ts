@@ -136,7 +136,7 @@ class StorageCdn {
                 'Accept-Ranges': 'bytes',
             };
 
-            if (!rangeHeader || rangeHeader === "bytes=0-") {
+            if (!rangeHeader || rangeHeader === "bytes=0-" || rangeHeader === "bytes=0-1") {
                 rangeHeader = "bytes=0-9999999";
             }
 
