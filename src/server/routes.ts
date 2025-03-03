@@ -132,7 +132,7 @@ router.post("/register/webhook/fcuaimvsdqicchpknzzzqotc", AuthController.registe
 
 router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
-router.get("/discord", authJwt, checkRole("admin"), UserController.generateDiscordLink)
+router.get("/discord", authJwt, UserController.generateDiscordLink)
 
 router.get("/users/list", authJwt, checkRole("admin"), UserController.list)
 router.patch("/users/update/:id", authJwt, checkRole("admin"), UserController.update)

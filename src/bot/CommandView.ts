@@ -7,6 +7,7 @@ export const viewCommand = {
     data: new SlashCommandBuilder()
         .setName('view')
         .setDescription('Permet de récupérer les informations de votre profil depuis le site de formation !')
+        .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageMessages)
         .addMentionableOption(option =>
             option.setName('user')
                 .setDescription('Utilisateur que vous voulez inspecter')
