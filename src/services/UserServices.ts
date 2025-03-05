@@ -23,8 +23,12 @@ class UserServices {
       let userDb: IUser[] = [];
       let search = req.query.search;
       let filter: any = {};
+      let field = req.query.field;
 
-      if (search) {
+      if (search && field) {
+        // @ts-ignore
+        filter[field] = { $regex: search, $options: "i" };
+      } else if (search) {
         filter.email = { $regex: search, $options: "i" };
       }
 
