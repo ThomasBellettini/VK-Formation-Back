@@ -37,7 +37,7 @@ export const viewCommand = {
                     .setThumbnail(userAvatar)
                     .addFields(
                         { name: `📧 Email:`, value: `${email || "Non renseigné"}`, inline: false },
-                        { name: `🪙 Valek Coins`, value: `${coin} VK`, inline: false },
+                        { name: `🪙 Valek Coins`, value: `${coin.toFixed(2)} VK`, inline: false },
                         { name: `⭐ Experience`, value: `${xp} XP`, inline: false },
                         { name: `📌 Projets terminés`, value: `${holyProjects.length} projet(s) terminé(s)`, inline: false },
                         { name: `📚 Leçons terminées`, value: `${lessonsFinished.length} leçon(s) terminée(s)`, inline: false }
