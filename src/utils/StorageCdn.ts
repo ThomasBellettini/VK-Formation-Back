@@ -75,6 +75,7 @@ class StorageCdn {
                     'Content-Type': 'application/octet-stream',
                 },
             };
+            console.log("DEBUG")
 
             await new Promise((resolve, reject) => {
                 const req = https.request(options, (res) => {
@@ -84,6 +85,7 @@ class StorageCdn {
                 req.on('error', reject);
                 fileStream.pipe(req);
             });
+            console.log("DEBUGSS")
 
             await Resource.create({
                 pathFile: destinationPath,
