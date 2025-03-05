@@ -169,7 +169,7 @@ router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.single("
 router.get("/lessons/info/:url", authJwt, LessonController.info)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
 
-router.get("/resources/show", authJwt, ResourceController.view)
+// router.get("/resources/show", authJwt, ResourceController.view)
 
 router.post("/discord/upload", authAPI, DiscordController.uploadDailyStat)
 router.get("/discord/stats", authJwtNotMandatory, DiscordController.getStats)
