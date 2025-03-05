@@ -127,28 +127,37 @@ class StorageCdn {
     async getStream(filePath: string, rangeHeader?: string) {
         try {
             const secureUrl = this.generateSecureLink(filePath);
-
             const headResponse = await axios.head(secureUrl);
             const fileSize = parseInt(headResponse.headers['content-length'], 10);
 
+            if (isNaN(fileSize) || fileSize <= 0) {
+                throw new Error("Taille du fichier invalide");
+            }
+
+            const maxAllowedSize = Math.floor(fileSize * 0.2); // Limite à 20% de la vidéo
             let headers: any = {
                 'Content-Type': 'video/mp4',
                 'Accept-Ranges': 'bytes',
             };
 
             if (!rangeHeader || rangeHeader === "bytes=0-" || rangeHeader === "bytes=0-1") {
-                rangeHeader = "bytes=0-15728639";
+                rangeHeader = `bytes=0-${maxAllowedSize - 1}`;
             }
 
             const [startStr, endStr] = rangeHeader.replace(/bytes=/, "").split("-");
             const start = parseInt(startStr, 10);
-            let end = endStr ? parseInt(endStr, 10) : start + 15728639;
+            let end = endStr ? parseInt(endStr, 10) : start + maxAllowedSize - 1;
 
             if (isNaN(start) || start < 0 || start >= fileSize) {
-                throw new Error("Invalid start range");
+                throw new Error("Plage de début invalide");
             }
 
-            end = Math.min(start + 15728639, fileSize - 1);
+            // Empêcher de dépasser 20% de la vidéo
+            if (end - start + 1 > maxAllowedSize) {
+                throw new Error("La plage demandée dépasse la limite autorisée (20% du fichier)");
+            }
+
+            end = Math.min(end, fileSize - 1);
             const chunkSize = (end - start) + 1;
 
             const response = await axios.get(secureUrl, {
