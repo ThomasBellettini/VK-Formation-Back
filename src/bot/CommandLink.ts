@@ -34,6 +34,7 @@ export const linkCommand = {
                     });
                 }
             }).catch(error => {
+                console.log(JSON.stringify(error));
                 return interaction.reply({ content: "❌ Erreur, " + error.response.data.data.message, ephemeral: true });
             });
         } catch (error) {
