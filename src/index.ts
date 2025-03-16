@@ -5,9 +5,11 @@ import {startCronJob} from "./utils/Cron.js";
 
 async function main() {
     const PORT = process.env.PORT || 5002;
-    server.listen(PORT, () => {
+    let httpServer = server.listen(PORT, () => {
         console.log(`App running on port ${PORT}`);
     });
+    httpServer.timeout = 7200 * 1000;
+    httpServer.keepAliveTimeout = 7200 * 1000;
 
     try {
         console.log(chalk.blue("> Init admin"));
