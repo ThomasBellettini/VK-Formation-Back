@@ -90,6 +90,7 @@ class AuthServices {
         email: email,
         password: password,
         isConfirmed: true,
+        discordAccess: true,
         confirmationCode:
           Math.random().toString(36) + Math.random().toString(36),
         resetCode: Math.random().toString(36) + Math.random().toString(36),
