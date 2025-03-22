@@ -14,6 +14,7 @@ class LessonServices {
     this.update = this.update.bind(this);
     this.info = this.info.bind(this);
     this.delete = this.delete.bind(this);
+    this.completeLesson = this.completeLesson.bind(this);
   }
 
   async list(req: Request) {
@@ -41,7 +42,7 @@ class LessonServices {
     }
   }
 
-  async info(req: Request, url: string) {
+  async completeLesson(req: Request, url: string) {
     try {
       // @ts-ignore
       let user = req.user as IUser;
@@ -52,7 +53,40 @@ class LessonServices {
       if (!databaseUser.lessonsFinished.includes(lesson._id)) {
         databaseUser.lessonsFinished.push(lesson._id);
         await databaseUser.save();
-      } else {
+        // @ts-ignore
+        lesson.finished = true;
+      }
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          lesson
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+  async info(req: Request, url: string) {
+    try {
+      // @ts-ignore
+      let user = req.user as IUser;
+      let databaseUser = await User.findOne({email: user.email});
+      let lesson = await Lesson.findOne({url: url}).lean();
+      if (!lesson) throw new Error('No lesson was founded !');
+      if (!databaseUser) throw new Error('No user found !');
+      if (databaseUser.lessonsFinished.includes(lesson._id)) {
         // @ts-ignore
         lesson.finished = true;
       }

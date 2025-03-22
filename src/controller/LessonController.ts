@@ -13,6 +13,7 @@ class LessonController {
     this.info = this.info.bind(this);
     this.update = this.update.bind(this);
     this.delete = this.delete.bind(this);
+    this.completeLesson = this.completeLesson.bind(this);
   }
 
   public async list(req: Request, res: Response) {
@@ -37,6 +38,11 @@ class LessonController {
 
   public async delete(req: Request, res: Response) {
     const r = await this.service.delete(req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async completeLesson(req: Request, res: Response) {
+    const r = await this.service.completeLesson(req, req.params.url);
     return res.status(r.statusCode).send(r);
   }
 
