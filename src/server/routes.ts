@@ -168,7 +168,7 @@ router.get("/lessons/list", authJwt, checkRole("admin"), LessonController.list)
 router.post("/lessons/add", authJwt, checkRole("admin"), upload.single("video"), LessonController.add)
 router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.single("video"), LessonController.update)
 router.get("/lessons/info/:url", authJwt, LessonController.info)
-router.get("/lessons/complete/:url", authJwt, LessonController.completeLesson)
+router.patch("/lessons/complete/:url", authJwt, LessonController.completeLesson)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
 
 // router.get("/resources/show", authJwt, ResourceController.view)
