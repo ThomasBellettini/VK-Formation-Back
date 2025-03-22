@@ -3,7 +3,7 @@ import {Request} from "express";
 import Transaction from "../model/Transaction.js";
 import {getOrCreateDiscordData} from "../model/Discord.js";
 import * as sea from "node:sea";
-import {generateToken} from "../utils/JWTUtils";
+import {generateToken} from "../utils/JWTUtils.js";
 
 class UserServices {
   constructor() {
