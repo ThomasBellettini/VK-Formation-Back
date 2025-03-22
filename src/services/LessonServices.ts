@@ -89,6 +89,9 @@ class LessonServices {
       if (databaseUser.lessonsFinished.includes(lesson._id)) {
         // @ts-ignore
         lesson.finished = true;
+      } else {
+        databaseUser.lessonsFinished.push(lesson._id);
+        await databaseUser.save();
       }
       return {
         success: true,
