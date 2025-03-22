@@ -19,6 +19,7 @@ class UserController {
     this.linkDiscord = this.linkDiscord.bind(this);
     this.userByDiscord = this.userByDiscord.bind(this);
     this.makeTransaction = this.makeTransaction.bind(this);
+    this.connectedAs = this.connectedAs.bind(this);
   }
 
   public async list(req: Request, res: any) {
@@ -64,6 +65,11 @@ class UserController {
 
   public async makeTransaction(req: Request, res: any) {
     const r = await this.service.makeTransaction(req.body.discordId, req.body.itemId);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async connectedAs(req: Request, res: any) {
+    const r = await this.service.connectedAs(req.params.id);
     return res.status(r.statusCode).send(r);
   }
 

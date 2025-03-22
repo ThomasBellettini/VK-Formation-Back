@@ -3,6 +3,7 @@ import {Request} from "express";
 import Transaction from "../model/Transaction.js";
 import {getOrCreateDiscordData} from "../model/Discord.js";
 import * as sea from "node:sea";
+import {generateToken} from "../utils/JWTUtils";
 
 class UserServices {
   constructor() {
@@ -14,6 +15,7 @@ class UserServices {
     this.linkDiscord = this.linkDiscord.bind(this);
     this.userByDiscord = this.userByDiscord.bind(this);
     this.makeTransaction = this.makeTransaction.bind(this);
+    this.connectedAs = this.connectedAs.bind(this);
   }
 
   async list(req: Request) {
@@ -248,6 +250,36 @@ class UserServices {
       };
     }
   }
+
+  async connectedAs(userID: string) {
+    try {
+      const user = await User.findOne({ _id: userID });
+      if (!user) throw "Invalid UserID !";
+      let token = generateToken(user.email, user.permission);
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "OK",
+          token: token,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message: err
+        },
+      };
+    }
+  }
+
 
   async info(id: string) {
     try {
