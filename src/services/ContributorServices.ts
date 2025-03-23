@@ -54,7 +54,7 @@ class ContributorServices {
 
   async add(req: Request) {
     try {
-      const {name} = req.body;
+      const name = req.body.name;
       if (!name) {
         throw new Error("Missing mandatory fields name");
       }
