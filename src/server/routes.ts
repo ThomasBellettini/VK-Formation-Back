@@ -11,6 +11,7 @@ import ResourceController from "../controller/ResourceController.js";
 import UserController from "../controller/UserController.js";
 import DiscordController from "../controller/DiscordController.js";
 import FolderController from "../controller/FolderController.js";
+import ContributorController from "../controller/ContributorController.js";
 
 const router = Router();
 
@@ -171,6 +172,10 @@ router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.single("
 router.get("/lessons/info/:url", authJwt, LessonController.info)
 router.patch("/lessons/complete/:url", authJwt, LessonController.completeLesson)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
+
+router.get("/collaborators/list", ContributorController.list)
+router.post("/collaborators/add", authJwt, checkRole("admin"), ContributorController.add)
+router.delete("/collaborators/delete", authJwt, checkRole("admin"), ContributorController.delete)
 
 // router.get("/resources/show", authJwt, ResourceController.view)
 
