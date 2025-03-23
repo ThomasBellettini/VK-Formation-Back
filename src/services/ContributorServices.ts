@@ -1,8 +1,9 @@
 import {Request} from "express";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
-import Folder from "../model/learning/Folder.js";
-import Contributor from "../model/Contributor.js";
+import Folder, {IFolder} from "../model/learning/Folder.js";
+import Contributor, {IContributor} from "../model/Contributor.js";
+import {ILesson} from "../model/learning/Lesson";
 
 
 class ContributorServices {
@@ -15,7 +16,20 @@ class ContributorServices {
 
   async list(req: Request) {
     try {
-      let contributors = await Contributor.find({}).sort({ name: 1 });
+      let contributorsDB = await Contributor.find({}).sort({ name: 1 }) as IContributor[];
+
+      let contributors: IContributor[] = contributorsDB.map((contributor) => {
+        let imageLink = StorageCdn.generateSecureLink(contributor.image);
+        return {
+          _id: contributor._id,
+          image: imageLink,
+          name: contributor.name,
+          createdAt: contributor.createdAt,
+          updatedAt: contributor.updatedAt
+        } as IContributor;
+      });
+
+
       return {
         success: true,
         statusCode: 201,
