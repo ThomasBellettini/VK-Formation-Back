@@ -174,7 +174,7 @@ router.patch("/lessons/complete/:url", authJwt, LessonController.completeLesson)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
 
 router.get("/collaborators/list", ContributorController.list)
-router.post("/collaborators/add", authJwt, checkRole("admin"), ContributorController.add)
+router.post("/collaborators/add", authJwt, checkRole("admin"), upload.single('image'), ContributorController.add)
 router.delete("/collaborators/delete", authJwt, checkRole("admin"), ContributorController.delete)
 
 // router.get("/resources/show", authJwt, ResourceController.view)
