@@ -35,7 +35,7 @@ class ContributorServices {
         statusCode: 201,
         errors: null,
         data: {
-          contributors
+          collaborators: contributors
         },
       };
     } catch (err) {
@@ -74,7 +74,7 @@ class ContributorServices {
         errors: null,
         data: {
           message: "Contributor has been created with success",
-          contributor
+          collaborator: contributor
         },
       };
     } catch (err) {
