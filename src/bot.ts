@@ -229,10 +229,6 @@ const cacheRegexBan = async () => {
         });
         if (response.status === 201) {
             REGEX_CACHE = response.data.data.regex;
-            // @ts-ignore
-            REGEX_CACHE = response.data.data.regex.map(regexString =>
-                regexString.replace(/\\\\/g, '\\')
-            );
         }
     } catch (err) {
         console.error('Erreur lors de l\'envoi des données :', err);
