@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction, Client, GatewayIntentBits, REST, Routes} from 'discord.js';
+import {ChatInputCommandInteraction, Client, GatewayIntentBits, REST, Routes, TextChannel} from 'discord.js';
 import express from 'express';
 import fs from 'fs';
 import axios from 'axios';
@@ -117,8 +117,9 @@ setInterval(() => {
 }, 1000);
 
 client.on('messageCreate', async (message) => {
+    if (!message.member) return console.log('Member not found');
+    if (!message.guild) return console.log('Guild not found');
     if (!message.author.bot) {
-        if (!message.member) return console.log('Member not found');
         globalDataTracking.set("messages", (globalDataTracking.get("messages") || 0) + 1);
         let member = message.member;
         let hasRole = member.roles.cache.has("1024829882569596959");
@@ -135,8 +136,18 @@ client.on('messageCreate', async (message) => {
             const regex = new RegExp(pattern, 'i');
             console.log(`Test de la regex : ${pattern}`);
             if (regex.test(message.content)) {
-                console.log(`Message "${message.content}" match avec la regex : ${pattern}`);
-                //TODO: Le role et le ping pour ban
+                // let response = await axios.post(`${API_URL}/discord/ban/${message.member.id}`, null, {
+                //     headers: {
+                //         'X-VK-TOKEN': process.env.API_KEY
+                //     }
+                // });
+                // if (response.status === 201) {
+                //     let channel = message.guild.channels.cache.get("1326649580779212841") as TextChannel;
+                //     await channel.send(`L'utilisateur ${message.member} a été banni pour avoir envoyé un message interdit (${message.content}) !`);
+                // }
+                // await message.member.roles.add("1296875202461831209");
+                await message.delete();
+
                 return;
             }
         }

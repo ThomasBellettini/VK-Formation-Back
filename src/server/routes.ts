@@ -199,6 +199,6 @@ router.post("/discord/link", authAPI, UserController.linkDiscord)
 router.get("/discord/user/:id", authAPI, UserController.userByDiscord)
 router.post("/discord/buy", authAPI, UserController.makeTransaction)
 
-router.patch("/discord/ban/:id", authAPI, UserController.banByDiscord)
+router.post("/discord/ban/:id", authAPI, UserController.banByDiscord)
 
 export default router;
