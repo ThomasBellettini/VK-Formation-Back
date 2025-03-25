@@ -45,6 +45,9 @@ const authJwt = async (req: any, res: Response, next: NextFunction) => {
     if (!dbUser) {
       res.status(403).send("Access Forbidden");
       return;
+    } else if (dbUser.permission === "ban") {
+      res.status(403).send("Access Forbidden");
+      return;
     }
     dbUser.lastLogin = new Date();
     dbUser = await dbUser.save();
@@ -77,13 +80,13 @@ const authJwtNotMandatory = async (req: any, res: Response, next: NextFunction) 
     if (!dbUser) {
       res.status(403).send("Access Forbidden");
       return;
+    } else if (dbUser.permission === "ban") {
+      delete req.user;
+      next();
+      return;
     }
     dbUser.lastLogin = new Date();
     dbUser = await dbUser.save();
-
-    // if (dbUser.permission === "ban") {
-    //   res.status(403).send("User is banned !");
-    // }
 
     const dbUserWithToken = dbUser.toObject();
     // @ts-ignore
