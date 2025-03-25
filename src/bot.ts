@@ -133,6 +133,7 @@ client.on('messageCreate', async (message) => {
     if (REGEX_CACHE.length !== 0) {
         for (const pattern of REGEX_CACHE) {
             const regex = new RegExp(pattern, 'i');
+            console.log(`Test de la regex : ${pattern}`);
             if (regex.test(message.content)) {
                 console.log(`Message "${message.content}" match avec la regex : ${pattern}`);
                 //TODO: Le role et le ping pour ban
@@ -228,8 +229,10 @@ const cacheRegexBan = async () => {
         });
         if (response.status === 201) {
             REGEX_CACHE = response.data.data.regex;
-            console.log('Regex mis à jour');
-            console.log(REGEX_CACHE);
+            // @ts-ignore
+            REGEX_CACHE = response.data.data.regex.map(regexString =>
+                regexString.replace(/\\\\/g, '\\')
+            );
         }
     } catch (err) {
         console.error('Erreur lors de l\'envoi des données :', err);
