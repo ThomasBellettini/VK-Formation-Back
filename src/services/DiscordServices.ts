@@ -10,7 +10,8 @@ class DiscordServices {
     this.uploadDailyStat = this.uploadDailyStat.bind(this);
     this.getStats = this.getStats.bind(this);
     this.getSchedule = this.getSchedule.bind(this);
-    this.updateDiscord = this.updateDiscord.bind(this);
+    this.updateShopItems = this.updateShopItems.bind(this);
+    this.updateRegex = this.updateRegex.bind(this);
     this.getShopItems = this.getShopItems.bind(this);
     this.getRegex = this.getRegex.bind(this);
   }
@@ -214,11 +215,38 @@ class DiscordServices {
     }
   }
 
-  async updateDiscord(req: Request) {
+  async updateShopItems(req: Request) {
     try {
       let discordData = await getOrCreateDiscordData();
       if (req.body.items)
         discordData.shopItems = req.body.items;
+      await discordData.save();
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          items: req.body.items ? req.body.items : []
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message: err
+        },
+      };
+    }
+  }
+
+  async updateRegex(req: Request) {
+    try {
+      let discordData = await getOrCreateDiscordData();
       if (req.body.regex)
         discordData.regex = req.body.regex;
       await discordData.save();
@@ -228,7 +256,7 @@ class DiscordServices {
         statusCode: 201,
         errors: null,
         data: {
-          items: req.body.items ? req.body.items : []
+          regex: req.body.regex ? req.body.regex : []
         },
       };
     } catch (err) {

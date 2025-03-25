@@ -190,6 +190,7 @@ router.get("/discord/schedule", DiscordController.getSchedule)
 router.get("/discord/items/list", DiscordController.getShopItems)
 router.get("/discord/regex/list", DiscordController.getRegex)
 router.patch("/discord/items/update", authJwt, checkRole("admin"), DiscordController.updateShopItems)
+router.patch("/discord/regex/update", authJwt, checkRole("admin"), DiscordController.updateRegex)
 
 router.post("/discord/link", authAPI, UserController.linkDiscord)
 router.get("/discord/user/:id", authAPI, UserController.userByDiscord)

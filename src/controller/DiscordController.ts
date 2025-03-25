@@ -15,6 +15,7 @@ class DiscordController {
     this.getSchedule = this.getSchedule.bind(this);
     this.getShopItems = this.getShopItems.bind(this);
     this.updateShopItems = this.updateShopItems.bind(this);
+    this.updateRegex = this.updateRegex.bind(this);
     this.getRegex = this.getRegex.bind(this);
   }
 
@@ -34,7 +35,12 @@ class DiscordController {
   }
 
   public async updateShopItems(req: Request, res: any) {
-    const r = await this.service.updateDiscord(req);
+    const r = await this.service.updateShopItems(req);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async updateRegex(req: Request, res: any) {
+    const r = await this.service.updateRegex(req);
     return res.status(r.statusCode).send(r);
   }
 

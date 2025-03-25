@@ -17,7 +17,7 @@ const DATA_FILE = path.join('./data/data.json');
 const PORT = 3010;
 const API_URL = process.env.API_URL;
 
-const REGEX_CACHE = [];
+let REGEX_CACHE: string[] = [];
 
 let cachedEvents: { title: string; description: string; dates: (string | undefined)[]; }[] = [];
 let cachedMessages: { author: string; authorImage: string; date: string; content: string; }[] = [];
@@ -128,6 +128,18 @@ client.on('messageCreate', async (message) => {
         else if (hasRole && actualPoint < 27075)
             dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1.5);
     }
+
+
+    if (REGEX_CACHE.length !== 0) {
+        for (const pattern of REGEX_CACHE) {
+            const regex = new RegExp(pattern, 'i');
+            if (regex.test(message.content)) {
+                console.log(`Message "${message.content}" match avec la regex : ${pattern}`);
+                //TODO: Le role et le ping pour ban
+                return;
+            }
+        }
+    }
 });
 
 client.on('guildMemberAdd', () => {
@@ -207,6 +219,21 @@ const uploadGlobalStat = async () => {
     }
 }
 
+const cacheRegexBan = async () => {
+    try {
+        let response = await axios.get(`${API_URL}/discord/regex/list`, {
+            headers: {
+                'X-VK-TOKEN': process.env.API_KEY
+            }
+        });
+        if (response.status === 201) {
+            REGEX_CACHE = response.data.data.regex;
+        }
+    } catch (err) {
+        console.error('Erreur lors de l\'envoi des données :', err);
+    }
+}
+
 
 
 client.once('ready', async () => {
@@ -228,6 +255,7 @@ client.once('ready', async () => {
     let refreshTime = 30 * 1000;
     await updateEventsCache();
     await updateMessagesCache();
+    setInterval(cacheRegexBan, refreshTime);
     setInterval(updateEventsCache, refreshTime);
     setInterval(updateMessagesCache, refreshTime);
     setInterval(uploadGlobalStat, refreshTime);
