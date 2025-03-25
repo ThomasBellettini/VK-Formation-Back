@@ -8,6 +8,7 @@ export interface IDiscord extends Document {
         name: string;
         cost: number;
     }[];
+    regex: string[];
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -23,8 +24,11 @@ const discordDataSchema: Schema<IDiscord> = new mongoose.Schema({
             type: Number,
             required: true
         }
+    }],
+    regex: [{
+        type: String,
+        required: true,
     }]
-
 }, {
     timestamps: true
 });
@@ -39,7 +43,8 @@ export const getOrCreateDiscordData = async (): Promise<IDiscord> => {
     if (!data) {
         console.log("Aucun document trouvé, création d'un nouveau...");
         data = new DiscordDataStats({
-            shopItems: []
+            shopItems: [],
+            regex: []
         });
         await data.save();
     }

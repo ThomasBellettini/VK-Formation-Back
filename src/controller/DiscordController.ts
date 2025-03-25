@@ -33,7 +33,7 @@ class DiscordController {
   }
 
   public async updateShopItems(req: Request, res: any) {
-    const r = await this.service.updateShopItems(req);
+    const r = await this.service.updateDiscord(req);
     return res.status(r.statusCode).send(r);
   }
 
