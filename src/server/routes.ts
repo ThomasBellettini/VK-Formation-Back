@@ -82,7 +82,7 @@ const authJwtNotMandatory = async (req: any, res: Response, next: NextFunction) 
     dbUser = await dbUser.save();
 
     if (dbUser.permission === "ban") {
-      throw new Error("User is banned !");
+      res.status(403).send("User is banned !");
     }
 
     const dbUserWithToken = dbUser.toObject();
