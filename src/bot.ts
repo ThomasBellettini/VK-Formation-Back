@@ -17,6 +17,8 @@ const DATA_FILE = path.join('./data/data.json');
 const PORT = 3010;
 const API_URL = process.env.API_URL;
 
+const REGEX_CACHE = [];
+
 let cachedEvents: { title: string; description: string; dates: (string | undefined)[]; }[] = [];
 let cachedMessages: { author: string; authorImage: string; date: string; content: string; }[] = [];
 

@@ -16,6 +16,7 @@ class UserServices {
     this.userByDiscord = this.userByDiscord.bind(this);
     this.makeTransaction = this.makeTransaction.bind(this);
     this.connectedAs = this.connectedAs.bind(this);
+    this.banByDiscord = this.banByDiscord.bind(this);
   }
 
   async list(req: Request) {
@@ -68,6 +69,34 @@ class UserServices {
       let userDb = await User.findById(id);
       if (!userDb) throw new Error("No user found !");
       userDb = await User.findByIdAndUpdate(id, req.body);
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          users: userDb,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error, no user found !",
+        },
+      };
+    }
+  }
+
+  async banByDiscord(discordID: string) {
+    try {
+      let userDb = await User.findOne({discordId: discordID});
+      if (!userDb) throw new Error("No user found !");
+      userDb.permission = "ban";
+      await userDb.save();
 
       return {
         success: true,

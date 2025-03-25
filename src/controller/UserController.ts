@@ -20,6 +20,7 @@ class UserController {
     this.userByDiscord = this.userByDiscord.bind(this);
     this.makeTransaction = this.makeTransaction.bind(this);
     this.connectedAs = this.connectedAs.bind(this);
+    this.banByDiscord = this.banByDiscord.bind(this);
   }
 
   public async list(req: Request, res: any) {
@@ -70,6 +71,11 @@ class UserController {
 
   public async connectedAs(req: Request, res: any) {
     const r = await this.service.connectedAs(req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async banByDiscord(req: Request, res: any) {
+    const r = await this.service.banByDiscord(req.params.id);
     return res.status(r.statusCode).send(r);
   }
 

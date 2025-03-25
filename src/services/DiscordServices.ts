@@ -12,6 +12,7 @@ class DiscordServices {
     this.getSchedule = this.getSchedule.bind(this);
     this.updateDiscord = this.updateDiscord.bind(this);
     this.getShopItems = this.getShopItems.bind(this);
+    this.getRegex = this.getRegex.bind(this);
   }
 
   async uploadDailyStat(req: Request) {
@@ -172,6 +173,31 @@ class DiscordServices {
         errors: null,
         data: {
           items: discordData.shopItems
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message: err
+        },
+      };
+    }
+  }
+
+  async getRegex() {
+    try {
+      let discordData = await getOrCreateDiscordData();
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          regex: discordData.regex || []
         },
       };
     } catch (err) {
