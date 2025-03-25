@@ -228,6 +228,8 @@ const cacheRegexBan = async () => {
         });
         if (response.status === 201) {
             REGEX_CACHE = response.data.data.regex;
+            console.log('Regex mis à jour');
+            console.log(REGEX_CACHE);
         }
     } catch (err) {
         console.error('Erreur lors de l\'envoi des données :', err);
