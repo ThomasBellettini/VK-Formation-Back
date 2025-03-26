@@ -16,7 +16,7 @@ class ContributorServices {
 
   async list(req: Request) {
     try {
-      let contributorsDB = await Contributor.find({}).sort({ name: 1 }) as IContributor[];
+      let contributorsDB = await Contributor.find({}).collation({ locale: 'fr', strength: 1 }).sort({ name: 1 }) as IContributor[];
 
       let contributors: IContributor[] = contributorsDB.map((contributor) => {
         let imageLink = StorageCdn.generateSecureLink(contributor.image);
