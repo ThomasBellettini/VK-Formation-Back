@@ -45,6 +45,9 @@ const authJwt = async (req: any, res: Response, next: NextFunction) => {
     if (!dbUser) {
       res.status(403).send("Access Forbidden");
       return;
+    } else if (dbUser.permission === "ban") {
+      res.status(403).send("Access Forbidden");
+      return;
     }
     dbUser.lastLogin = new Date();
     dbUser = await dbUser.save();
@@ -76,6 +79,10 @@ const authJwtNotMandatory = async (req: any, res: Response, next: NextFunction) 
     let dbUser = await User.findOne({ email: decoded.email });
     if (!dbUser) {
       res.status(403).send("Access Forbidden");
+      return;
+    } else if (dbUser.permission === "ban") {
+      delete req.user;
+      next();
       return;
     }
     dbUser.lastLogin = new Date();
@@ -184,10 +191,14 @@ router.get("/discord/stats", authJwtNotMandatory, DiscordController.getStats)
 router.get("/discord/schedule", DiscordController.getSchedule)
 
 router.get("/discord/items/list", DiscordController.getShopItems)
+router.get("/discord/regex/list", DiscordController.getRegex)
 router.patch("/discord/items/update", authJwt, checkRole("admin"), DiscordController.updateShopItems)
+router.patch("/discord/regex/update", authJwt, checkRole("admin"), DiscordController.updateRegex)
 
 router.post("/discord/link", authAPI, UserController.linkDiscord)
 router.get("/discord/user/:id", authAPI, UserController.userByDiscord)
 router.post("/discord/buy", authAPI, UserController.makeTransaction)
+
+router.post("/discord/ban/:id", authAPI, UserController.banByDiscord)
 
 export default router;

@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction, Client, GatewayIntentBits, REST, Routes} from 'discord.js';
+import {ChatInputCommandInteraction, Client, GatewayIntentBits, REST, Routes, TextChannel} from 'discord.js';
 import express from 'express';
 import fs from 'fs';
 import axios from 'axios';
@@ -16,6 +16,8 @@ const GUILD_ID = process.env.DISCORD_GUILD_ID;
 const DATA_FILE = path.join('./data/data.json');
 const PORT = 3010;
 const API_URL = process.env.API_URL;
+
+let REGEX_CACHE: string[] = [];
 
 let cachedEvents: { title: string; description: string; dates: (string | undefined)[]; }[] = [];
 let cachedMessages: { author: string; authorImage: string; date: string; content: string; }[] = [];
@@ -115,8 +117,9 @@ setInterval(() => {
 }, 1000);
 
 client.on('messageCreate', async (message) => {
+    if (!message.member) return console.log('Member not found');
+    if (!message.guild) return console.log('Guild not found');
     if (!message.author.bot) {
-        if (!message.member) return console.log('Member not found');
         globalDataTracking.set("messages", (globalDataTracking.get("messages") || 0) + 1);
         let member = message.member;
         let hasRole = member.roles.cache.has("1024829882569596959");
@@ -125,6 +128,29 @@ client.on('messageCreate', async (message) => {
             dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1);
         else if (hasRole && actualPoint < 27075)
             dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1.5);
+    }
+
+
+    if (REGEX_CACHE.length !== 0) {
+        for (const pattern of REGEX_CACHE) {
+            const regex = new RegExp(pattern, 'i');
+            console.log(`Test de la regex : ${pattern}`);
+            if (regex.test(message.content)) {
+                // let response = await axios.post(`${API_URL}/discord/ban/${message.member.id}`, null, {
+                //     headers: {
+                //         'X-VK-TOKEN': process.env.API_KEY
+                //     }
+                // });
+                // if (response.status === 201) {
+                //     let channel = message.guild.channels.cache.get("1326649580779212841") as TextChannel;
+                //     await channel.send(`L'utilisateur ${message.member} a été banni pour avoir envoyé un message interdit (${message.content}) !`);
+                // }
+                // await message.member.roles.add("1296875202461831209");
+                await message.delete();
+
+                return;
+            }
+        }
     }
 });
 
@@ -205,6 +231,21 @@ const uploadGlobalStat = async () => {
     }
 }
 
+const cacheRegexBan = async () => {
+    try {
+        let response = await axios.get(`${API_URL}/discord/regex/list`, {
+            headers: {
+                'X-VK-TOKEN': process.env.API_KEY
+            }
+        });
+        if (response.status === 201) {
+            REGEX_CACHE = response.data.data.regex;
+        }
+    } catch (err) {
+        console.error('Erreur lors de l\'envoi des données :', err);
+    }
+}
+
 
 
 client.once('ready', async () => {
@@ -226,6 +267,7 @@ client.once('ready', async () => {
     let refreshTime = 30 * 1000;
     await updateEventsCache();
     await updateMessagesCache();
+    setInterval(cacheRegexBan, refreshTime);
     setInterval(updateEventsCache, refreshTime);
     setInterval(updateMessagesCache, refreshTime);
     setInterval(uploadGlobalStat, refreshTime);
