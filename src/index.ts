@@ -8,7 +8,10 @@ async function main() {
     let httpServer = server.listen(PORT, () => {
         console.log(`App running on port ${PORT}`);
     });
-    httpServer.setTimeout(1000 * 60 * 720);
+    server.on('connection', function(socket) {
+        // @ts-ignore
+        socket.setTimeout(60 * 60 * 1000);
+    });
 
     try {
         console.log(chalk.blue("> Init admin"));
