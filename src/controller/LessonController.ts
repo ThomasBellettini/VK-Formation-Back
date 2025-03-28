@@ -22,6 +22,7 @@ class LessonController {
   }
 
   public async add(req: Request, res: Response) {
+    req.setTimeout(0);
     const r = await this.service.add(req);
     return res.status(r.statusCode).send(r);
   }
