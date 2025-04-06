@@ -277,6 +277,23 @@ app.get('/discord/messages', async (req, res) => {
     res.json(cachedMessages);
 });
 
+app.delete('/evaluation/finish/:channelId', async (req, res) => {
+    const channelId = req.params.channelId;
+
+    try {
+        const channel = await client.channels.fetch(channelId);
+        if (!channel) {
+            return res.status(404).json({ error: 'Channel not found' });
+        }
+
+        await channel.delete('Évaluation terminée – suppression du salon');
+        return res.status(200).json({ message: `Channel ${channelId} supprimé.` });
+    } catch (error) {
+        console.error(`Erreur suppression channel Discord:`, error);
+        return res.status(500).json({ error: 'Erreur lors de la suppression du channel' });
+    }
+})
+
 app.post("/evaluation/add", async (req, res) => {
     try {
         const { evaluation } = req.body;

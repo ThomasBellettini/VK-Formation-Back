@@ -803,6 +803,10 @@ class HolyServices {
         }
       }
 
+      if (evaluation.channelId && evaluation.channelId !== "") {
+        await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/${evaluation.channelId}`);
+      }
+
       await Evaluation.findByIdAndDelete(id);
       user.holyProjects.push({
         project: project._id,
@@ -810,7 +814,6 @@ class HolyServices {
         evaluator: evaluator._id
       })
 
-      //TODO: Envoyer un ping a discord pour clear channel
       if (req.body.percent >= 80)
         user.xp += project.xp;
       let cost = project.cost || 1;
