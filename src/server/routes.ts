@@ -12,7 +12,7 @@ import UserController from "../controller/UserController.js";
 import DiscordController from "../controller/DiscordController.js";
 import FolderController from "../controller/FolderController.js";
 import ContributorController from "../controller/ContributorController.js";
-import HolyProject from "../model/learning/HolyProject";
+import HolyProject from "../model/learning/HolyProject.js";
 
 const router = Router();
 
