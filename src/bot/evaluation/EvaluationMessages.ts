@@ -32,7 +32,6 @@ export const EvaluationButton = {
                 }
             }).then(async response => {
                if (response.data?.success) {
-                   console.log("PLEASE WORKZ");
 
                    let evaluation = response.data?.data.evaluation as IEvaluation;
                    let project = evaluation.project as IHolyProject;
@@ -46,7 +45,6 @@ export const EvaluationButton = {
                    if (!guild) {
                        return interaction.reply({ content: "❌ Erreur de configuration, veuillez contacter un administrateur !", ephemeral: true });
                    }
-                   console.log("PLEASE WORKS");
 
                    supportRole.forEach(role => {
                        permissionOverwrites.push({
@@ -62,12 +60,7 @@ export const EvaluationButton = {
                        id: user.id,
                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
                    });
-                   if (student?.discordId) {
-                       permissionOverwrites.push({
-                           id: student.discordId,
-                           allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-                       });
-                   }
+
                    const channelName = `${user.username}-${project.name}`;
 
                    const newChannel = await guild.channels.create({
