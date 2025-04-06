@@ -12,7 +12,7 @@ import UserController from "../controller/UserController.js";
 import DiscordController from "../controller/DiscordController.js";
 import FolderController from "../controller/FolderController.js";
 import ContributorController from "../controller/ContributorController.js";
-import HolyProject from "../model/learning/HolyProject.js";
+import HolyProject, {EvaluatorType, EvaluationType} from "../model/learning/HolyProject.js";
 
 const router = Router();
 
@@ -208,7 +208,7 @@ router.post("/discord/ban/:id", authAPI, UserController.banByDiscord)
 router.get("/update", async (req, res) => {
   await HolyProject.updateMany(
       {
-        $set: { evaluatorType: HolyProject.EvaluatorType.EVALUATOR, evaluationType: HolyProject.EvaluationType.STANDART, qcmContent: [] }
+        $set: { evaluatorType: EvaluatorType.EVALUATOR, evaluationType: EvaluationType.STANDARD, qcmContent: [] }
       }
   )
 });
