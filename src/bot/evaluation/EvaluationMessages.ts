@@ -41,6 +41,7 @@ export const EvaluationButton = {
                    let supportRole = ["1018989669393899610", "1098544186015367198"];
                    let permissionOverwrites = [];
                    const student = evaluation.user as IUser;
+                   console.log(JSON.stringify(response.data));
 
                    if (!guild) {
                        return interaction.reply({ content: "❌ Erreur de configuration, veuillez contacter un administrateur !", ephemeral: true });
