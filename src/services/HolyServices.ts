@@ -402,6 +402,17 @@ class HolyServices {
         }
         req.body.courses = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
       }
+        if (req.body.qcmContent) {
+            let qcmContent = JSON.parse(req.body.qcmContent);
+            req.body.qcmContent = qcmContent.map((qcm: any) => {
+            return {
+                question: qcm.question,
+                type: qcm.type,
+                options: qcm.options,
+                correctAnswers: qcm.correctAnswers
+            }
+            });
+        }
       if (req.body.links)
         req.body.links = JSON.parse(req.body.links);
       holyProject = await HolyProject.findByIdAndUpdate(id, req.body, {new: true});
