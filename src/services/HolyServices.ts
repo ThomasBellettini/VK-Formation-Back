@@ -857,7 +857,7 @@ class HolyServices {
       let project = evaluation.project as IHolyProject;
       let user = evaluation.user as IUser;
       if (project.evaluatorType === EvaluatorType.EVALUATOR) {
-        if (evaluator.permission !== "evaluateur" && evaluator.permission !== "admin") {
+        if (evaluator.permission !== "evaluateur" && evaluator.permission !== "admin" && evaluator.permission !== "formateur") {
           throw new Error("Vous n'êtes pas évaluateur !");
         }
       } else if (project.evaluatorType === EvaluatorType.FORMATOR) {
