@@ -80,7 +80,7 @@ export const EvaluationButton = {
                            'X-VK-TOKEN': process.env.API_KEY
                        }
                    }).catch(error => {
-                       console.log(JSON.stringify(error.response));
+                       console.log(JSON.stringify(error));
                        return interaction.reply({ content: "❌ Erreur, " + error.response?.data?.data?.message || error.message, ephemeral: true });
                    });
 
