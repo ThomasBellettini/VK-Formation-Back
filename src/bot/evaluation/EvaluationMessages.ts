@@ -22,7 +22,6 @@ export const EvaluationButton = {
         if (!interaction.customId.startsWith("eval-")) return;
 
         const itemId = interaction.customId.replace("eval-", "");
-        console.log(`Claim evaluation for ${itemId} (${interaction.user.id})`);
         try {
             axios.post(`${process.env.API_URL}/evaluation/claim/${itemId}`, {
                 discordId: interaction.user.id

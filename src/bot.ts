@@ -146,10 +146,9 @@ client.on('messageCreate', async (message) => {
     if (REGEX_CACHE.length !== 0) {
         for (const pattern of REGEX_CACHE) {
             const regex = new RegExp(pattern, 'i');
-            console.log(`Test de la regex : ${pattern}`);
             if (regex.test(message.content)) {
                 await message.delete();
-
+                console.log("REGEX FOUND !")
                 return;
             }
         }
