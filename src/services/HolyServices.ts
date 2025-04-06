@@ -811,6 +811,7 @@ class HolyServices {
 
           let resource = await Resource.findOne({ pathFile: path }) as IResource;
           if (resource) {
+            console.log(resource.pathFile)
             await StorageCdn.deleteEvaluationFile(`evaluation/${path}`);
             await Resource.findByIdAndDelete(resource._id);
           }
