@@ -38,7 +38,7 @@ export const EvaluationButton = {
                    let project = evaluation.project as IHolyProject;
                    const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID as string);
                    let user = interaction.user;
-                   let supportRole = ["1018989669393899610", "1098544186015367198"];
+                   let supportRole = ["1346534010020560987", "1098544186015367198"];
                    let permissionOverwrites = [];
                    const student = evaluation.user as IUser;
                    console.log(JSON.stringify(response.data));
