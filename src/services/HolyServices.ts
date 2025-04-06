@@ -809,10 +809,9 @@ class HolyServices {
           let path = file.replace(`${CST.URL.REDIRECT}`, "");
           console.log(path)
 
-          let resource = await Resource.findOne({ pathFile: path }) as IResource;
+          let resource = await Resource.findOne({ pathFile: `evaluation/${path}` }) as IResource;
           if (resource) {
-            console.log(resource.pathFile)
-            await StorageCdn.deleteEvaluationFile(`evaluation/${path}`);
+            await StorageCdn.deleteEvaluationFile(resource.pathFile);
             await Resource.findByIdAndDelete(resource._id);
           }
         }
