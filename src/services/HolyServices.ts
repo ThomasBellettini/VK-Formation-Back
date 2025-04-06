@@ -794,7 +794,10 @@ class HolyServices {
 
       if (project.evaluationType === EvaluationType.UPLOAD) {
         for (let file of evaluation.uploadFiles) {
+          console.log(file)
           let path = file.replace(`${CST.URL.REDIRECT}`, "");
+          console.log(path)
+
           let resource = await Resource.findOne({ pathFile: path }) as IResource;
           if (resource) {
             await StorageCdn.deleteEvaluationFile(`evaluation/${path}`);
