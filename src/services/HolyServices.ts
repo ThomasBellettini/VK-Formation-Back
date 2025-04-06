@@ -896,7 +896,7 @@ class HolyServices {
           throw new Error("Vous n'êtes pas formateur !");
         }
       }
-      await Evaluation.findByIdAndUpdate(id, {evaluator: evaluator._id});
+      evaluation = await Evaluation.findByIdAndUpdate(id, {evaluator: evaluator._id}, {new: true});
       return {
         success: true,
         statusCode: 201,
