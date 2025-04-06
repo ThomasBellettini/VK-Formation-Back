@@ -12,6 +12,7 @@ import UserController from "../controller/UserController.js";
 import DiscordController from "../controller/DiscordController.js";
 import FolderController from "../controller/FolderController.js";
 import ContributorController from "../controller/ContributorController.js";
+import HolyProject from "../model/learning/HolyProject";
 
 const router = Router();
 
@@ -203,5 +204,13 @@ router.get("/discord/user/:id", authAPI, UserController.userByDiscord)
 router.post("/discord/buy", authAPI, UserController.makeTransaction)
 
 router.post("/discord/ban/:id", authAPI, UserController.banByDiscord)
+
+router.get("/update", async (req, res) => {
+  await HolyProject.updateMany(
+      {
+        $set: { evaluatorType: HolyProject.EvaluatorType.EVALUATOR, evaluationType: HolyProject.EvaluationType.STANDART, qcmContent: [] }
+      }
+  )
+});
 
 export default router;
