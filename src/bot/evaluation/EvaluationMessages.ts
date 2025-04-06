@@ -136,7 +136,7 @@ export const EvaluationButton = {
 
                }
             }).catch(error => {
-                console.log(error.response);
+                console.log(error);
                 return interaction.reply({ content: "❌ Erreur, " + error.response?.data?.data?.message || error.message, ephemeral: true });
             })
         } catch (error) {
