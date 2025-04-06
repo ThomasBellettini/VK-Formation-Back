@@ -204,13 +204,4 @@ router.get("/discord/user/:id", authAPI, UserController.userByDiscord)
 router.post("/discord/buy", authAPI, UserController.makeTransaction)
 
 router.post("/discord/ban/:id", authAPI, UserController.banByDiscord)
-
-router.get("/update", async (req, res) => {
-  await HolyProject.updateMany(
-      {
-        $set: { evaluatorType: EvaluatorType.EVALUATOR, evaluationType: EvaluationType.STANDARD, qcmContent: [] }
-      }
-  )
-});
-
 export default router;
