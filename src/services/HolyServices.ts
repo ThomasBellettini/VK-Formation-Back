@@ -3,10 +3,11 @@ import User, {IUser} from "../model/User.js";
 import {Request} from "express";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
-import Evaluation from "../model/learning/Evaluation.js";
+import Evaluation, {IEvaluation} from "../model/learning/Evaluation.js";
 import CST from "../server/constants.js";
 import holyProject from "../model/learning/HolyProject.js";
 import axios from "axios";
+import Resource, {IResource} from "../model/Resource.js";
 
 interface IHolyGraph {
     _id: mongoose.Types.ObjectId;
@@ -771,7 +772,7 @@ class HolyServices {
       let evaluation = await Evaluation.findById(id)
           .populate("project")
           .populate("evaluator")
-          .lean();
+          .lean() as IEvaluation;
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
@@ -790,12 +791,25 @@ class HolyServices {
         throw new Error("You can't evaluate yourself !");
       }
       let project = evaluation.project as IHolyProject;
+
+      if (project.evaluationType === EvaluationType.UPLOAD) {
+        for (let file of evaluation.uploadFiles) {
+          let path = file.replace(`${CST.URL.REDIRECT}`, "");
+          let resource = await Resource.findOne({ pathFile: path }) as IResource;
+          if (resource) {
+            await StorageCdn.deleteEvaluationFile(`evaluation/${path}`);
+            await Resource.findByIdAndDelete(resource._id);
+          }
+        }
+      }
+
       await Evaluation.findByIdAndDelete(id);
       user.holyProjects.push({
         project: project._id,
         resultPercent: req.body.percent,
         evaluator: evaluator._id
       })
+
       //TODO: Envoyer un ping a discord pour clear channel
       if (req.body.percent >= 80)
         user.xp += project.xp;

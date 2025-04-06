@@ -119,6 +119,23 @@ class StorageCdn {
         }
     }
 
+    async deleteEvaluationFile(path: string): Promise<boolean> {
+        try {
+            const url = `https://storage.bunnycdn.com/${this.storageZoneName}/${path}`;
+            await axios.delete(url, {
+                headers: {
+                    AccessKey: this.accessKey,
+                    'Content-Type': 'application/octet-stream',
+                },
+            });
+
+            return true;
+        } catch (error: Error | any) {
+            console.error(`Erreur upload BunnyCDN:`, error.response?.data || error.message);
+            throw new Error("Upload vers BunnyCDN échoué");
+        }
+    }
+
 
     /**
      * Genere un lien sécurisé pour accéder à un fichier sur BunnyCDN
@@ -197,6 +214,8 @@ class StorageCdn {
             throw new Error(`Erreur lors du streaming du fichier: ${error.message}`);
         }
     }
+
+
 
     /**
      * Génère un nom de fichier aléatoire en conservant son extension
