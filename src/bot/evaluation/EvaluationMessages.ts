@@ -86,47 +86,49 @@ export const EvaluationButton = {
                    }).catch(error => {
                        console.log(JSON.stringify(error));
                        return interaction.reply({ content: "❌ Erreur, " + error.response?.data?.data?.message || error.message, ephemeral: true });
+                   }).then((response) => {
+                       const evaluatorTag = interaction.user.tag;
+                       const studentDiscordId = student.discordId;
+                       const studentTag = studentDiscordId ? `<@${studentDiscordId}>` : "Non renseigné";
+                       const projectName = project.name;
+                       const xp = project.xp;
+                       const evaluationText = project.evaluationText;
+                       const uploadFiles = evaluation.uploadFiles || [];
+                       const shareLinks = evaluation.shareLinks || [];
+
+                       const embed = new EmbedBuilder()
+                           .setTitle("📋 Nouvelle Évaluation")
+                           .setColor(0x301934) // Violet foncé
+                           .addFields(
+                               { name: "🧑‍🏫 Évaluateur", value: evaluatorTag, inline: true },
+                               { name: "👨‍🎓 Élève", value: studentTag, inline: true },
+                               { name: "📘 Projet", value: projectName, inline: false },
+                               { name: "✨ XP Gagnée", value: `${xp} XP`, inline: true },
+                               { name: "🖋️ Lien d'évaluation", value: `🔗 ${process.env.FRONTEND_URL}/${evaluation._id}`, inline: false },
+                           );
+                       if (evaluationText) {
+                           embed.addFields({ name: "📝 Commentaire", value: evaluationText, inline: false });
+                       }
+                       if (uploadFiles.length > 0) {
+                           embed.addFields({
+                               name: "📎 Fichiers Uploadés",
+                               value: uploadFiles.map(f => `🔗 ${f}`).join('\n'),
+                               inline: false
+                           });
+                       }
+                       if (shareLinks.length > 0) {
+                           embed.addFields({
+                               name: "🌐 Liens Partagés",
+                               value: shareLinks.map(l => `🔗 ${l}`).join('\n'),
+                               inline: false
+                           });
+                       }
+                       await newChannel.send({ embeds: [embed] });
+                       await interaction.message.delete();
+                       return interaction.reply({ content: "Evaluation claim avec succès !", ephemeral: true });
                    });
 
-                   const evaluatorTag = interaction.user.tag;
-                   const studentDiscordId = student.discordId;
-                   const studentTag = studentDiscordId ? `<@${studentDiscordId}>` : "Non renseigné";
-                   const projectName = project.name;
-                   const xp = project.xp;
-                   const evaluationText = project.evaluationText;
-                   const uploadFiles = evaluation.uploadFiles || [];
-                   const shareLinks = evaluation.shareLinks || [];
 
-                   const embed = new EmbedBuilder()
-                       .setTitle("📋 Nouvelle Évaluation")
-                       .setColor(0x301934) // Violet foncé
-                       .addFields(
-                           { name: "🧑‍🏫 Évaluateur", value: evaluatorTag, inline: true },
-                           { name: "👨‍🎓 Élève", value: studentTag, inline: true },
-                           { name: "📘 Projet", value: projectName, inline: false },
-                           { name: "✨ XP Gagnée", value: `${xp} XP`, inline: true },
-                           { name: "🖋️ Lien d'évaluation", value: `🔗 ${process.env.FRONTEND_URL}/${evaluation._id}`, inline: false },
-                       );
-                   if (evaluationText) {
-                       embed.addFields({ name: "📝 Commentaire", value: evaluationText, inline: false });
-                   }
-                   if (uploadFiles.length > 0) {
-                       embed.addFields({
-                           name: "📎 Fichiers Uploadés",
-                           value: uploadFiles.map(f => `🔗 ${f}`).join('\n'),
-                           inline: false
-                       });
-                   }
-                   if (shareLinks.length > 0) {
-                       embed.addFields({
-                           name: "🌐 Liens Partagés",
-                           value: shareLinks.map(l => `🔗 ${l}`).join('\n'),
-                           inline: false
-                       });
-                   }
-                   await newChannel.send({ embeds: [embed] });
-                   await interaction.message.delete();
-                   return interaction.reply({ content: "Evaluation claim avec succès !", ephemeral: true });
                }
             }).catch(error => {
                 console.log(error.response);
