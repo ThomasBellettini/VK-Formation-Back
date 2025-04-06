@@ -122,10 +122,10 @@ class StorageCdn {
     async deleteEvaluationFile(path: string): Promise<boolean> {
         try {
             const url = `https://storage.bunnycdn.com/${this.storageZoneName}/${path}`;
+            console.log(url);
             await axios.delete(url, {
                 headers: {
-                    AccessKey: this.accessKey,
-                    'Content-Type': 'application/octet-stream',
+                    AccessKey: this.accessKey
                 },
             });
 
