@@ -40,7 +40,6 @@ export const EvaluationButton = {
                    let supportRole = ["1346534010020560987", "1098544186015367198"];
                    let permissionOverwrites = [];
                    const student = evaluation.user as IUser;
-                   console.log(JSON.stringify(response.data));
 
                    if (!guild) {
                        return interaction.reply({ content: "❌ Erreur de configuration, veuillez contacter un administrateur !", ephemeral: true });
@@ -61,6 +60,13 @@ export const EvaluationButton = {
                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
                    });
 
+                   let studentMember = await guild.members.fetch(student.discordId);
+                   if (studentMember) {
+                       permissionOverwrites.push({
+                           id: studentMember.id,
+                           allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                       });
+                   }
                    const channelName = `${user.username}-${project.name}`;
 
                    const newChannel = await guild.channels.create({
@@ -69,7 +75,6 @@ export const EvaluationButton = {
                        parent: process.env.DISCORD_EVALUATION_CATEGORY_ID,
                        permissionOverwrites: permissionOverwrites
                    });
-                   console.log("PLEASE WORK", newChannel.id);
 
                    await axios.post(`${process.env.API_URL}/evaluation/channel/${itemId}`, {
                        channelId: newChannel.id
