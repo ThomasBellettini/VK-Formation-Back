@@ -32,6 +32,8 @@ export const EvaluationButton = {
                 }
             }).then(async response => {
                if (response.data?.success) {
+                   console.log("PLEASE WORKZ");
+
                    let evaluation = response.data?.data.evaluation as IEvaluation;
                    let project = evaluation.project as IHolyProject;
                    const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID as string);
@@ -43,6 +45,7 @@ export const EvaluationButton = {
                    if (!guild) {
                        return interaction.reply({ content: "❌ Erreur de configuration, veuillez contacter un administrateur !", ephemeral: true });
                    }
+                   console.log("PLEASE WORKS");
 
                    supportRole.forEach(role => {
                        permissionOverwrites.push({
