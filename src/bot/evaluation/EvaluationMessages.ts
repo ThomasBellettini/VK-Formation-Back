@@ -99,7 +99,7 @@ export const EvaluationButton = {
                            .setTitle("📋 Nouvelle Évaluation")
                            .setColor(0x301934) // Violet foncé
                            .addFields(
-                               {name: "🧑‍🏫 Évaluateur", value: evaluatorTag, inline: true},
+                               {name: "🧑‍🏫 Évaluateur", value: user.tag, inline: true},
                                {name: "👨‍🎓 Élève", value: studentTag, inline: true},
                                {name: "📘 Projet", value: projectName, inline: false},
                                {name: "✨ XP Gagnée", value: `${xp} XP`, inline: true},
