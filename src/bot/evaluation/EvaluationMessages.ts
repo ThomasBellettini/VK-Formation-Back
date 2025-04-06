@@ -72,6 +72,7 @@ export const EvaluationButton = {
                        parent: process.env.DISCORD_EVALUATION_CATEGORY_ID,
                        permissionOverwrites: permissionOverwrites
                    });
+                   console.log("PLEASE WORK", newChannel.id);
 
                    await axios.post(`${process.env.API_URL}/evaluation/channel/${itemId}`, {
                        channelId: newChannel.id
