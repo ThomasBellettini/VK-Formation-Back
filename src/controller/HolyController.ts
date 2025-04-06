@@ -17,6 +17,8 @@ class HolyController {
     this.evaluateUpdateUser = this.evaluateUpdateUser.bind(this);
     this.delete = this.delete.bind(this);
     this.hasEvaluationLink = this.hasEvaluationLink.bind(this);
+    this.claimEvaluation = this.claimEvaluation.bind(this);
+    this.updateChannelFromDiscord = this.updateChannelFromDiscord.bind(this);
   }
 
   public async list(req: Request, res: Response) {
@@ -61,6 +63,16 @@ class HolyController {
 
   public async delete(req: Request, res: Response) {
     const r = await this.service.delete(req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async claimEvaluation(req: Request, res: Response) {
+    const r = await this.service.claimEvaluation(req, req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async updateChannelFromDiscord(req: Request, res: Response) {
+    const r = await this.service.updateChannelFromDiscord(req, req.params.id);
     return res.status(r.statusCode).send(r);
   }
 }

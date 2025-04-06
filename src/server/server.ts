@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import setRoutes from "./routes.js";
 import morgan from "morgan";
+import ResourceController from "../controller/ResourceController.js";
 
 const server : Express = express();
 server.use(helmet());
@@ -24,4 +25,6 @@ server.use((req, res, next) => {
 server.use(cors());
 server.use(morgan('dev'));
 server.use("/v1/api", setRoutes);
+
+server.get("/storage/:path", ResourceController.download);
 export default server;

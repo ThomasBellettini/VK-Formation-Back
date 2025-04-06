@@ -1,16 +1,12 @@
-import HolyProject from "../model/learning/HolyProject.js";
-import User, {IUser} from "../model/User.js";
 import {Request} from "express";
-import {ICourseBundle} from "../model/learning/CourseBundle.js";
-import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 import Resource from "../model/Resource.js";
-import jwt from "jsonwebtoken";
-import CST from "../server/constants.js";
+import storageCdn from "../utils/StorageCdn.js";
 
 class ResourceServices {
   constructor() {
     this.view = this.view.bind(this);
+    this.download = this.download.bind(this);
   }
 
   async view(req: Request, res: any) {
@@ -47,6 +43,27 @@ class ResourceServices {
       return res.status(500).json({ error: err.message || "Erreur inconnue" });
     }
   }
+
+  async download(req: Request, res: any) {
+    try {
+      let resourcePath = req.params.path as string;
+      if (!resourcePath) {
+        return res.status(400).json({ error: "Path is required to view resource" });
+      }
+      resourcePath = `evaluation/${resourcePath}`;
+      let resource = await Resource.findOne({ pathFile: resourcePath });
+      if (!resource) {
+        return res.status(404).json({ error: "Resource not found" });
+      }
+      let secureUrl = storageCdn.generateSecureLink(resourcePath);
+      res.redirect(secureUrl);
+
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || "Erreur inconnue" });
+    }
+  }
+
+
 
 }
 export default ResourceServices;

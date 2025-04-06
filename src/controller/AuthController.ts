@@ -16,6 +16,7 @@ class AuthController {
     this.forgotPassword = this.forgotPassword.bind(this);
     this.resetPassword = this.resetPassword.bind(this);
     this.registerWebhook = this.registerWebhook.bind(this);
+    this.deleteWebhook = this.deleteWebhook.bind(this);
   }
 
   public async me(req: Request, res: any) {
@@ -64,6 +65,13 @@ class AuthController {
   public async accountConfirmation(req: Request, res: Response) {
     const r = await this.service.accountConfirmation(
         req.body.code
+    );
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async deleteWebhook(req: Request, res: Response) {
+    const r = await this.service.deleteWebhook(
+        req
     );
     return res.status(r.statusCode).send(r);
   }

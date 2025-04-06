@@ -25,6 +25,10 @@ export default {
     TOKEN_EXPIRATION: process.env.TOKEN_EXPIRATION,
   },
   DISCORD: {
-    MODULE: process.env.DISCORD_MODULE_URL
+    MODULE: process.env.DISCORD_MODULE_URL,
+    API_URL: process.env.DISCORD_MODULE_URL,
+  },
+  URL: {
+    REDIRECT: process.env.URL_REDIRECT
   }
 };

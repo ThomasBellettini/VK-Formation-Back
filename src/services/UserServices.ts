@@ -4,6 +4,8 @@ import Transaction from "../model/Transaction.js";
 import {getOrCreateDiscordData} from "../model/Discord.js";
 import * as sea from "node:sea";
 import {generateToken} from "../utils/JWTUtils.js";
+import Evaluation from "../model/learning/Evaluation.js";
+import {IHolyProject} from "../model/learning/HolyProject.js";
 
 class UserServices {
   constructor() {
@@ -130,6 +132,19 @@ class UserServices {
 
       userDb.discordId = discordId;
       userDb.discordLinkCode = "";
+
+      let evaluation = await Evaluation.findOne({user: userDb._id, discord: true}).populate("project");
+      if (evaluation) {
+        userDb.holyProjects.push({
+          project: evaluation.project,
+          resultPercent: 100,
+          evaluator: null
+        })
+        let project = evaluation.project as IHolyProject;
+        userDb.xp += project.xp;
+        await Evaluation.findByIdAndDelete(evaluation._id);
+      }
+
       await userDb.save();
 
       return {
@@ -188,6 +203,12 @@ class UserServices {
       if (!item) {
         throw new Error("Aucun item trouvé avec cet id !");
       }
+      let buyEvaluator = false;
+      if (item.name === "Grade évaluateur") {
+        if (userDb.permission === "evaluateur") throw new Error("Vous êtes déjà évaluateur !");
+        userDb.permission = "evaluateur";
+        buyEvaluator = true;
+      }
       if (userDb.coin < item.cost) throw new Error("Vous n'avez pas assez de valek coins !");
       userDb.coin -= item.cost;
 
@@ -204,7 +225,8 @@ class UserServices {
         errors: null,
         data: {
           item: item,
-          user: userDb
+          user: userDb,
+          evaluator: buyEvaluator
         },
       };
     } catch (err: any) {

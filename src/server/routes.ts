@@ -133,6 +133,7 @@ const checkRole = (role: string) => async (req: any, res: Response, next: NextFu
 
 router.post("/login", AuthController.login);
 router.post("/register", authAPI, AuthController.register)
+router.post("/unregister", authAPI, AuthController.deleteWebhook)
 router.post("/forgot", AuthController.forgotPassword)
 router.patch("/forgot", AuthController.resetPassword)
 
@@ -160,7 +161,9 @@ router.get("/evaluation/info/:id", authJwt, HolyController.evaluateInfo)
 router.patch("/evaluation/update/:id", authJwt, HolyController.evaluateUpdateUser)
 
 router.get("/evaluation/link/info/:url", authJwt, HolyController.hasEvaluationLink)
-router.post("/evaluation/link/add", authJwt, HolyController.generateEvaluation)
+router.post("/evaluation/link/add", authJwt, upload.array("files"), HolyController.generateEvaluation)
+router.post("/evaluation/claim/:id", authAPI, HolyController.claimEvaluation)
+router.post("/evaluation/channel/:id", authAPI, HolyController.updateChannelFromDiscord)
 
 router.get("/sub-modules/list", authJwt,  checkRole("admin"), FolderController.list)
 router.post("/sub-modules/add", authJwt, checkRole("admin"), upload.single('image'), FolderController.add)

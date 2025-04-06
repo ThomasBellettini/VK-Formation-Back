@@ -27,7 +27,7 @@ export const linkCommand = {
                 }
             }).then(async response => {
                 if (response.status === 201) {
-                    await member.roles.add(roleId);
+                    // await member.roles.add(roleId);
                     await interaction.reply({
                         content: `Félicitation, vous venez de lier votre compte discord à votre compte de formation ayant pour email ${response.data.data.user.email}`,
                         ephemeral: true

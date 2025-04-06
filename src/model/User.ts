@@ -29,6 +29,7 @@ export interface IUser extends Document {
     holyProjects: {
         project: mongoose.Types.ObjectId | IHolyProject;
         resultPercent: number;
+        evaluator: (mongoose.Types.ObjectId | IUser) | null;
     }[];
 
     createdAt?: Date;
@@ -86,6 +87,11 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         resultPercent: {
             type: Number,
             default: 0
+        },
+        evaluator: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
         }
     }],
     discordAccess: {
@@ -105,7 +111,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         type: Date,
         required: false,
         default: null
-    }
+    },
 
 }, {
     timestamps: true

@@ -1,11 +1,12 @@
-import HolyProject, {IHolyProject} from "../model/learning/HolyProject.js";
+import HolyProject, {EvaluationType, EvaluatorType, IHolyProject, QCMType} from "../model/learning/HolyProject.js";
 import User, {IUser} from "../model/User.js";
 import {Request} from "express";
-import {ICourseBundle} from "../model/learning/CourseBundle.js";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 import Evaluation from "../model/learning/Evaluation.js";
-import * as process from "node:process";
+import CST from "../server/constants.js";
+import holyProject from "../model/learning/HolyProject.js";
+import axios from "axios";
 
 interface IHolyGraph {
     _id: mongoose.Types.ObjectId;
@@ -14,7 +15,7 @@ interface IHolyGraph {
 
     level: number | null;
     url: string;
-    evaluationText: string;
+    evaluationText: string | null;
     content: string | null;
     linkedProjectId: string;
 
@@ -22,6 +23,22 @@ interface IHolyGraph {
 
     cdnVideoContent: string | null;
     cdnAudioContent: string | null;
+
+    evaluationType: EvaluationType;
+    evaluatorType: EvaluatorType;
+
+    uploadFilesDescription: string | null;
+    uploadFilesCount: number | null;
+
+    qcmContent: {
+      question: string;
+      type: QCMType;
+      options: string[];
+      correctAnswers: string[];
+    }[];
+
+    shareLinksDescription: string | null;
+    shareLinksCount: string | null;
 
     hasPermission: boolean;
     projectDone: boolean;
@@ -49,6 +66,8 @@ class HolyServices {
     this.evaluateUpdateUser = this.evaluateUpdateUser.bind(this);
     this.delete = this.delete.bind(this);
     this.hasEvaluationLink = this.hasEvaluationLink.bind(this);
+    this.claimEvaluation = this.claimEvaluation.bind(this);
+    this.updateChannelFromDiscord = this.updateChannelFromDiscord.bind(this);
   }
 
   async list(req: Request) {
@@ -119,7 +138,14 @@ class HolyServices {
             xp: iterator.xp,
             links: iterator.links,
             createdAt: iterator.createdAt,
-            updatedAt: iterator.updatedAt
+            updatedAt: iterator.updatedAt,
+            uploadFilesDescription: iterator.uploadFilesDescription,
+            uploadFilesCount: iterator.uploadFilesCount,
+            shareLinksDescription: iterator.shareLinksDescription,
+            shareLinksCount: iterator.shareLinksCount,
+            qcmContent: [],
+            evaluationType: iterator.evaluationType,
+            evaluatorType: iterator.evaluatorType
           };
         });
       } else {
@@ -143,7 +169,14 @@ class HolyServices {
             percent: null,
             links: [],
             createdAt: iterator.createdAt,
-            updatedAt: iterator.updatedAt
+            updatedAt: iterator.updatedAt,
+            uploadFilesDescription: null,
+            uploadFilesCount: null,
+            shareLinksDescription: null,
+            shareLinksCount: null,
+            qcmContent: [],
+            evaluationType: iterator.evaluationType,
+            evaluatorType: iterator.evaluatorType
           };
         });
       }
@@ -223,6 +256,15 @@ class HolyServices {
         hasPermission = holyProjectDatabase.level <= maxLevelCompleted + 1;
       }
 
+      let qcmContent = holyProjectDatabase.qcmContent.map((qcm => {
+        return {
+          question: qcm.question,
+          type: qcm.type,
+          options: qcm.options,
+          correctAnswers: []
+        }
+      }));
+
       let holyProject: IHolyGraph = {
         _id: holyProjectDatabase._id,
         name: holyProjectDatabase.name,
@@ -241,7 +283,14 @@ class HolyServices {
         percent: percent,
         links: holyProjectDatabase.links,
         createdAt: holyProjectDatabase.createdAt,
-        updatedAt: holyProjectDatabase.updatedAt
+        updatedAt: holyProjectDatabase.updatedAt,
+        uploadFilesDescription: holyProjectDatabase.uploadFilesDescription,
+        uploadFilesCount: holyProjectDatabase.uploadFilesCount,
+        shareLinksDescription: holyProjectDatabase.shareLinksDescription,
+        shareLinksCount: holyProjectDatabase.shareLinksCount,
+        qcmContent: qcmContent,
+        evaluationType: holyProjectDatabase.evaluationType,
+        evaluatorType: holyProjectDatabase.evaluatorType
       };
 
       return {
@@ -288,6 +337,25 @@ class HolyServices {
       }
       if (req.body.links)
         req.body.links = JSON.parse(req.body.links);
+      if (req.body.qcmContent) {
+        let qcmContent = JSON.parse(req.body.qcmContent);
+        req.body.qcmContent = qcmContent.map((qcm: any) => {
+          return {
+            question: qcm.question,
+            type: qcm.type,
+            options: qcm.options,
+            correctAnswers: qcm.correctAnswers
+          }
+        });
+      }
+      if (req.body.uploadFilesDescription === 'undefined')
+        req.body.uploadFilesDescription = null;
+      if (req.body.uploadFilesCount === 'undefined')
+        req.body.uploadFilesCount = 0;
+      if (req.body.shareLinksDescription === 'undefined')
+        req.body.shareLinksDescription = null;
+      if (req.body.shareLinksCount === 'undefined')
+        req.body.shareLinksCount = 0;
       let holyProject = await HolyProject.create(req.body);
 
       return {
@@ -460,7 +528,8 @@ class HolyServices {
       }
       // @ts-ignore
       let user = req.user as IUser;
-      if (!user._id) {
+      let databaseUser = await User.findById(user._id);
+      if (!databaseUser) {
         throw new Error("No user found !");
       }
       if (user.coin < (holyProject.cost || 1)) {
@@ -471,9 +540,10 @@ class HolyServices {
       if (userProject?.resultPercent) {
         throw new Error("Project already done !");
       }
+
       let evaluationDB = await Evaluation.findOne({user: user._id, project: holyProject._id});
-        if (evaluationDB) {
-          return {
+      if (evaluationDB) {
+        return {
             success: true,
             statusCode: 201,
             errors: null,
@@ -481,15 +551,144 @@ class HolyServices {
               message: "Evaluation already exist !",
               evaluationID: evaluationDB._id
             },
-          };
-        }
+        };
+      }
 
-      let evaluation = await Evaluation.create({
+      let additionalInformation = [];
+      let discordChannel = false;
+      let evaluation = null;
+
+      switch (holyProject.evaluationType) {
+        case EvaluationType.DISCORD:
+          if (user.discordId && user.discordId !== "") {
+            databaseUser.holyProjects.push({
+                project: holyProject._id,
+                resultPercent: 100,
+                evaluator: null
+            })
+            databaseUser.xp += holyProject.xp;
+            databaseUser.coin -= (holyProject.cost || 1);
+            await databaseUser.save();
+            return {
+              success: true,
+              statusCode: 201,
+              errors: null,
+              data: {
+                message: "Evaluation finished with success",
+                percent: 100,
+                evaluationID: null
+              },
+            }
+          }
+          evaluation = await Evaluation.create({
+            user: user._id,
+            project: holyProject._id,
+            discord: true
+          });
+          break;
+        case EvaluationType.STANDARD:
+          discordChannel = true;
+          break;
+        case EvaluationType.UPLOAD:
+          if (!req.files || req.files.length !== holyProject.uploadFilesCount) {
+            throw new Error("You must provide all upload files !");
+          }
+          // @ts-ignore
+          for (let file of req.files) {
+            const identifier = await StorageCdn.generateRandomFilename(file.originalname);
+            let filePath = `evaluation/${identifier}`;
+            let { bunnyFilePath, duration } = await StorageCdn.uploadEvaluationFile(file.path, filePath, file.originalname);
+            if (bunnyFilePath && bunnyFilePath !== "") {
+                additionalInformation.push(`${CST.URL.REDIRECT}${identifier}`);
+            } else {
+              throw new Error("Error during upload file !");
+            }
+          }
+          discordChannel = true;
+          break;
+        case EvaluationType.SHARE_LINKS:
+            if (!req.body.shareLinks || req.body.shareLinks.length === 0) {
+                throw new Error("Share links is mandatory !");
+            }
+            if (req.body.shareLinks.length !== holyProject.shareLinksCount) {
+                throw new Error("You must provide all share links !");
+            }
+            additionalInformation = req.body.shareLinks;
+            discordChannel = true;
+            break;
+        case EvaluationType.QCM:
+          const bodyQcm = JSON.parse(req.body.answers);
+          console.log(bodyQcm);
+
+          if (!bodyQcm || Object.keys(bodyQcm).length === 0) {
+            throw new Error("QCM content is mandatory !");
+          }
+
+          if (Object.keys(bodyQcm).length !== holyProject.qcmContent.length) {
+            throw new Error("You must provide all qcm content !");
+          }
+
+          let totalQuestions = holyProject.qcmContent.length;
+          let correctCount = 0;
+
+          for (let i = 0; i < totalQuestions; i++) {
+            const qcm = holyProject.qcmContent[i];
+            const submittedAnswers: string[] = bodyQcm[i.toString()] || [];
+
+            if (!Array.isArray(submittedAnswers)) {
+              throw new Error(`Answers for question ${i} must be an array`);
+            }
+
+            const expectedAnswers = qcm.correctAnswers;
+            const allOptions = qcm.options;
+
+            const hasAllCorrect = expectedAnswers.every(ans => submittedAnswers.includes(ans));
+            const hasNoWrong = submittedAnswers.every(ans => expectedAnswers.includes(ans));
+
+            if (hasAllCorrect && hasNoWrong) {
+              correctCount++;
+            }
+          }
+          let percent = Math.round((correctCount / totalQuestions) * 100);
+          databaseUser.holyProjects.push({
+            project: holyProject._id,
+            resultPercent: percent,
+            evaluator: null
+          });
+          databaseUser.coin -= (holyProject.cost || 1);
+          if (percent >= 80) {
+            databaseUser.xp += holyProject.xp;
+          }
+          await databaseUser.save();
+          return {
+            success: true,
+            statusCode: 201,
+            errors: null,
+            data: {
+              message: "Evaluation finished with success",
+              percent: percent,
+              evaluationID: null
+            },
+          }
+        default:
+            throw new Error("No evaluation type found !");
+      }
+      evaluation = await Evaluation.create({
         user: user._id,
-        project: holyProject._id
+        project: holyProject._id,
+        uploadFiles: (holyProject.evaluationType === EvaluationType.UPLOAD ? additionalInformation : []),
+        sharedLinks: (holyProject.evaluationType === EvaluationType.SHARE_LINKS ? additionalInformation : []),
       });
+      evaluation.project = holyProject as unknown as IHolyProject;
+      evaluation.user = user;
+
       await User.findByIdAndUpdate(user._id, {coin: user.coin - (holyProject.cost || 1)});
 
+      if (discordChannel) {
+        await axios.post(`${CST.DISCORD.API_URL}/evaluation/add`, {
+          evaluation: evaluation
+        })
+      }
 
       return {
         success: true,
@@ -518,7 +717,7 @@ class HolyServices {
     try {
       // @ts-ignore
       let requestUser = req.user as IUser;
-      const evaluation = await Evaluation.findById(id).populate("project").lean();
+      const evaluation = await Evaluation.findById(id).populate("project").populate("evaluator").lean();
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
@@ -531,6 +730,13 @@ class HolyServices {
       }
       if (evaluation.percent && evaluation.percent > 0) {
         throw new Error("Evaluation already done !");
+      }
+      let evaluator = evaluation.evaluator as IUser;
+      if (!evaluator) {
+        throw new Error("No evaluator found !");
+      }
+      if (evaluator._id.toString() !== requestUser._id.toString()) {
+        throw new Error("You are not the evaluator of this evaluation !");
       }
 
       return {
@@ -564,9 +770,17 @@ class HolyServices {
       }
       let evaluation = await Evaluation.findById(id)
           .populate("project")
+          .populate("evaluator")
           .lean();
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
+      }
+      let evaluator = evaluation.evaluator as IUser;
+      if (!evaluator) {
+        throw new Error("No evaluator found !");
+      }
+      if (evaluator._id.toString() !== requestUser._id.toString()) {
+        throw new Error("You are not the evaluator of this evaluation !");
       }
       let user = await User.findById(evaluation.user) as IUser;
       if (!user) {
@@ -579,8 +793,10 @@ class HolyServices {
       await Evaluation.findByIdAndDelete(id);
       user.holyProjects.push({
         project: project._id,
-        resultPercent: req.body.percent
+        resultPercent: req.body.percent,
+        evaluator: evaluator._id
       })
+      //TODO: Envoyer un ping a discord pour clear channel
       if (req.body.percent >= 80)
         user.xp += project.xp;
       let cost = project.cost || 1;
@@ -594,6 +810,109 @@ class HolyServices {
         data: {
           message: "User has been evaluated with success",
           evaluation: evaluation
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err,
+        },
+      };
+    }
+  }
+
+  async claimEvaluation(req: Request, id: string) {
+    try {
+      // @ts-ignore
+      let requestUser = req.body.discordId;
+
+      if (!requestUser || requestUser === "") {
+        throw new Error("Discord ID is mandatory !");
+      }
+      if (!id || id === "") {
+        throw new Error("Evaluation ID is mandatory !");
+      }
+
+      let evaluation = await Evaluation.findById(id)
+          .populate("project")
+          .populate("user");
+      if (!evaluation) {
+        throw new Error("No Evaluation found with this id !");
+      }
+      if (evaluation.evaluator !== null) {
+        throw new Error("Un evaluateur a déjà été assigné à cette évaluation !");
+      }
+      let evaluator = await User.findOne({discordId: requestUser}) as IUser;
+      if (!evaluator) {
+        throw new Error("No evaluator user found !");
+      }
+      if (evaluator._id.toString() === evaluation.user._id.toString()) {
+        throw new Error("Vous ne pouvez pas vous évaluer vous-même !");
+      }
+      let project = evaluation.project as IHolyProject;
+      let user = evaluation.user as IUser;
+      if (project.evaluatorType === EvaluatorType.EVALUATOR) {
+        if (evaluator.permission !== "evaluateur" && evaluator.permission !== "admin") {
+          throw new Error("Vous n'êtes pas évaluateur !");
+        }
+      } else if (project.evaluatorType === EvaluatorType.FORMATOR) {
+        if (evaluator.permission !== "admin" && evaluator.permission !== "formateur") {
+          throw new Error("Vous n'êtes pas formateur !");
+        }
+      }
+      await Evaluation.findByIdAndUpdate(id, {evaluator: evaluator._id});
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "Evaluation has been claimed with success !",
+          evaluation
+        },
+      };
+    } catch (err: any) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        token: null,
+        data: {
+          message:err.message,
+        },
+      };
+    }
+  }
+
+  async updateChannelFromDiscord(req: Request, id: string) {
+    try {
+      // @ts-ignore
+      let channelId = req.body.channelId;
+
+      if (!channelId || channelId === "") {
+        throw new Error("Channel ID is mandatory !");
+      }
+      if (!id || id === "") {
+        throw new Error("Evaluation ID is mandatory !");
+      }
+
+      let evaluation = await Evaluation.findById(id)
+          .lean();
+      if (!evaluation) {
+        throw new Error("No Evaluation found with this id !");
+      }
+      await Evaluation.findByIdAndUpdate(id, {channelId: channelId});
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "Evaluation channel has been updated with success !",
         },
       };
     } catch (err) {

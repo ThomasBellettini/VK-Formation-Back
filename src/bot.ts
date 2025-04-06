@@ -1,4 +1,13 @@
-import {ChatInputCommandInteraction, Client, GatewayIntentBits, REST, Routes, TextChannel} from 'discord.js';
+import {
+    ActionRowBuilder, ButtonBuilder, ButtonStyle,
+    ChatInputCommandInteraction,
+    Client,
+    EmbedBuilder,
+    GatewayIntentBits,
+    REST,
+    Routes,
+    TextChannel
+} from 'discord.js';
 import express from 'express';
 import fs from 'fs';
 import axios from 'axios';
@@ -7,6 +16,7 @@ import { linkCommand } from './bot/CommandLink.js';
 import { meCommand } from './bot/CommandMe.js';
 import { viewCommand } from './bot/CommandView.js';
 import {buttonHandler, shopCommand} from './bot/CommandShop.js';
+import {EvaluationButton} from './bot/evaluation/EvaluationMessages.js';
 import { config } from "dotenv";
 config();
 
@@ -55,6 +65,8 @@ async function formatDiscordMessage(content: string, guild: any): Promise<string
 }
 
 const app = express();
+app.use(express.json({ limit: '10gb' }));
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -136,16 +148,6 @@ client.on('messageCreate', async (message) => {
             const regex = new RegExp(pattern, 'i');
             console.log(`Test de la regex : ${pattern}`);
             if (regex.test(message.content)) {
-                // let response = await axios.post(`${API_URL}/discord/ban/${message.member.id}`, null, {
-                //     headers: {
-                //         'X-VK-TOKEN': process.env.API_KEY
-                //     }
-                // });
-                // if (response.status === 201) {
-                //     let channel = message.guild.channels.cache.get("1326649580779212841") as TextChannel;
-                //     await channel.send(`L'utilisateur ${message.member} a été banni pour avoir envoyé un message interdit (${message.content}) !`);
-                // }
-                // await message.member.roles.add("1296875202461831209");
                 await message.delete();
 
                 return;
@@ -172,11 +174,8 @@ client.on('interactionCreate', async (interaction) => {
         }
     } else if (interaction.isButton()) {
         await buttonHandler.execute(interaction, client);
-
+        await EvaluationButton.execute(interaction, client);
     }
-
-
-
 });
 
 const updateEventsCache = async () => {
@@ -246,8 +245,6 @@ const cacheRegexBan = async () => {
     }
 }
 
-
-
 client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN as string);
     await (async () => {
@@ -256,7 +253,6 @@ client.once('ready', async () => {
         } catch (error) {
             console.error('Erreur lors du déploiement de la commande:', error);
         }
-
         const commands = await rest.get(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string));
         // @ts-ignore
         for (const command of commands) {
@@ -280,6 +276,51 @@ app.get('/discord/schedule', async (req, res) => {
 app.get('/discord/messages', async (req, res) => {
     res.json(cachedMessages);
 });
+
+app.post("/evaluation/add", async (req, res) => {
+    try {
+        const { evaluation } = req.body;
+        if (!evaluation) {
+            return res.status(400).json({ error: "Missing evaluation data" });
+        }
+
+        const _id = evaluation._id;
+        const { name, xp } = evaluation.project;
+
+        const embed = new EmbedBuilder()
+            .setTitle("🎓 Nouvelle évaluation disponible !")
+            .addFields(
+                { name: "📘 Projet", value: name, inline: true },
+                { name: "💰 Récompense", value: `${xp} coins`, inline: true }
+            )
+            .setColor("DarkPurple")
+            .setTimestamp();
+        let row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`eval-${_id}`)
+                .setLabel("🎯 Prendre l'évaluation")
+                .setStyle(ButtonStyle.Success)
+        );
+
+        let channel = await client.channels.fetch(process.env.DISCORD_EVALUATION_CHANNEL_STANDARD_ID as string) as TextChannel;
+        if (evaluation.project.evaluatorType === "formator")
+            channel = await client.channels.fetch(process.env.DISCORD_EVALUATION_CHANNEL_FORMATOR_ID as string) as TextChannel;
+
+        if (!channel) {
+            return res.status(404).json({ error: "Channel not found or not text-based" });
+        }
+
+        await channel.send({
+            embeds: [embed],
+            components: [row]
+        });
+
+        res.status(200).json({ message: "Évaluation envoyée sur Discord !" });
+    } catch (err) {
+        console.error("Erreur en envoyant le message Discord :", err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+})
 
 app.listen(PORT, () => console.log(`API launched on http://localhost:${PORT}`));
 

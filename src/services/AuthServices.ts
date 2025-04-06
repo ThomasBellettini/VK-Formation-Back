@@ -13,6 +13,7 @@ class AuthServices {
     this.accountConfirmation = this.accountConfirmation.bind(this);
     this.resetPassword = this.resetPassword.bind(this);
     this.forgotPassword = this.forgotPassword.bind(this);
+    this.deleteWebhook = this.deleteWebhook.bind(this);
   }
 
   async me(user: IUser) {
@@ -84,7 +85,21 @@ class AuthServices {
         throw "Missing data ! Fields Required: email, password";
       }
       const user = await User.findOne({ email: email });
-      if (user) throw "User already exist !";
+      if (user) {
+        if (user.permission === "ban") {
+          user.permission = "user";
+          await user.save();
+          return {
+            success: true,
+            statusCode: 201,
+            errors: null,
+            data: {
+              user: user,
+            },
+          };
+        }
+        throw "User already exist !";
+      }
 
       let newUser = await User.create({
         email: email,
@@ -133,7 +148,21 @@ class AuthServices {
         throw "Missing data ! Fields Required: email";
       }
       const user = await User.findOne({ email: email });
-      if (user) throw "User already exist !";
+      if (user) {
+        if (user.permission === "ban") {
+          user.permission = "user";
+          await user.save();
+          return {
+            success: true,
+            statusCode: 201,
+            errors: null,
+            data: {
+              user: user,
+            },
+          };
+        }
+        throw "User already exist !";
+      }
       let password = Math.random().toString(36) + Math.random().toString(36);
 
       let newUser = await User.create({
@@ -166,6 +195,45 @@ class AuthServices {
       };
     }
   }
+
+  async deleteWebhook(req: Request) {
+    try {
+      let fullAccess = false;
+      if (!req.body.data || !req.body.data.customer) {
+        throw "Missing data ! Fields Required: email";
+      }
+      let email = req.body.data.customer.email;
+      if (!email ) {
+        throw "Missing data ! Fields Required: email";
+      }
+      const user = await User.findOne({ email: email });
+      if (!user) {
+        throw "User not found !";
+      }
+      user.permission = "ban";
+      await user.save();
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: user,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error in user creation !",
+        },
+      };
+    }
+  }
+
 
   async accountConfirmation(confirmationCode: string) {
     try {

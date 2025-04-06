@@ -48,7 +48,7 @@ export const shopCommand = {
                 embed.addFields({ name: item.name, value: `💰 ${item.cost} VK Coins`, inline: true });
 
                 const button = new ButtonBuilder()
-                    .setCustomId(`${item._id}`)
+                    .setCustomId(`shop-${item._id}`)
                     .setLabel(`Acheter ${item.name}`)
                     .setStyle(ButtonStyle.Primary);
 
@@ -75,8 +75,9 @@ export const shopCommand = {
 export const buttonHandler = {
     async execute(interaction: ButtonInteraction, client: Client) {
         if (!interaction.isButton()) return;
+        if (!interaction.customId.startsWith("shop-")) return;
 
-        const itemId = interaction.customId;
+        const itemId = interaction.customId.replace("shop-", "");
         try {
             axios.post(`${process.env.API_URL}/discord/buy`, {
                 itemId: itemId,
@@ -87,6 +88,9 @@ export const buttonHandler = {
                 }
             }).then(async response => {
                if (response.data?.success) {
+                   if (response.data?.data.evaluator && response.data?.data.evaluator === true) {
+                          return interaction.reply({ content: "✅ Achat effectué avec succès ! Vous êtes désormais évaluateur !", ephemeral: true });
+                   }
                    let userFormation = response.data?.data.user;
                    const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID as string);
                    let item = response.data?.data.item as Item;
