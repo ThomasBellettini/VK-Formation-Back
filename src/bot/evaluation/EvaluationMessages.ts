@@ -86,7 +86,7 @@ export const EvaluationButton = {
                    }).catch(error => {
                        console.log(JSON.stringify(error));
                        return interaction.reply({ content: "❌ Erreur, " + error.response?.data?.data?.message || error.message, ephemeral: true });
-                   }).then((response) => {
+                   }).then(async (response) => {
                        const evaluatorTag = interaction.user.tag;
                        const studentDiscordId = student.discordId;
                        const studentTag = studentDiscordId ? `<@${studentDiscordId}>` : "Non renseigné";
@@ -100,14 +100,18 @@ export const EvaluationButton = {
                            .setTitle("📋 Nouvelle Évaluation")
                            .setColor(0x301934) // Violet foncé
                            .addFields(
-                               { name: "🧑‍🏫 Évaluateur", value: evaluatorTag, inline: true },
-                               { name: "👨‍🎓 Élève", value: studentTag, inline: true },
-                               { name: "📘 Projet", value: projectName, inline: false },
-                               { name: "✨ XP Gagnée", value: `${xp} XP`, inline: true },
-                               { name: "🖋️ Lien d'évaluation", value: `🔗 ${process.env.FRONTEND_URL}/${evaluation._id}`, inline: false },
+                               {name: "🧑‍🏫 Évaluateur", value: evaluatorTag, inline: true},
+                               {name: "👨‍🎓 Élève", value: studentTag, inline: true},
+                               {name: "📘 Projet", value: projectName, inline: false},
+                               {name: "✨ XP Gagnée", value: `${xp} XP`, inline: true},
+                               {
+                                   name: "🖋️ Lien d'évaluation",
+                                   value: `🔗 ${process.env.FRONTEND_URL}/${evaluation._id}`,
+                                   inline: false
+                               },
                            );
                        if (evaluationText) {
-                           embed.addFields({ name: "📝 Commentaire", value: evaluationText, inline: false });
+                           embed.addFields({name: "📝 Commentaire", value: evaluationText, inline: false});
                        }
                        if (uploadFiles.length > 0) {
                            embed.addFields({
@@ -123,9 +127,9 @@ export const EvaluationButton = {
                                inline: false
                            });
                        }
-                       await newChannel.send({ embeds: [embed] });
+                       await newChannel.send({embeds: [embed]});
                        await interaction.message.delete();
-                       return interaction.reply({ content: "Evaluation claim avec succès !", ephemeral: true });
+                       return interaction.reply({content: "Evaluation claim avec succès !", ephemeral: true});
                    });
 
 
