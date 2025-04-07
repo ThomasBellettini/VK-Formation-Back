@@ -120,6 +120,14 @@ class HolyServices {
               hasPermission = true;
             }
           }
+          let qcm = iterator.qcmContent.map((qcm => {
+            return {
+                question: qcm.question,
+                type: qcm.type,
+                options: qcm.options,
+                correctAnswers: (user.permission === "admin" ? qcm.correctAnswers : [])
+            }
+          }));
 
           return {
             _id: iterator._id,
@@ -144,7 +152,7 @@ class HolyServices {
             uploadFilesCount: iterator.uploadFilesCount,
             shareLinksDescription: iterator.shareLinksDescription,
             shareLinksCount: iterator.shareLinksCount,
-            qcmContent: [],
+            qcmContent: qcm,
             evaluationType: iterator.evaluationType,
             evaluatorType: iterator.evaluatorType
           };
