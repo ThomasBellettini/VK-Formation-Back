@@ -76,7 +76,7 @@ export const buttonHandler = {
     async execute(interaction: ButtonInteraction, client: Client) {
         if (!interaction.isButton()) return;
         if (!interaction.customId.startsWith("shop-")) return;
-
+        const member = await interaction.guild?.members.fetch(interaction.user.id);
         const itemId = interaction.customId.replace("shop-", "");
         try {
             axios.post(`${process.env.API_URL}/discord/buy`, {
@@ -89,10 +89,9 @@ export const buttonHandler = {
             }).then(async response => {
                if (response.data?.success) {
                    if (response.data?.data.evaluator && response.data?.data.evaluator === true) {
-                       if (interaction.member)
+                       if (member)
                         {
-                            // @ts-ignore
-                            await interaction.member.roles.add("1359202659239858180");
+                            await member.roles.add("1359202659239858180");
                         }
                        return interaction.reply({ content: "✅ Achat effectué avec succès ! Vous êtes désormais évaluateur !", ephemeral: true });
                    }
