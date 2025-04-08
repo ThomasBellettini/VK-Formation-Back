@@ -421,6 +421,14 @@ class HolyServices {
             }
           });
         }
+      if (req.body.uploadFilesDescription === 'undefined')
+        req.body.uploadFilesDescription = null;
+      if (req.body.uploadFilesCount === 'undefined')
+        req.body.uploadFilesCount = 0;
+      if (req.body.shareLinksDescription === 'undefined')
+        req.body.shareLinksDescription = null;
+      if (req.body.shareLinksCount === 'undefined')
+        req.body.shareLinksCount = 0;
       if (req.body.links)
         req.body.links = JSON.parse(req.body.links);
       holyProject = await HolyProject.findByIdAndUpdate(id, req.body, {new: true});
