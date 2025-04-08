@@ -89,7 +89,12 @@ export const buttonHandler = {
             }).then(async response => {
                if (response.data?.success) {
                    if (response.data?.data.evaluator && response.data?.data.evaluator === true) {
-                          return interaction.reply({ content: "✅ Achat effectué avec succès ! Vous êtes désormais évaluateur !", ephemeral: true });
+                       if (interaction.member)
+                        {
+                            // @ts-ignore
+                            await interaction.member.roles.add("1359202659239858180");
+                        }
+                       return interaction.reply({ content: "✅ Achat effectué avec succès ! Vous êtes désormais évaluateur !", ephemeral: true });
                    }
                    let userFormation = response.data?.data.user;
                    const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID as string);

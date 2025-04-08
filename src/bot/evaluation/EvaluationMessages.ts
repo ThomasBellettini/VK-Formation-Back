@@ -108,9 +108,6 @@ export const EvaluationButton = {
                                    inline: false
                                },
                            );
-                       if (evaluationText) {
-                           embed.addFields({name: "📝 Commentaire", value: evaluationText, inline: false});
-                       }
                        if (uploadFiles.length > 0) {
                            embed.addFields({
                                name: "📎 Fichiers Uploadés",
