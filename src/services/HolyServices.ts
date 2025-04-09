@@ -841,14 +841,20 @@ class HolyServices {
       if (project.level >= 1) {
         let count = user.holyProjects.filter(hp => {
           let userProject = hp.project as IHolyProject;
+          console.log("---")
+          console.log(userProject);
+          console.log(hp.resultPercent);
+          console.log("---")
           return userProject.level === project.level && hp.resultPercent >= 80;
         }).length;
 
         let allProject = await HolyProject.countDocuments({level: project.level});
+        console.log('counter all ' + allProject);
         if (count >= allProject) {
           level = project.level;
         }
       }
+      console.log(level)
 
       await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/${(evaluation.channelId && evaluation.channelId !== "") ? evaluation.channelId : 0}`, {
         data: {
