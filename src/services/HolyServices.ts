@@ -848,9 +848,7 @@ class HolyServices {
 
         let allProject = await HolyProject.find({});
         let allProjectCounter = allProject.filter(p => {
-          console.log(p.name)
-          console.log(p.level, project.level);
-          return p.level === project.level;
+          return p.level === project.level && p.linkedProjectId === null;
         }).length;
         console.log(`counter all ${allProjectCounter}`);
         if (count >= allProjectCounter) {
