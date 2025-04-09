@@ -841,16 +841,14 @@ class HolyServices {
       if (project.level >= 1) {
         let count = user.holyProjects.filter(hp => {
           let userProject = hp.project as IHolyProject;
-          console.log("---")
-          console.log(userProject);
-          console.log(hp.resultPercent);
-          console.log("---")
           return userProject.level === project.level && hp.resultPercent >= 80;
         }).length;
+        if (req.body.percent >= 80) count++;
 
-        let allProject = await HolyProject.countDocuments({level: project.level});
-        console.log('counter all ' + allProject);
-        if (count >= allProject) {
+        let allProject = await HolyProject.find({});
+        let allProjectCounter = allProject.filter(p => p.level === project.level).length;
+        console.log('counter all ' + allProjectCounter);
+        if (count >= allProjectCounter) {
           level = project.level;
         }
       }
