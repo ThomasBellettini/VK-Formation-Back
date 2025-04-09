@@ -810,7 +810,8 @@ class HolyServices {
       if (evaluator._id.toString() !== requestUser._id.toString()) {
         throw new Error("You are not the evaluator of this evaluation !");
       }
-      let user = await User.findById(evaluation.user) as IUser;
+      let user = await User.findById(evaluation.user).populate("holyProjects.project") as IUser;
+
       if (!user) {
         throw new Error("No evaluable user found !");
       }
@@ -830,10 +831,25 @@ class HolyServices {
           }
         }
       }
+      let level = 0;
+      if (project.level > 1) {
+        let count = user.holyProjects.filter(hp => {
+          let userProject = hp.project as IHolyProject;
+          return userProject.level === project.level && hp.resultPercent >= 80;
+        }).length;
 
-      if (evaluation.channelId && evaluation.channelId !== "") {
-        await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/${evaluation.channelId}`);
+        let allProject = await HolyProject.countDocuments({level: project.level});
+        if (count >= allProject) {
+          level = project.level - 1;
+        }
       }
+
+      await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/${(evaluation.channelId && evaluation.channelId !== "") ? evaluation.channelId : 0}`, {
+        data: {
+          userId: user.discordId,
+          level: level
+        }
+      });
 
       await Evaluation.findByIdAndDelete(id);
       user.holyProjects.push({

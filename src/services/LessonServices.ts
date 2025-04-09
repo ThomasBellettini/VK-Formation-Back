@@ -52,6 +52,7 @@ class LessonServices {
       if (!databaseUser) throw new Error('No user found !');
       if (!databaseUser.lessonsFinished.includes(lesson._id)) {
         databaseUser.lessonsFinished.push(lesson._id);
+        databaseUser.coin += 25;
         await databaseUser.save();
         // @ts-ignore
         lesson.finished = true;

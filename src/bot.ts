@@ -277,16 +277,57 @@ app.get('/discord/messages', async (req, res) => {
 });
 
 app.delete('/evaluation/finish/:channelId', async (req, res) => {
-    const channelId = req.params.channelId;
+    const channelId = req.params.channelId as string;
+    const userId = req.body.userId;
+    const level = req.body.level;
+
+    const guild = client.guilds.cache.get(GUILD_ID as string);
+
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing user ID' });
+    }
+    if (!level) {
+        return res.status(400).json({ error: 'Missing level' });
+    }
+    if (!guild) {
+        return res.status(500).json({ error: 'Guild not found' });
+    }
 
     try {
-        const channel = await client.channels.fetch(channelId);
-        if (!channel) {
-            return res.status(404).json({ error: 'Channel not found' });
+        if (channelId !== "0") {
+            const channel = await client.channels.fetch(channelId);
+            if (!channel) {
+                return res.status(404).json({error: 'Channel not found'});
+            }
+
+            await channel.delete('Évaluation terminée – suppression du salon');
+        }
+        const member = await guild.members.fetch(userId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+        switch (level) {
+            case 1:
+                await member.roles.add("1359185594043076839");
+                break;
+            case 2:
+                await member.roles.add("1359185594043076839");
+                await member.roles.add("1359186018229555331");
+                break;
+            case 3:
+                await member.roles.add("1359185594043076839");
+                await member.roles.add("1359186018229555331");
+                await member.roles.add("1359186018313703547");
+                break;
+            case 4:
+                await member.roles.add("1359185594043076839");
+                await member.roles.add("1359186018229555331");
+                await member.roles.add("1359186018313703547");
+                await member.roles.add("1359186092301090931");
+                break;
         }
 
-        await channel.delete('Évaluation terminée – suppression du salon');
-        return res.status(200).json({ message: `Channel ${channelId} supprimé.` });
+        return res.status(200).json({ message: `Channel supprimé et role ajoutés.` });
     } catch (error) {
         console.error(`Erreur suppression channel Discord:`, error);
         return res.status(500).json({ error: 'Erreur lors de la suppression du channel' });
