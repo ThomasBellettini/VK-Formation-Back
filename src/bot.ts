@@ -286,7 +286,7 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
     if (!userId) {
         return res.status(400).json({ error: 'Missing user ID' });
     }
-    if (!level) {
+    if (level === undefined || level === null) {
         return res.status(400).json({ error: 'Missing level' });
     }
     if (!guild) {

@@ -831,6 +831,12 @@ class HolyServices {
           }
         }
       }
+      user.holyProjects.push({
+        project: project._id,
+        resultPercent: req.body.percent,
+        evaluator: evaluator._id
+      })
+
       let level = 0;
       if (project.level >= 1) {
         let count = user.holyProjects.filter(hp => {
@@ -852,11 +858,6 @@ class HolyServices {
       });
 
       await Evaluation.findByIdAndDelete(id);
-      user.holyProjects.push({
-        project: project._id,
-        resultPercent: req.body.percent,
-        evaluator: evaluator._id
-      })
 
       if (req.body.percent >= 80)
         user.xp += project.xp;
