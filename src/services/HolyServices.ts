@@ -832,7 +832,7 @@ class HolyServices {
         }
       }
       let level = 0;
-      if (project.level > 1) {
+      if (project.level >= 1) {
         let count = user.holyProjects.filter(hp => {
           let userProject = hp.project as IHolyProject;
           return userProject.level === project.level && hp.resultPercent >= 80;
@@ -840,7 +840,7 @@ class HolyServices {
 
         let allProject = await HolyProject.countDocuments({level: project.level});
         if (count >= allProject) {
-          level = project.level - 1;
+          level = project.level;
         }
       }
 
