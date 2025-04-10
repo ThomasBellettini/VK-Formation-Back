@@ -645,6 +645,12 @@ class HolyServices {
             discordChannel = true;
             break;
         case EvaluationType.QCM:
+          evaluation = await Evaluation.create({
+            user: user._id,
+            project: holyProject._id,
+            uploadFiles: [],
+            sharedLinks: []
+          });
           const bodyQcm = JSON.parse(req.body.answers);
           console.log(bodyQcm);
 
@@ -688,6 +694,7 @@ class HolyServices {
             databaseUser.xp += holyProject.xp;
           }
           await databaseUser.save();
+          await Evaluation.findByIdAndDelete(evaluation._id);
           return {
             success: true,
             statusCode: 201,
