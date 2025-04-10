@@ -645,22 +645,14 @@ class HolyServices {
             discordChannel = true;
             break;
         case EvaluationType.QCM:
-          evaluation = await Evaluation.create({
-            user: user._id,
-            project: holyProject._id,
-            uploadFiles: [],
-            sharedLinks: []
-          });
           const bodyQcm = JSON.parse(req.body.answers);
           console.log(bodyQcm);
 
           if (!bodyQcm || Object.keys(bodyQcm).length === 0) {
-            await Evaluation.findByIdAndDelete(evaluation._id);
             throw new Error("QCM content is mandatory !");
           }
 
           if (Object.keys(bodyQcm).length !== holyProject.qcmContent.length) {
-            await Evaluation.findByIdAndDelete(evaluation._id);
             throw new Error("You must provide all qcm content !");
           }
 
@@ -672,7 +664,6 @@ class HolyServices {
             const submittedAnswers: string[] = bodyQcm[i.toString()] || [];
 
             if (!Array.isArray(submittedAnswers)) {
-              await Evaluation.findByIdAndDelete(evaluation._id);
               throw new Error(`Answers for question ${i} must be an array`);
             }
 
@@ -697,7 +688,6 @@ class HolyServices {
             databaseUser.xp += holyProject.xp;
           }
           await databaseUser.save();
-          await Evaluation.findByIdAndDelete(evaluation._id);
           return {
             success: true,
             statusCode: 201,
