@@ -655,10 +655,12 @@ class HolyServices {
           console.log(bodyQcm);
 
           if (!bodyQcm || Object.keys(bodyQcm).length === 0) {
+            await Evaluation.findByIdAndDelete(evaluation._id);
             throw new Error("QCM content is mandatory !");
           }
 
           if (Object.keys(bodyQcm).length !== holyProject.qcmContent.length) {
+            await Evaluation.findByIdAndDelete(evaluation._id);
             throw new Error("You must provide all qcm content !");
           }
 
@@ -670,6 +672,7 @@ class HolyServices {
             const submittedAnswers: string[] = bodyQcm[i.toString()] || [];
 
             if (!Array.isArray(submittedAnswers)) {
+              await Evaluation.findByIdAndDelete(evaluation._id);
               throw new Error(`Answers for question ${i} must be an array`);
             }
 
