@@ -840,6 +840,8 @@ class HolyServices {
       })
 
       let level = 0;
+      console.log("here ;:::")
+      console.log(project);
       if (project.level >= 1) {
         let count = user.holyProjects.filter(hp => {
           let userProject = hp.project as IHolyProject;
