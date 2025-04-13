@@ -841,13 +841,11 @@ class HolyServices {
 
       let level = 0;
       if (project.level >= 1) {
-        console.log("here ;:::")
         let count = user.holyProjects.filter(hp => {
           let userProject = hp.project as IHolyProject;
-          console.log(userProject.level, project.level)
+          console.log(hp);
           return userProject.level === project.level && hp.resultPercent >= 80;
         }).length || 0;
-        console.log("heresssss ;:::")
 
         if (req.body.percent >= 80) count++;
         console.log(count)
