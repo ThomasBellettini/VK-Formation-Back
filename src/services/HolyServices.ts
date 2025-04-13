@@ -817,7 +817,7 @@ class HolyServices {
       if (user._id.toString() === requestUser._id.toString()) {
         throw new Error("You can't evaluate yourself !");
       }
-      let project = await HolyProject.findById(evaluation.project) as IHolyProject;
+      let project = await HolyProject.findById(evaluation.project).lean() as IHolyProject;
       if (!project) {
         throw new Error("No project found !");
       }
