@@ -797,7 +797,6 @@ class HolyServices {
         throw new Error("Percent is mandatory and must be greater than 0 !");
       }
       let evaluation = await Evaluation.findById(id)
-          .populate("project")
           .populate("evaluator")
           .lean() as IEvaluation;
       if (!evaluation) {
@@ -818,7 +817,10 @@ class HolyServices {
       if (user._id.toString() === requestUser._id.toString()) {
         throw new Error("You can't evaluate yourself !");
       }
-      let project = evaluation.project as IHolyProject;
+      let project = await HolyProject.findById(evaluation.project) as IHolyProject;
+      if (!project) {
+        throw new Error("No project found !");
+      }
 
       if (project.evaluationType === EvaluationType.UPLOAD) {
         for (let file of evaluation.uploadFiles) {
