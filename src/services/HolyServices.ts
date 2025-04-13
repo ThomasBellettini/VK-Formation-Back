@@ -842,8 +842,8 @@ class HolyServices {
       let level = 0;
       if (project.level >= 1) {
         let count = user.holyProjects.filter(hp => {
-          let userProject = hp.project as IHolyProject;
           console.log(hp);
+          let userProject = hp.project as IHolyProject;
           return userProject.level === project.level && hp.resultPercent >= 80;
         }).length || 0;
 
