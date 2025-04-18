@@ -103,7 +103,7 @@ export const EvaluationButton = {
                                {name: "📘 Projet", value: projectName, inline: false},
                                {name: "✨ XP Gagnée", value: `${xp} XP`, inline: true},
                                {
-                                   name: "🖋️ Lien d'évaluation",
+                                   name: "🖋️ Lien d'évaluation (Concerne le formateur)",
                                    value: `🔗 ${process.env.FRONTEND_URL}/${evaluation._id}`,
                                    inline: false
                                },
