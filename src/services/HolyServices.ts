@@ -665,9 +665,7 @@ class HolyServices {
             if (shareLinks.length !== holyProject.shareLinksCount) {
                 throw new Error("You must provide all share links !");
             }
-            for (let link of shareLinks) {
-              additionalInformation.push(link);
-            }
+            additionalInformation = shareLinks;
             discordChannel = true;
             break;
         case EvaluationType.QCM:
@@ -734,7 +732,7 @@ class HolyServices {
         user: user._id,
         project: holyProject._id,
         uploadFiles: (holyProject.evaluationType === EvaluationType.UPLOAD ? additionalInformation : []),
-        sharedLinks: (holyProject.evaluationType === EvaluationType.SHARE_LINKS ? additionalInformation : []),
+        shareLinks: (holyProject.evaluationType === EvaluationType.SHARE_LINKS ? additionalInformation : []),
       });
       evaluation.project = holyProject as unknown as IHolyProject;
       evaluation.user = user;
