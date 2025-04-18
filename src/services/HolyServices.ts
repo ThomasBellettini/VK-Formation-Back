@@ -665,7 +665,9 @@ class HolyServices {
             if (shareLinks.length !== holyProject.shareLinksCount) {
                 throw new Error("You must provide all share links !");
             }
-            additionalInformation = shareLinks;
+            for (let link of shareLinks) {
+              additionalInformation.push(link);
+            }
             discordChannel = true;
             break;
         case EvaluationType.QCM:
