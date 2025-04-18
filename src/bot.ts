@@ -300,7 +300,7 @@ client.once('ready', async () => {
     setInterval(updateEventsCache, refreshTime);
     setInterval(updateMessagesCache, refreshTime);
     setInterval(uploadGlobalStat, refreshTime);
-    setInterval(refreshDeletionChannel, 60 * 60 * 1000);
+    setInterval(refreshDeletionChannel, 1000);
 });
 
 app.get('/discord/schedule', async (req, res) => {
