@@ -661,10 +661,11 @@ class HolyServices {
             if (!req.body.shareLinks || req.body.shareLinks.length === 0) {
                 throw new Error("Share links is mandatory !");
             }
-            if (req.body.shareLinks.length !== holyProject.shareLinksCount) {
+            let shareLinks = JSON.parse(req.body.shareLinks);
+            if (shareLinks.length !== holyProject.shareLinksCount) {
                 throw new Error("You must provide all share links !");
             }
-            additionalInformation = req.body.shareLinks;
+            additionalInformation = shareLinks;
             discordChannel = true;
             break;
         case EvaluationType.QCM:
