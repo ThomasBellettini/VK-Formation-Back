@@ -753,7 +753,8 @@ class HolyServices {
         errors: null,
         data: {
           message: "Evaluation created with success",
-          evaluationID: evaluation._id
+          evaluationID: evaluation._id,
+          percent: 0
         },
       };
     } catch (err) {
