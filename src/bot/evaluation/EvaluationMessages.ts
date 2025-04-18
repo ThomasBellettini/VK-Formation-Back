@@ -123,6 +123,7 @@ export const EvaluationButton = {
                            });
                        }
                        await newChannel.send({embeds: [embed]});
+                       await newChannel.send(`||<@${studentDiscordId}>||`);
                        await interaction.message.delete();
                        return interaction.reply({content: "Evaluation claim avec succès !", ephemeral: true});
                    });
