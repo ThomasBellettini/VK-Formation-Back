@@ -20,6 +20,11 @@ import {EvaluationButton} from './bot/evaluation/EvaluationMessages.js';
 import { config } from "dotenv";
 config();
 
+type ChannelDeletionEntry = {
+    channelId: string;
+    deleteAt: number;
+};
+
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
@@ -160,6 +165,7 @@ client.on('guildMemberAdd', () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
+    if (interaction === null) return;
     if (interaction.isCommand()) {
         const command = interaction.commandName;
         if (command === 'me') {
@@ -244,6 +250,30 @@ const cacheRegexBan = async () => {
     }
 }
 
+const refreshDeletionChannel = async () => {
+    let deletionList: ChannelDeletionEntry[] = [];
+    try {
+        deletionList = JSON.parse(fs.readFileSync('./data/channels.json', 'utf-8') || '[]');
+    } catch {}
+
+    const now = Date.now();
+    const remaining: ChannelDeletionEntry[] = [];
+
+    for (const entry of deletionList) {
+        if (entry.deleteAt <= now) {
+            try {
+                const channel = await client.channels.fetch(entry.channelId);
+                if (channel) await channel.delete("Suppression planifiée après fin d’évaluation");
+            } catch (err) {
+                console.error(`Erreur suppression channel ${entry.channelId} :`, err);
+            }
+        } else {
+            remaining.push(entry);
+        }
+    }
+    fs.writeFileSync('./data/channels.json', JSON.stringify(remaining, null, 2));
+}
+
 client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN as string);
     await (async () => {
@@ -266,6 +296,7 @@ client.once('ready', async () => {
     setInterval(updateEventsCache, refreshTime);
     setInterval(updateMessagesCache, refreshTime);
     setInterval(uploadGlobalStat, refreshTime);
+    setInterval(refreshDeletionChannel, 60 * 60 * 1000);
 });
 
 app.get('/discord/schedule', async (req, res) => {
@@ -295,12 +326,9 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
 
     try {
         if (channelId !== "0") {
-            const channel = await client.channels.fetch(channelId);
-            if (!channel) {
-                return res.status(404).json({error: 'Channel not found'});
-            }
-
-            await channel.delete('Évaluation terminée – suppression du salon');
+            const deletionList: ChannelDeletionEntry[] = JSON.parse(fs.readFileSync('./data/channels.json', 'utf-8') || '[]');
+            deletionList.push({ channelId, deleteAt: Date.now() + 24 * 60 * 60 * 1000 });
+            fs.writeFileSync('./data/channels.json', JSON.stringify(deletionList, null, 2));
         }
         const member = await guild.members.fetch(userId);
         if (!member) {

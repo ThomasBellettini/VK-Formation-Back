@@ -57,6 +57,28 @@ interface IHolyGraph {
 }
 
 class HolyServices {
+  async notifyDiscordIfLevelCompleted(user: IUser, currentProject: IHolyProject) {
+    if (!user.discordId || !currentProject.level || currentProject.level < 1) return;
+
+    let count = user.holyProjects.filter(hp => {
+      if (!hp.project || !hp.resultPercent || hp.resultPercent < 80) return false;
+      return (hp.project as any).level === currentProject.level && (hp.project as any).linkedProjectId === null;
+    }).length;
+
+    const allProjects = await HolyProject.find({
+      level: currentProject.level,
+      linkedProjectId: null
+    }).lean();
+
+    if (count >= allProjects.length) {
+      await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/0`, {
+        data: {
+          userId: user.discordId,
+          level: currentProject.level
+        }
+      });
+    }
+  }
   constructor() {
     this.list = this.list.bind(this);
     this.add = this.add.bind(this);
@@ -550,7 +572,7 @@ class HolyServices {
       if (!url) {
         throw new Error("Url is mandatory !");
       }
-      const holyProject = await HolyProject.findOne({url: url}) as IHolyGraph;
+      const holyProject = await HolyProject.findOne({url: url}) as IHolyProject;
       if (!holyProject) {
         throw new Error("No Holy Project found with this url !");
       }
@@ -593,10 +615,11 @@ class HolyServices {
                 project: holyProject._id,
                 resultPercent: 100,
                 evaluator: null
-            })
+            });
             databaseUser.xp += holyProject.xp;
             databaseUser.coin -= (holyProject.cost || 1);
             await databaseUser.save();
+            await this.notifyDiscordIfLevelCompleted(databaseUser, holyProject);
             return {
               success: true,
               statusCode: 201,
@@ -688,6 +711,9 @@ class HolyServices {
             databaseUser.xp += holyProject.xp;
           }
           await databaseUser.save();
+          if (percent >= 80) {
+            await this.notifyDiscordIfLevelCompleted(databaseUser, holyProject);
+          }
           return {
             success: true,
             statusCode: 201,
@@ -842,7 +868,9 @@ class HolyServices {
       let level = 0;
       if (project.level >= 1) {
         let count = user.holyProjects.filter(hp => {
-          console.log(hp);
+          if (hp.project === null) {
+            return false;
+          }
           let userProject = hp.project as IHolyProject;
           return userProject.level === project.level && hp.resultPercent >= 80;
         }).length || 0;
@@ -859,7 +887,6 @@ class HolyServices {
           level = project.level;
         }
       }
-      console.log(level)
 
       await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/${(evaluation.channelId && evaluation.channelId !== "") ? evaluation.channelId : 0}`, {
         data: {
