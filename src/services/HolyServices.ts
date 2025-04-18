@@ -821,7 +821,7 @@ class HolyServices {
     try {
       // @ts-ignore
       let requestUser = req.user as IUser;
-      if (!req.body.percent || req.body.percent < 0) {
+      if (req.body.percent === null || req.body.percent === undefined || req.body.percent < 0) {
         throw new Error("Percent is mandatory and must be greater than 0 !");
       }
       let evaluation = await Evaluation.findById(id)
