@@ -251,9 +251,13 @@ const cacheRegexBan = async () => {
 }
 
 const refreshDeletionChannel = async () => {
+    const deletionFilePath = './data/channels.json';
+    if (!fs.existsSync(deletionFilePath)) {
+      fs.writeFileSync(deletionFilePath, '[]');
+    }
     let deletionList: ChannelDeletionEntry[] = [];
     try {
-        deletionList = JSON.parse(fs.readFileSync('./data/channels.json', 'utf-8') || '[]');
+        deletionList = JSON.parse(fs.readFileSync(deletionFilePath, 'utf-8') || '[]');
     } catch {}
 
     const now = Date.now();
@@ -326,9 +330,14 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
 
     try {
         if (channelId !== "0") {
-            const deletionList: ChannelDeletionEntry[] = JSON.parse(fs.readFileSync('./data/channels.json', 'utf-8') || '[]');
+            const deletionFilePath = './data/channels.json';
+            if (!fs.existsSync(deletionFilePath)) {
+              fs.writeFileSync(deletionFilePath, '[]');
+            }
+
+            const deletionList: ChannelDeletionEntry[] = JSON.parse(fs.readFileSync(deletionFilePath, 'utf-8') || '[]');
             deletionList.push({ channelId, deleteAt: Date.now() + 24 * 60 * 60 * 1000 });
-            fs.writeFileSync('./data/channels.json', JSON.stringify(deletionList, null, 2));
+            fs.writeFileSync(deletionFilePath, JSON.stringify(deletionList, null, 2));
         }
         const member = await guild.members.fetch(userId);
         if (!member) {
