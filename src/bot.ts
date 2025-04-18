@@ -340,6 +340,7 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
             fs.writeFileSync(deletionFilePath, JSON.stringify(deletionList, null, 2));
             const channel = await client.channels.fetch(channelId) as TextChannel;
             if (channel && channel.isTextBased()) {
+                await channel.setName(`terminée-${channel.name}`);
                 await channel.send("Le channel sera supprimé dans 24h.");
             }
         }
