@@ -338,6 +338,10 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
             const deletionList: ChannelDeletionEntry[] = JSON.parse(fs.readFileSync(deletionFilePath, 'utf-8') || '[]');
             deletionList.push({ channelId, deleteAt: Date.now() + 24 * 60 * 60 * 1000 });
             fs.writeFileSync(deletionFilePath, JSON.stringify(deletionList, null, 2));
+            const channel = await client.channels.fetch(channelId) as TextChannel;
+            if (channel && channel.isTextBased()) {
+                await channel.send("Le channel sera supprimé dans 24h.");
+            }
         }
         const member = await guild.members.fetch(userId);
         if (!member) {
