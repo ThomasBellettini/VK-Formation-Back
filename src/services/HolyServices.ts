@@ -129,7 +129,7 @@ class HolyServices {
             for (const project of userProject) {
               if (project.resultPercent > percent) {
                 percent = project?.resultPercent;
-                projectDone = percent > 80;
+                projectDone = percent >= 80;
               }
             }
           }
@@ -251,7 +251,7 @@ class HolyServices {
         for (const project of userProject) {
           if (project.resultPercent > percent) {
             percent = project?.resultPercent;
-            projectDone = percent > 80;
+            projectDone = percent >= 80;
           }
         }
       }
@@ -586,7 +586,7 @@ class HolyServices {
         throw new Error("Not enough coin to generate evaluation !");
       }
 
-      let userProject = user.holyProjects.find(hp => hp.project.toString() === holyProject._id.toString() && hp.resultPercent > 80);
+      let userProject = user.holyProjects.find(hp => hp.project.toString() === holyProject._id.toString() && hp.resultPercent >= 80);
       if (userProject?.resultPercent) {
         throw new Error("Project already done !");
       }
