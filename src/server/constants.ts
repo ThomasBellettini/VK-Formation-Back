@@ -23,6 +23,7 @@ export default {
     BUNNY_CDN_URL: process.env.BUNNY_CDN_URL,
     BUNNY_SECURITY_KEY: process.env.BUNNY_SECURITY_KEY,
     TOKEN_EXPIRATION: process.env.TOKEN_EXPIRATION,
+    BUNNY_FTP_PASSWORD: process.env.BUNNY_FTP_PASSWORD,
   },
   DISCORD: {
     MODULE: process.env.DISCORD_MODULE_URL,

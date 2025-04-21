@@ -7,6 +7,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import ffmpeg, {FfprobeData} from "fluent-ffmpeg";
 import * as https from "node:https";
+import * as ftp from "basic-ftp";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ class StorageCdn {
 
     private readonly storageZoneName: string;
     private readonly accessKey: string;
+    private readonly ftpPassword: string;
     private readonly cdnUrl: string;
     private readonly securityKey: string | undefined;
     private readonly tokenExpiration: number;
@@ -27,6 +29,7 @@ class StorageCdn {
         this.storageZoneName = CST.STORAGE.BUNNY_STORAGE_NAME!;
         this.accessKey = CST.STORAGE.BUNNY_ACCESS_KEY!;
         this.cdnUrl = CST.STORAGE.BUNNY_CDN_URL!;
+        this.ftpPassword = CST.STORAGE.BUNNY_FTP_PASSWORD!;
         this.securityKey = CST.STORAGE.BUNNY_SECURITY_KEY;
         // @ts-ignore
         this.tokenExpiration = parseInt(CST.STORAGE.TOKEN_EXPIRATION);
@@ -64,15 +67,18 @@ class StorageCdn {
                     });
                 }
             });
-            const url = `https://storage.bunnycdn.com/${this.storageZoneName}/${destinationPath}`;
-            const fileBuffer = fs.readFileSync(path);
+            const client = new ftp.Client();
+            client.ftp.verbose = false;
 
-            await axios.put(url, fileBuffer, {
-                headers: {
-                    AccessKey: this.accessKey,
-                    'Content-Type': 'application/octet-stream',
-                },
+            await client.access({
+                host: "storage.bunnycdn.com",
+                user: "valek",
+                password: this.ftpPassword,
+                secure: false,
             });
+
+            await client.uploadFrom(path, destinationPath);
+            client.close();
             await Resource.create({
                 pathFile: destinationPath,
                 video: isVideo,
@@ -92,7 +98,6 @@ class StorageCdn {
      * @param path path du fichier
      * @param destinationPath Chemin où enregistrer le fichier sur BunnyCDN
      * @param originalName Nom original du fichier
-     * @param isVideo Indique si le fichier est une vidéo
      */
     async uploadEvaluationFile(path: string, destinationPath: string, originalName: string): Promise<IStreamResponse> {
         try {
@@ -114,10 +119,11 @@ class StorageCdn {
 
             return {bunnyFilePath: destinationPath, duration: 0};
         } catch (error: Error | any) {
-            console.error(`Erreur upload BunnyCDN:`, error.response?.data || error.message);
+            console.error("Erreur upload BunnyCDN:", error.response?.data || error.message);
             throw new Error("Upload vers BunnyCDN échoué");
         }
     }
+
 
     async deleteEvaluationFile(path: string): Promise<boolean> {
         try {
