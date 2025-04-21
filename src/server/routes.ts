@@ -12,7 +12,7 @@ import UserController from "../controller/UserController.js";
 import DiscordController from "../controller/DiscordController.js";
 import FolderController from "../controller/FolderController.js";
 import ContributorController from "../controller/ContributorController.js";
-import HolyProject, {EvaluatorType, EvaluationType} from "../model/learning/HolyProject.js";
+import RecruitmentController from "../controller/RecruitmentController.js";
 
 const router = Router();
 
@@ -204,5 +204,10 @@ router.get("/discord/user/:id", authAPI, UserController.userByDiscord)
 router.post("/discord/buy", authAPI, UserController.makeTransaction)
 
 router.post("/discord/ban/:id", authAPI, UserController.banByDiscord)
+
+router.get("/recruit-video-maker/list", authJwt, checkRole("admin"), RecruitmentController.list)
+router.post("/recruit-video-maker/add", authJwt, checkRole("admin"), RecruitmentController.add)
+router.patch("/recruit-video-maker/update/:id", authJwt, checkRole("admin"), RecruitmentController.update)
+
 
 export default router;
