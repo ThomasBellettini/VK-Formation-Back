@@ -132,7 +132,6 @@ setInterval(() => {
             if (isUnmuted || hasUnmutedInEvent) {
                 const hasRole = member.roles.cache.has("1024829882569596959");
                 const actualPoint = dataTracking.get(member.id) || 0;
-                console.log(`Member: ${member.user.username}, Point: ${actualPoint}, Role: ${hasRole}, Channel: ${channel.name}`);
 
                 if (!hasRole && actualPoint < 18050) {
                     dataTracking.set(member.id, actualPoint + 1);
