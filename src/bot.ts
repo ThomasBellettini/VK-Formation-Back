@@ -18,6 +18,7 @@ import { viewCommand } from './bot/CommandView.js';
 import {buttonHandler, shopCommand} from './bot/CommandShop.js';
 import {EvaluationButton} from './bot/evaluation/EvaluationMessages.js';
 import { config } from "dotenv";
+import {IRecruitment} from "./model/Recruitment.js";
 config();
 
 type ChannelDeletionEntry = {
@@ -117,19 +118,30 @@ setInterval(() => {
     if (!guild) return;
 
     guild.channels.cache.forEach(channel => {
-        if (channel.isVoiceBased()) {
-            channel.members.forEach(member => {
-                if (!member.voice.mute) {
-                    let hasRole = member.roles.cache.has("1024829882569596959");
-                    let actualPoint = dataTracking.get(member.id) || 0;
-                    if (!hasRole && actualPoint < 18050)
-                        dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1);
-                    else if (hasRole && actualPoint < 27075)
-                        dataTracking.set(member.id, (dataTracking.get(member.id) || 0) + 1.5);
-                    globalDataTracking.set("voice", (globalDataTracking.get("voice") || 0) + 1);
+        if (!channel.isVoiceBased()) return;
+
+        const members = [...channel.members.values()];
+
+        const isEventChannel = channel.type === 13;
+
+        const hasUnmutedInEvent = isEventChannel && members.some(member => !member.voice.mute);
+
+        members.forEach(member => {
+            const isUnmuted = !member.voice.mute;
+
+            if (isUnmuted || hasUnmutedInEvent) {
+                const hasRole = member.roles.cache.has("1024829882569596959");
+                const actualPoint = dataTracking.get(member.id) || 0;
+
+                if (!hasRole && actualPoint < 18050) {
+                    dataTracking.set(member.id, actualPoint + 1);
+                } else if (hasRole && actualPoint < 27075) {
+                    dataTracking.set(member.id, actualPoint + 1.5);
                 }
-            });
-        }
+
+                globalDataTracking.set("voice", (globalDataTracking.get("voice") || 0) + 1);
+            }
+        });
     });
 }, 1000);
 
@@ -420,6 +432,34 @@ app.post("/evaluation/add", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 })
+
+app.post('/discord/recruitment', async (req, res) => {
+    let recruitment = req.body as IRecruitment;
+    if (!recruitment) {
+        return res.status(400).json({ error: 'Missing recruitment data' });
+    }
+    try {
+        const forumChannelId = '1091437727712542830';
+        const forumChannel = await client.channels.fetch(forumChannelId);
+
+        if (!forumChannel || forumChannel.type !== 15) {
+            return res.status(400).json({ error: 'Forum channel not found or wrong type' });
+        }
+
+        const thread = await forumChannel.threads.create({
+            name: `${recruitment.name}`,
+            message: {
+                content: `Nouvelle Offre de Recrutement !\n\n${recruitment.details} \n\nBudget: ${recruitment.budget >= 0 ? recruitment.budget : "/"}€\nEmail de contact: ${(recruitment.email !== null ? recruitment.email : "Non renseigné")}`,
+            },
+            appliedTags: ["1091440064489328781"]
+        });
+
+        return res.status(200).json({ message: 'Thread created', threadUrl: `https://discord.com/channels/${thread.guildId}/${thread.id}` });
+    } catch (error) {
+        console.error('Error creating thread:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 app.listen(PORT, () => console.log(`API launched on http://localhost:${PORT}`));
 
