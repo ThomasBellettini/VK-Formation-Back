@@ -246,10 +246,10 @@ class HolyServices {
       );
 
       let projectDone = false;
-      let percent = 0;
+      let percent = null;
       if (userProject) {
         for (const project of userProject) {
-          if (project.resultPercent > percent) {
+          if (percent === null || project.resultPercent > percent) {
             percent = project?.resultPercent;
             projectDone = percent >= 80;
           }
