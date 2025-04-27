@@ -180,7 +180,7 @@ client.on('messageCreate', async (message) => {
                 const prompt = await formatDiscordMessage(message.content, message.guild);
 
                 const completion = await openai.chat.completions.create({
-                    model: "gpt-4o",
+                    model: "gpt-4o-mini",
                     messages: [
                         {
                             role: "user",
