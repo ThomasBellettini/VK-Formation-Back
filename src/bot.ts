@@ -167,7 +167,12 @@ client.on('messageCreate', async (message) => {
                     temperature: 0.2,
                 });
 
-                const reply = completion.choices[0].message.content;
+                let reply = completion.choices[0].message.content ?? "";
+
+                if (reply.length > 1600) {
+                    reply = reply.slice(0, 1600) + '...';
+                }
+
                 if (reply) {
                     await message.reply(reply);
                 } else {
