@@ -19,12 +19,15 @@ import {buttonHandler, shopCommand} from './bot/CommandShop.js';
 import {EvaluationButton} from './bot/evaluation/EvaluationMessages.js';
 import { config } from "dotenv";
 import {IRecruitment} from "./model/Recruitment.js";
+import OpenAI from "openai";
 config();
 
 type ChannelDeletionEntry = {
     channelId: string;
     deleteAt: number;
 };
+
+const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
@@ -149,6 +152,33 @@ client.on('messageCreate', async (message) => {
     if (!message.member) return console.log('Member not found');
     if (!message.guild) return console.log('Guild not found');
     if (!message.author.bot) {
+        if (message.channel.id === '1366086560147308605') {
+            try {
+                const prompt = await formatDiscordMessage(message.content, message.guild);
+
+                const completion = await openai.chat.completions.create({
+                    model: "gpt-4o",
+                    messages: [
+                        {
+                            role: "user",
+                            content: prompt,
+                        }
+                    ],
+                    temperature: 0.2,
+                });
+
+                const reply = completion.choices[0].message.content;
+                if (reply) {
+                    await message.reply(reply);
+                } else {
+                    await message.reply("Désolé, je n'ai pas pu générer de réponse.");
+                }
+            } catch (err) {
+                console.error("Erreur GPT :", err);
+                await message.reply("Une erreur est survenue lors de la génération de la réponse.");
+            }
+            return;
+        }
         globalDataTracking.set("messages", (globalDataTracking.get("messages") || 0) + 1);
         let member = message.member;
         let hasRole = member.roles.cache.has("1024829882569596959");
