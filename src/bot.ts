@@ -175,7 +175,7 @@ client.on('messageCreate', async (message) => {
                 }
             } catch (err) {
                 console.error("Erreur GPT :", err);
-                await message.reply("Une erreur est survenue lors de la génération de la réponse.");
+                await message.reply({content: "Une erreur est survenue lors de la génération de la réponse."});
             }
             return;
         }
