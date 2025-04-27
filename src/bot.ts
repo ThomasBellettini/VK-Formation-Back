@@ -149,6 +149,28 @@ setInterval(() => {
     });
 }, 1000);
 
+function splitMessage(text: string, maxLength = 1600): string[] {
+    const messages: string[] = [];
+    let currentMessage = "";
+
+    const lines = text.split(/\n/);
+
+    for (const line of lines) {
+        if ((currentMessage + line + "\n").length > maxLength) {
+            if (currentMessage.length > 0) messages.push(currentMessage.trim());
+            currentMessage = line + "\n";
+        } else {
+            currentMessage += line + "\n";
+        }
+    }
+
+    if (currentMessage.length > 0) {
+        messages.push(currentMessage.trim());
+    }
+
+    return messages;
+}
+
 client.on('messageCreate', async (message) => {
     if (!message.member) return console.log('Member not found');
     if (!message.guild) return console.log('Guild not found');
@@ -169,11 +191,10 @@ client.on('messageCreate', async (message) => {
                 });
 
                 let reply = completion.choices[0].message.content ?? "";
+                const messageParts = splitMessage(reply);
 
-                const chunks = reply.match(/[\s\S]{1,1600}/g) || [];
-
-                for (const chunk of chunks) {
-                    await message.reply(reply);
+                for (const part of messageParts) {
+                    await message.reply(part);
                 }
 
             } catch (err) {
