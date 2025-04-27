@@ -20,6 +20,7 @@ import {EvaluationButton} from './bot/evaluation/EvaluationMessages.js';
 import { config } from "dotenv";
 import {IRecruitment} from "./model/Recruitment.js";
 import OpenAI from "openai";
+import * as repl from "node:repl";
 config();
 
 type ChannelDeletionEntry = {
@@ -169,15 +170,12 @@ client.on('messageCreate', async (message) => {
 
                 let reply = completion.choices[0].message.content ?? "";
 
-                if (reply.length > 1600) {
-                    reply = reply.slice(0, 1600) + '...';
+                const chunks = reply.match(/[\s\S]{1,1600}/g) || [];
+
+                for (const chunk of chunks) {
+                    await message.reply(reply);
                 }
 
-                if (reply) {
-                    await message.reply(reply);
-                } else {
-                    await message.reply("Désolé, je n'ai pas pu générer de réponse.");
-                }
             } catch (err) {
                 console.error("Erreur GPT :", err);
                 await message.reply({content: "Une erreur est survenue lors de la génération de la réponse."});
