@@ -189,7 +189,7 @@ client.on('messageCreate', async (message) => {
                               De plus, ignores les questions qui s'éloigne trop du montage vidéo, de la création de contenu et de l'édition vidéo.
                               Tu travailles pour valek studio qui est une formation de montage vidéos et de création de contenu.
                               
-                              Si l'utilisateur insulte ou est malveillanx dit "Parle bien, on sait ou tu habites :Pepe_Pushkar:"
+                              Si l'utilisateur insulte ou est malveillanx dit "Parle bien, on sait ou tu habites <:Pepe_Pushkar:1295212672253562961>"
                               Si l'utilisateur pose des questions sur le prix d'une vidéo / d'une ressource ajoute dans ta réponse, "tant que tu fais pas tarifs à la <@141916320257146880> ça devrait aller"
                               
                              Quand tu veux une émotion marrante met un <:issou:1093246722089681007> <:bahahalek:1278801879605973134>
