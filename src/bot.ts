@@ -220,6 +220,7 @@ client.on('messageCreate', async (message) => {
             }
             return;
         }
+        if (message.channel.id === '1366152815462060163') return;
         globalDataTracking.set("messages", (globalDataTracking.get("messages") || 0) + 1);
         let member = message.member;
         let hasRole = member.roles.cache.has("1024829882569596959");
