@@ -205,6 +205,8 @@ router.post("/discord/buy", authAPI, UserController.makeTransaction)
 
 router.post("/discord/ban/:id", authAPI, UserController.banByDiscord)
 
+router.post("/sio-form/add", UserController.sioFormContact)
+
 router.get("/recruit-video-maker/list", authJwt, checkRole("admin"), RecruitmentController.list)
 router.post("/recruit-video-maker/add", authJwt, checkRole("admin"), RecruitmentController.add)
 router.patch("/recruit-video-maker/update/:id", authJwt, checkRole("admin"), RecruitmentController.update)

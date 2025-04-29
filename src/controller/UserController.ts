@@ -21,6 +21,7 @@ class UserController {
     this.makeTransaction = this.makeTransaction.bind(this);
     this.connectedAs = this.connectedAs.bind(this);
     this.banByDiscord = this.banByDiscord.bind(this);
+    this.sioFormContact = this.sioFormContact.bind(this);
   }
 
   public async list(req: Request, res: any) {
@@ -76,6 +77,11 @@ class UserController {
 
   public async banByDiscord(req: Request, res: any) {
     const r = await this.service.banByDiscord(req.params.id);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async sioFormContact(req: Request, res: any) {
+    const r = await this.service.sioFormContact(req);
     return res.status(r.statusCode).send(r);
   }
 

@@ -6,6 +6,7 @@ import * as sea from "node:sea";
 import {generateToken} from "../utils/JWTUtils.js";
 import Evaluation from "../model/learning/Evaluation.js";
 import {IHolyProject} from "../model/learning/HolyProject.js";
+import axios from "axios";
 
 class UserServices {
   constructor() {
@@ -19,6 +20,7 @@ class UserServices {
     this.makeTransaction = this.makeTransaction.bind(this);
     this.connectedAs = this.connectedAs.bind(this);
     this.banByDiscord = this.banByDiscord.bind(this);
+    this.sioFormContact = this.sioFormContact.bind(this);
   }
 
   async list(req: Request) {
@@ -371,6 +373,71 @@ class UserServices {
         errors: null,
         data: {
           user: user,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error in user creation !",
+        },
+      };
+    }
+  }
+
+  async sioFormContact(req: Request) {
+    try {
+      if (!req.body.email || !req.body.firstname || !req.body.lastname || !req.body.phone) {
+        throw new Error("Missing fields");
+      }
+      let {email, firstname, lastname, phone} = req.body;
+      let response = await axios.post(`https://api.systeme.io/api/contacts`, {
+
+        email: email,
+        fields: [
+          {
+            slug: "first_name",
+            value: firstname
+          },
+          {
+            slug: "surname",
+            value: lastname
+          },
+          {
+            slug: "email",
+            value: email
+          },
+          {
+            slug: "phone_number",
+            value: phone
+          }
+        ]
+      }, {
+        headers: {
+          "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+        }
+      });
+
+      if (response.data.id) {
+        await axios.post(`https://api.systeme.io/api/contacts/${response.data.id}/tags`, {
+
+          tagId: "1439803"
+        }, {
+          headers: {
+            "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+          }
+        });
+      }
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          message: "success",
         },
       };
     } catch (err) {
