@@ -424,7 +424,7 @@ class UserServices {
       if (response.data.id) {
         await axios.post(`https://api.systeme.io/api/contacts/${response.data.id}/tags`, {
 
-          tagId: "1439803"
+          tagId: 1439803
         }, {
           headers: {
             "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
