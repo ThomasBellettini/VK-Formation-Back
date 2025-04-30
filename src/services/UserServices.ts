@@ -407,10 +407,6 @@ class UserServices {
             value: lastname
           },
           {
-            slug: "email",
-            value: email
-          },
-          {
             slug: "phone_number",
             value: phone
           }
