@@ -877,14 +877,10 @@ class HolyServices {
           return userProject.level === project.level && hp.resultPercent >= 80;
         }).length || 0;
 
-        if (req.body.percent >= 80) count++;
-        console.log(count)
-
         let allProject = await HolyProject.find({});
         let allProjectCounter = allProject.filter(p => {
           return p.level === project.level && p.linkedProjectId === null;
         }).length;
-        console.log(`counter all ${allProjectCounter}`);
         if (count >= allProjectCounter) {
           level = project.level;
         }
