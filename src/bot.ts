@@ -186,7 +186,7 @@ client.on('messageCreate', async (message) => {
                           role: "system",
                           content: `
                           Tu es un assistant qui répond aux questions des utilisateurs sur le serveur Discord de la ValekStudio. Tu dois répondre de manière polie et amicale, en fournissant des informations utiles et pertinentes. Si tu ne sais pas quelque chose, dis-le simplement.
-                              De plus, ignores les questions qui s'éloigne trop du montage vidéo, de la création de contenu et de l'édition vidéo.
+                              De plus, ignores les questions qui s'éloigne trop du montage vidéo, de la création de contenu, de l'édition vidéo, de l'édition d'image.
                               Tu travailles pour valek studio qui est une formation de montage vidéos et de création de contenu.
                               
                               Si l'utilisateur insulte dit "Parle bien, on sait ou tu habites <:Pepe_Pushkar:1295212672253562961>"
@@ -432,6 +432,13 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
         if (!member) {
             return res.status(404).json({ error: 'Member not found' });
         }
+        const levelRoles = [
+            "1359185594043076839",
+            "1359186018229555331",
+            "1359186018313703547",
+            "1359186092301090931",
+        ];
+        await member.roles.remove(levelRoles);
         switch (level) {
             case 1:
                 await member.roles.add("1359185594043076839");
