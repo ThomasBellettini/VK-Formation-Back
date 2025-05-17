@@ -3,6 +3,7 @@ import { generateToken } from "../utils/JWTUtils.js";
 import mongoose from "mongoose";
 import {Request} from "express";
 import {sendTemplateEmail} from "../utils/BrevoUtils.js";
+import axios from "axios";
 
 class AuthServices {
   constructor() {
@@ -111,8 +112,40 @@ class AuthServices {
         resetCode: Math.random().toString(36) + Math.random().toString(36),
       });
 
-        await sendTemplateEmail(1, {vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`}, newUser.email);
+      let response = await axios.get(`https://api.systeme.io/api/contacts?email=${email}`, {
+        headers: {
+          "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+        }
+      });
+      if (response.status === 200 && response.data.items && response.data.items.length > 0) {
+        let items = response.data.items;
+        for (let i = 0; i < items.length; i++) {
+          let items = response.data.items[i] as {
+            id: string;
+            tags: {
+                id: string;
+                name: string;
+            }[];
+          };
+          for (let j = 0; j < items.tags.length; j++) {
+            let tag = items.tags[j];
+            await axios.delete(`https://api.systeme.io/api/contacts/${items.id}/tags/${tag.id}`, {
+              headers: {
+                "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+              }
+            });
+          }
+          await axios.post(`https://api.systeme.io/api/contacts/${items.id}/tags`, {
+            tagId: 1439804
+          }, {
+            headers: {
+              "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+            }
+          });
+        }
+      }
 
+      await sendTemplateEmail(1, {vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`}, newUser.email);
       return {
         success: true,
         statusCode: 201,
