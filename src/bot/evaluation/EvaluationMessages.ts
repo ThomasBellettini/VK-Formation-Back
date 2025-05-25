@@ -16,10 +16,22 @@ import {IEvaluation} from "../../model/learning/Evaluation";
 import {IUser} from "../../model/User";
 config();
 
+let globalEvaluationCooldown = 0;
+
 export const EvaluationButton = {
     async execute(interaction: ButtonInteraction, client: Client) {
         if (!interaction.isButton()) return;
         if (!interaction.customId.startsWith("eval-")) return;
+
+        const now = Date.now();
+        const remaining = globalEvaluationCooldown - now;
+        if (remaining > 0) {
+            return interaction.reply({
+                content: `⏳ Merci de patienter encore **${(remaining / 1000).toFixed(1)}s** avant de pouvoir réclamer une évaluation.`,
+                ephemeral: true
+            });
+        }
+        globalEvaluationCooldown = now + 5000;
 
         const itemId = interaction.customId.replace("eval-", "");
         try {
