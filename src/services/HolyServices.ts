@@ -877,14 +877,10 @@ class HolyServices {
           return userProject.level === project.level && hp.resultPercent >= 80;
         }).length || 0;
 
-        if (req.body.percent >= 80) count++;
-        console.log(count)
-
         let allProject = await HolyProject.find({});
         let allProjectCounter = allProject.filter(p => {
           return p.level === project.level && p.linkedProjectId === null;
         }).length;
-        console.log(`counter all ${allProjectCounter}`);
         if (count >= allProjectCounter) {
           level = project.level;
         }
@@ -901,7 +897,7 @@ class HolyServices {
 
       if (req.body.percent >= 80)
         user.xp += project.xp;
-      let cost = project.cost || 1;
+      let cost = (project.cost || 1) + 200;
       await user.save();
       await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + cost});
 
