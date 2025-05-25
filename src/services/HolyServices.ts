@@ -8,6 +8,7 @@ import CST from "../server/constants.js";
 import holyProject from "../model/learning/HolyProject.js";
 import axios from "axios";
 import Resource, {IResource} from "../model/Resource.js";
+import * as process from "node:process";
 
 interface IHolyGraph {
     _id: mongoose.Types.ObjectId;
@@ -57,6 +58,7 @@ interface IHolyGraph {
 }
 
 class HolyServices {
+
   async notifyDiscordIfLevelCompleted(user: IUser, currentProject: IHolyProject) {
     if (!user.discordId || !currentProject.level || currentProject.level < 1) return;
 
@@ -79,6 +81,7 @@ class HolyServices {
       });
     }
   }
+
   constructor() {
     this.list = this.list.bind(this);
     this.add = this.add.bind(this);
@@ -870,18 +873,19 @@ class HolyServices {
       let level = 0;
       if (project.level >= 1) {
         let count = user.holyProjects.filter(hp => {
-          if (hp.project === null) {
+          if (hp.project === null || hp.resultPercent === null || hp.resultPercent < 80 ) {
             return false;
           }
           let userProject = hp.project as IHolyProject;
-          return userProject.level === project.level && hp.resultPercent >= 80;
+          console.log(`(${user.email} - ${project.name}) (${userProject.name}) Comparing user project level ${userProject.level} with project level ${project.level}`);
+          return (userProject.level === project.level);
         }).length || 0;
 
-        let allProject = await HolyProject.find({});
-        let allProjectCounter = allProject.filter(p => {
-          return p.level === project.level && p.linkedProjectId === null;
-        }).length;
-        if (count >= allProjectCounter) {
+        let allProject = await HolyProject.find({
+            level: project.level,
+            linkedProjectId: null
+        }).lean();
+        if (count >= allProject.length) {
           level = project.level;
         }
       }
