@@ -438,21 +438,24 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
             "1359186018313703547",
             "1359186092301090931",
         ];
-        await member.roles.remove(levelRoles);
         switch (level) {
             case 1:
+                await member.roles.remove(levelRoles);
                 await member.roles.add("1359185594043076839");
                 break;
             case 2:
+                await member.roles.remove(levelRoles);
                 await member.roles.add("1359185594043076839");
                 await member.roles.add("1359186018229555331");
                 break;
             case 3:
+                await member.roles.remove(levelRoles);
                 await member.roles.add("1359185594043076839");
                 await member.roles.add("1359186018229555331");
                 await member.roles.add("1359186018313703547");
                 break;
             case 4:
+                await member.roles.remove(levelRoles);
                 await member.roles.add("1359185594043076839");
                 await member.roles.add("1359186018229555331");
                 await member.roles.add("1359186018313703547");
