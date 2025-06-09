@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, User } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder, User, PermissionsBitField } from 'discord.js';
 import axios from 'axios';
 import { config } from 'dotenv';
 config();
@@ -21,6 +21,18 @@ export const giveCommand = {
         const membre: User = interaction.options.getUser('membre', true);
         const amount = interaction.options.getInteger('amount', true);
 
+        // Vérif permission administrateur ou rôle spécifique
+        const member = await interaction.guild?.members.fetch(interaction.user.id);
+        const hasPerm = member?.permissions.has(PermissionsBitField.Flags.Administrator);
+        const hasRole = member?.roles.cache.has('1376217613864275978');
+
+        if (!hasPerm && !hasRole) {
+            return interaction.reply({
+                content: '❌ Tu n’as pas la permission d’utiliser cette commande.',
+                ephemeral: true
+            });
+        }
+
         try {
             const response = await axios.post(`${process.env.API_URL}/discord/give`, {
                 discordId: membre.id,
@@ -34,7 +46,7 @@ export const giveCommand = {
             if (response.status === 201) {
                 return interaction.reply({
                     content: `✅ ${membre.username} a reçu ${amount} 💰 avec succès.`,
-                    ephemeral: false
+                    ephemeral: true
                 });
             } else {
                 return interaction.reply({
