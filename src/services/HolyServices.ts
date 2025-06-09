@@ -865,7 +865,7 @@ class HolyServices {
         }
       }
       user.holyProjects.push({
-        project: project._id,
+        project: project,
         resultPercent: req.body.percent,
         evaluator: evaluator._id
       })
