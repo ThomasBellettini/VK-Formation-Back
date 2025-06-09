@@ -18,6 +18,7 @@ class UserServices {
     this.linkDiscord = this.linkDiscord.bind(this);
     this.userByDiscord = this.userByDiscord.bind(this);
     this.makeTransaction = this.makeTransaction.bind(this);
+    this.giveMoney = this.giveMoney.bind(this);
     this.connectedAs = this.connectedAs.bind(this);
     this.banByDiscord = this.banByDiscord.bind(this);
     this.sioFormContact = this.sioFormContact.bind(this);
@@ -181,6 +182,33 @@ class UserServices {
         errors: null,
         data: {
           user: userDb
+        },
+      };
+    } catch (err: any) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: err.message,
+        },
+      };
+    }
+  }
+
+  async giveMoney(discordID: string, money: number) {
+    try {
+      let userDb = await User.findOne({discordId: discordID});
+      if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
+      userDb.coin += money;
+      await userDb.save();
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: userDb,
         },
       };
     } catch (err: any) {

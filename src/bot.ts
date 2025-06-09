@@ -15,6 +15,7 @@ import path from 'path';
 import { linkCommand } from './bot/CommandLink.js';
 import { meCommand } from './bot/CommandMe.js';
 import { viewCommand } from './bot/CommandView.js';
+import { giveCommand } from './bot/CommandGive.js';
 import {buttonHandler, shopCommand} from './bot/CommandShop.js';
 import {EvaluationButton} from './bot/evaluation/EvaluationMessages.js';
 import { config } from "dotenv";
@@ -260,6 +261,8 @@ client.on('interactionCreate', async (interaction) => {
             await shopCommand.execute(interaction as ChatInputCommandInteraction);
         } else if (command === 'view') {
             await viewCommand.execute(interaction as ChatInputCommandInteraction);
+        } else if (command === 'give') {
+            await giveCommand.execute(interaction as ChatInputCommandInteraction);
         }
     } else if (interaction.isButton()) {
         await buttonHandler.execute(interaction, client);
@@ -366,7 +369,7 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN as string);
     await (async () => {
         try {
-            await rest.put(Routes.applicationCommands(CLIENT_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON(), shopCommand.data.toJSON(), viewCommand.data.toJSON() ]});
+            await rest.put(Routes.applicationCommands(CLIENT_ID as string), {body: [linkCommand.data.toJSON(), meCommand.data.toJSON(), shopCommand.data.toJSON(), viewCommand.data.toJSON(), giveCommand.data.toJSON() ]});
         } catch (error) {
             console.error('Erreur lors du déploiement de la commande:', error);
         }

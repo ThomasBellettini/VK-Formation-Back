@@ -191,6 +191,7 @@ router.delete("/collaborators/delete/:id", authJwt, checkRole("admin"), Contribu
 // router.get("/resources/show", authJwt, ResourceController.view)
 
 router.post("/discord/upload", authAPI, DiscordController.uploadDailyStat)
+router.post("/discord/give", authAPI, UserController.giveMoney)
 router.get("/discord/stats", authJwtNotMandatory, DiscordController.getStats)
 router.get("/discord/schedule", DiscordController.getSchedule)
 
