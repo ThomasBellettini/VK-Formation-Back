@@ -1,6 +1,6 @@
 FROM node:22 as builder
 
-WORKDIR /app
+WORKDIR /back
 
 # Installer les dépendances système
 RUN apt-get update && apt-get install -y ffmpeg
