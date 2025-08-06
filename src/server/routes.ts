@@ -13,6 +13,7 @@ import DiscordController from "../controller/DiscordController.js";
 import FolderController from "../controller/FolderController.js";
 import ContributorController from "../controller/ContributorController.js";
 import RecruitmentController from "../controller/RecruitmentController.js";
+import PlanetController from "../controller/PlanetController.js";
 
 const router = Router();
 
@@ -211,6 +212,13 @@ router.post("/sio-form/add", UserController.sioFormContact)
 router.get("/recruit-video-maker/list", authJwt, checkRole("admin"), RecruitmentController.list)
 router.post("/recruit-video-maker/add", RecruitmentController.add)
 router.patch("/recruit-video-maker/update/:id", authJwt, checkRole("admin"), RecruitmentController.update)
+
+// Planet routes
+router.get("/planets/list", authJwt, PlanetController.list)
+router.post("/planets/add", authJwt, checkRole("admin"), upload.single('model'), PlanetController.add)
+router.get("/planets/info/:url", authJwt, PlanetController.info)
+router.patch("/planets/update/:id", authJwt, checkRole("admin"), upload.single('model'), PlanetController.update)
+router.delete("/planets/delete/:id", authJwt, checkRole("admin"), PlanetController.delete)
 
 
 export default router;
