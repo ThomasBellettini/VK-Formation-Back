@@ -1,10 +1,13 @@
 import mongoose, {Document, mongo, Schema} from 'mongoose';
 import { IHolyProject } from './HolyProject.js';
 import { ILesson } from './Lesson.js';
+import { IPolaris } from './Polaris.js';
 
 export interface IPlanet extends Document {
     _id: mongoose.Types.ObjectId;
     url: string;
+
+    polaris: IPolaris | mongoose.Types.ObjectId;
 
     name: string;
     description: string;
@@ -55,6 +58,11 @@ const planetSchema: Schema<IPlanet> = new mongoose.Schema({
         type: String,
         required: true,
     },
+    polaris: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Polaris',
+        required: false
+    }
 }, {
     timestamps: true
 });

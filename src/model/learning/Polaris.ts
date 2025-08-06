@@ -44,6 +44,6 @@ const polarisSchema: Schema<IPolaris> = new mongoose.Schema({
     timestamps: true
 });
 
-const Polaris = mongoose.model<IPolaris>('Planet', polarisSchema);
+const Polaris = mongoose.model<IPolaris>('Polaris', polarisSchema);
 
 export default Polaris;

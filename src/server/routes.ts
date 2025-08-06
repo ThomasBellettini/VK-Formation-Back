@@ -14,6 +14,8 @@ import FolderController from "../controller/FolderController.js";
 import ContributorController from "../controller/ContributorController.js";
 import RecruitmentController from "../controller/RecruitmentController.js";
 import PlanetController from "../controller/PlanetController.js";
+import PolarisController from "../controller/PolarisController.js";
+import UserPlanetController from "../controller/UserPlanetController.js";
 
 const router = Router();
 
@@ -219,6 +221,17 @@ router.post("/planets/add", authJwt, checkRole("admin"), upload.single('model'),
 router.get("/planets/info/:url", authJwt, PlanetController.info)
 router.patch("/planets/update/:id", authJwt, checkRole("admin"), upload.single('model'), PlanetController.update)
 router.delete("/planets/delete/:id", authJwt, checkRole("admin"), PlanetController.delete)
+
+// Polaris routes
+router.get("/polaris/list", authJwt, PolarisController.list)
+router.post("/polaris/add", authJwt, checkRole("admin"), PolarisController.add)
+router.get("/polaris/info/:url", authJwt, PolarisController.info)
+router.patch("/polaris/update/:id", authJwt, checkRole("admin"), PolarisController.update)
+router.delete("/polaris/delete/:id", authJwt, checkRole("admin"), PolarisController.delete)
+
+// User Planet routes
+router.get("/user/planets/finished", authJwt, UserPlanetController.getUserFinishedPlanets)
+router.get("/user/planets/:planetId/progress", authJwt, UserPlanetController.getUserPlanetProgress)
 
 
 export default router;

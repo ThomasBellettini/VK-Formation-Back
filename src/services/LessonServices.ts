@@ -5,6 +5,8 @@ import {ILesson} from "../model/learning/Lesson.js";
 import mongoose from "mongoose";
 import ffmpeg, {FfprobeData} from "fluent-ffmpeg";
 import StorageCdn from "../utils/StorageCdn.js";
+import Planet from "../model/learning/Planet.js";
+import HolyProject from "../model/learning/HolyProject.js";
 
 class LessonServices {
 
@@ -46,8 +48,8 @@ class LessonServices {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let databaseUser = await User.findOne({email: user.email});
-      let lesson = await Lesson.findOne({url: url}).lean();
+      let databaseUser = await User.findOne({ email: user.email });
+      let lesson = await Lesson.findOne({ url: url }).populate('planet').lean();
       if (!lesson) throw new Error('No lesson was founded !');
       if (!databaseUser) throw new Error('No user found !');
       if (!databaseUser.lessonsFinished.includes(lesson._id)) {
@@ -56,6 +58,41 @@ class LessonServices {
         await databaseUser.save();
         // @ts-ignore
         lesson.finished = true;
+
+        if (lesson.planet) {
+          const planet = lesson.planet as any;
+          
+          const allPlanetLessons = await Lesson.find({ planet: planet._id }).lean();
+          const allPlanetLessonIds = allPlanetLessons.map(l => l._id.toString());
+          
+          const userFinishedLessonIds = databaseUser.lessonsFinished.map(lessonId => 
+            typeof lessonId === 'string' ? lessonId : lessonId.toString()
+          );
+          
+          const allLessonsFinished = allPlanetLessonIds.every(lessonId => 
+            userFinishedLessonIds.includes(lessonId)
+          );
+
+          if (allLessonsFinished) {
+              const planetProject = await HolyProject.findOne({ planet: planet._id }).lean();
+              
+              if (planetProject) {
+                const userProject = databaseUser.holyProjects.find(project => 
+                  project.polaris === planet.polaris?.identifier || 
+                  (typeof project.project === 'string' ? 
+                    project.project === planetProject._id.toString() : 
+                    project.project._id.toString() === planetProject._id.toString())
+                );
+
+                if (userProject && userProject.resultPercent >= 80) {
+                  if (!databaseUser.planetsFinished.includes(planet._id)) {
+                    databaseUser.planetsFinished.push(planet._id);
+                    await databaseUser.save();
+                  }
+                }
+              }
+            }
+        }
       }
       return {
         success: true,
