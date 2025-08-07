@@ -16,6 +16,7 @@ import RecruitmentController from "../controller/RecruitmentController.js";
 import PlanetController from "../controller/PlanetController.js";
 import PolarisController from "../controller/PolarisController.js";
 import UserPlanetController from "../controller/UserPlanetController.js";
+import NotificationController from "../controller/NotificationController.js";
 
 const router = Router();
 
@@ -232,6 +233,12 @@ router.delete("/polaris/delete/:id", authJwt, checkRole("admin"), PolarisControl
 // User Planet routes
 router.get("/user/planets/finished", authJwt, UserPlanetController.getUserFinishedPlanets)
 router.get("/user/planets/:planetId/progress", authJwt, UserPlanetController.getUserPlanetProgress)
+
+// Notification routes
+router.post("/notifications/add", authJwt, NotificationController.add)
+router.delete("/notifications/delete/:id", authJwt, NotificationController.delete)
+router.delete("/notifications/delete-all/:userId?", authJwt, NotificationController.deleteAll)
+router.get("/notifications/list/:userId?", authJwt, NotificationController.list)
 
 
 export default router;

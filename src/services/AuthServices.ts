@@ -5,6 +5,7 @@ import {sendTemplateEmail} from "../utils/BrevoUtils.js";
 import axios from "axios";
 import Polaris from "../model/learning/Polaris.js";
 import { getUserLevelForPolaris } from "../utils/utils.js";
+import Notification from "../model/Notification.js";
 
 class AuthServices {
   constructor() {
@@ -38,13 +39,18 @@ class AuthServices {
         });
       }
 
+      const notifications = await Notification.find({ linkedUser: userDb._id })
+        .sort({ createdAt: -1 })
+        .lean();
+
       return {
         success: true,
         statusCode: 201,
         errors: null,
         data: {
           user: userData,
-          polarisLevels
+          polarisLevels,
+          notifications
         },
       };
     } catch (err) {
