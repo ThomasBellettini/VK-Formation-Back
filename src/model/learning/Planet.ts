@@ -16,7 +16,7 @@ export interface IPlanet extends Document {
 
     isDone: boolean;
 
-    courses: ILesson | mongoose.Types.ObjectId;
+    courses: (ILesson | mongoose.Types.ObjectId)[];
     projects: IHolyProject | mongoose.Types.ObjectId;
 
     createdAt?: Date;
@@ -41,10 +41,10 @@ const planetSchema: Schema<IPlanet> = new mongoose.Schema({
         required: true,
         default: false
     },
-    courses: {
+    courses: [{
         type: mongoose.Types.ObjectId,
         ref: 'Lesson',
-    },
+    }],
     projects: {
         type: mongoose.Types.ObjectId,
         ref: 'HolyProject',

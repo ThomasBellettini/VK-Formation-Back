@@ -81,11 +81,9 @@ class UserPlanetService {
       let coursesCompleted = 0;
       let totalCourses = 0;
 
-      if (planetCourses) {
+      if (planetCourses && Array.isArray(planetCourses)) {
         const userFinishedLessons = new Set(databaseUser.lessonsFinished.map((lesson: any) => lesson._id.toString()));
-        const planetCourseIds = Array.isArray(planetCourses) 
-          ? planetCourses.map(course => course._id.toString())
-          : [planetCourses._id.toString()];
+        const planetCourseIds = planetCourses.map(course => course._id.toString());
 
         totalCourses = planetCourseIds.length;
         coursesCompleted = planetCourseIds.filter(courseId => 

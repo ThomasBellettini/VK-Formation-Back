@@ -59,45 +59,31 @@ interface IHolyGraph {
 
 class HolyServices {
 
-  // TODO: Check permissions based on planet and polaris levels
-  async checkUserPermissions(user: IUser, holyProject: IHolyProject): Promise<boolean> {
-    try {
-      // Get the planet associated with this holy project
-      const planet = await Planet.findById(holyProject.planet).populate('polaris').lean();
-      if (!planet) {
-        return false; // No planet found, no permission
-      }
-
-      // Get the polaris associated with this planet
-      const polaris = planet.polaris as IPolaris;
-      if (!polaris) {
-        return false; // No polaris found, no permission
-      }
-
-      // Check if user has completed the required planets in this polaris
-      const userPlanetsInPolaris = user.planetsFinished.filter(planetId => {
-        // TODO: Check if this planet belongs to the same polaris
-        // This requires additional logic to check planet-polaris relationships
-        return true; // Temporary, needs proper implementation
-      });
-
-      // TODO: Implement proper permission logic based on polaris level requirements
-      // For now, return true as a temporary solution
-      return true;
-    } catch (error) {
-      console.error("Error checking user permissions:", error);
-      return false;
-    }
-  }
-
   async notifyDiscordIfLevelCompleted(user: IUser, currentProject: IHolyProject) {
-    // TODO: Update this method to work with planet/polaris level system
-    // For now, we'll keep the basic structure but it needs to be updated
     if (!user.discordId) return;
 
-    // TODO: Implement level completion logic based on planet/polaris system
-    // This should check if user has completed all projects in a planet/polaris level
+    const planet = await Planet.findById(currentProject.planet).populate('polaris').lean();
+    if (!planet || !planet.polaris) return;
+
+    const polaris = planet.polaris as any;
+    
+    const polarisData = await Polaris.findOne({ identifier: polaris.identifier })
+      .populate('planets')
+      .lean();
+    
+    if (!polarisData) return;
+    const userLevel = await getUserLevelForPolaris(user, polaris.identifier);
+  
+  
+      await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/0`, {
+        data: {
+          userId: user.discordId,
+          level: userLevel
+        }
+      });
+    
   }
+
 
   constructor() {
     this.list = this.list.bind(this);
@@ -136,8 +122,7 @@ class HolyServices {
             }
           }
           
-          // TODO: Implement permission check based on planet/polaris levels
-          let hasPermission = true; // Temporary, needs async implementation
+          let hasPermission = false;
           
           let qcm = iterator.qcmContent.map((qcm => {
             return {
@@ -214,8 +199,7 @@ class HolyServices {
         }
       }
 
-      // TODO: Implement permission logic based on planet/polaris levels
-      let hasPermission = true; // Temporary, needs implementation based on planet/polaris system
+      let hasPermission = false;
 
       let qcmContent = holyProjectDatabase.qcmContent.map((qcm => {
         return {
@@ -550,6 +534,26 @@ class HolyServices {
                 evaluator: null,
                 polaris: polarisIdentifier
             });
+            
+            if (planet) {
+              const allPlanetLessons = await Lesson.find({ planet: planet._id }).lean();
+              const allPlanetLessonIds = allPlanetLessons.map((l: any) => l._id.toString());
+              
+              const userFinishedLessonIds = databaseUser.lessonsFinished.map((lessonId: any) => 
+                typeof lessonId === 'string' ? lessonId : lessonId.toString()
+              );
+              
+              const allLessonsFinished = allPlanetLessonIds.every((lessonId: string) => 
+                userFinishedLessonIds.includes(lessonId)
+              );
+
+              if (allLessonsFinished) {
+                if (!databaseUser.planetsFinished.includes(planet._id)) {
+                  databaseUser.planetsFinished.push(planet._id);
+                }
+              }
+            }
+            
             databaseUser.coin -= (holyProject.cost || 1);
             await databaseUser.save();
             await this.notifyDiscordIfLevelCompleted(databaseUser, holyProject);
@@ -648,6 +652,26 @@ class HolyServices {
             evaluator: null,
             polaris: polarisIdentifier
           });
+          
+          if (percent >= 80 && planet) {
+            const allPlanetLessons = await Lesson.find({ planet: planet._id }).lean();
+            const allPlanetLessonIds = allPlanetLessons.map((l: any) => l._id.toString());
+            
+            const userFinishedLessonIds = databaseUser.lessonsFinished.map((lessonId: any) => 
+              typeof lessonId === 'string' ? lessonId : lessonId.toString()
+            );
+            
+            const allLessonsFinished = allPlanetLessonIds.every((lessonId: string) => 
+              userFinishedLessonIds.includes(lessonId)
+            );
+
+            if (allLessonsFinished) {
+              if (!databaseUser.planetsFinished.includes(planet._id)) {
+                databaseUser.planetsFinished.push(planet._id);
+              }
+            }
+          }
+          
           databaseUser.coin -= (holyProject.cost || 1);
           await databaseUser.save();
           if (percent >= 80) {
@@ -891,6 +915,9 @@ class HolyServices {
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
+      if (evaluation.discord === false && evaluation.channelId === null)
+        evaluation.evaluator = null;
+
       if (evaluation.evaluator !== null) {
         throw new Error("Un evaluateur a déjà été assigné à cette évaluation !");
       }

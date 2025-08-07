@@ -1,4 +1,6 @@
 import Planet, { IPlanet } from "../model/learning/Planet.js";
+import Lesson from "../model/learning/Lesson.js";
+import HolyProject from "../model/learning/HolyProject.js";
 import { Request } from "express";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
@@ -42,7 +44,7 @@ class PlanetServices {
 
   async add(req: Request): Promise<IPlanetResponse> {
     try {
-      const { name, description, level, url } = req.body;
+      const { name, description, level, url, lessons, projects } = req.body;
       
       if (!name || !description || !level || !url) {
         return {
@@ -69,6 +71,35 @@ class PlanetServices {
       } else {
           throw new Error("Missing image file");
       }
+      let lessonIds: string[] = [];
+      if (lessons) {
+        try {
+          lessonIds = JSON.parse(lessons);
+          if (!Array.isArray(lessonIds)) {
+            lessonIds = [lessonIds];
+          }
+        } catch (error) {
+          console.error("Error parsing lessons:", error);
+          return {
+            statusCode: 400,
+            message: "Invalid lessons format. Expected JSON array."
+          };
+        }
+      }
+
+      let projectId: string | null = null;
+      if (projects) {
+        try {
+          const parsedProject = JSON.parse(projects);
+          projectId = Array.isArray(parsedProject) ? parsedProject[0] : parsedProject;
+        } catch (error) {
+          console.error("Error parsing project:", error);
+          return {
+            statusCode: 400,
+            message: "Invalid project format. Expected JSON string or array with single project ID."
+          };
+        }
+      }
 
       const planet = new Planet({
         name,
@@ -76,10 +107,44 @@ class PlanetServices {
         level,
         url,
         modelName,
-        isDone: false
+        isDone: false,
+        projects: projectId ? new mongoose.Types.ObjectId(projectId) : undefined,
+        courses: lessonIds.map(id => new mongoose.Types.ObjectId(id))
       });
 
       await planet.save();
+
+      if (lessonIds.length > 0) {
+        try {
+          const existingLessons = await Lesson.find({ _id: { $in: lessonIds } });
+          if (existingLessons.length !== lessonIds.length) {
+            console.warn("Some lesson IDs were not found:", lessonIds);
+          }
+
+          await Lesson.updateMany(
+            { _id: { $in: lessonIds } },
+            { planet: planet._id }
+          );
+
+          console.log(`Updated ${existingLessons.length} lessons to reference planet ${planet._id}`);
+        } catch (error) {
+          console.error("Error updating lessons:", error);
+        }
+      }
+
+      if (projectId) {
+        try {
+          const existingProject = await HolyProject.findById(projectId);
+          if (!existingProject) {
+            console.warn("Project ID not found:", projectId);
+          } else {
+            await HolyProject.findByIdAndUpdate(projectId, { planet: planet._id });
+            console.log(`Updated project ${projectId} to reference planet ${planet._id}`);
+          }
+        } catch (error) {
+          console.error("Error updating project:", error);
+        }
+      }
 
       const populatedPlanet = await Planet.findById(planet._id)
         .populate('courses', 'name description url')
@@ -130,7 +195,7 @@ class PlanetServices {
 
   async update(req: Request, id: string): Promise<IPlanetResponse> {
     try {
-      const { name, description, level, url, isDone } = req.body;
+      const { name, description, level, url, isDone, lessons, projects } = req.body;
       
       const planet = await Planet.findById(id);
       if (!planet) {
@@ -161,6 +226,38 @@ class PlanetServices {
           throw new Error("Missing image file");
       }
 
+      // Parse lessons array if provided
+      let lessonIds: string[] = [];
+      if (lessons) {
+        try {
+          lessonIds = JSON.parse(lessons);
+          if (!Array.isArray(lessonIds)) {
+            lessonIds = [lessonIds];
+          }
+        } catch (error) {
+          console.error("Error parsing lessons:", error);
+          return {
+            statusCode: 400,
+            message: "Invalid lessons format. Expected JSON array."
+          };
+        }
+      }
+
+      // Parse single project if provided
+      let projectId: string | null = null;
+      if (projects) {
+        try {
+          const parsedProject = JSON.parse(projects);
+          projectId = Array.isArray(parsedProject) ? parsedProject[0] : parsedProject;
+        } catch (error) {
+          console.error("Error parsing project:", error);
+          return {
+            statusCode: 400,
+            message: "Invalid project format. Expected JSON string or array with single project ID."
+          };
+        }
+      }
+
       const updateData: Partial<IPlanet> = {};
       if (name !== undefined) updateData.name = name;
       if (description !== undefined) updateData.description = description;
@@ -169,7 +266,15 @@ class PlanetServices {
       if (modelName !== undefined) updateData.modelName = modelName;
       if (isDone !== undefined) updateData.isDone = isDone;
       if (modelName !== planet.modelName) updateData.modelName = modelName;
+      
+      if (lessonIds.length > 0) {
+        updateData.courses = lessonIds.map(id => new mongoose.Types.ObjectId(id));
+      }
+      if (projectId) {
+        updateData.projects = new mongoose.Types.ObjectId(projectId);
+      }
 
+      // Update the planet
       const updatedPlanet = await Planet.findByIdAndUpdate(
         id,
         updateData,
@@ -178,6 +283,52 @@ class PlanetServices {
         .populate('courses', 'name description url')
         .populate('projects', 'name description url')
         .lean();
+
+      // Update lessons to reference this planet
+      if (lessonIds.length > 0) {
+        try {
+          // Validate that all lesson IDs exist
+          const existingLessons = await Lesson.find({ _id: { $in: lessonIds } });
+          if (existingLessons.length !== lessonIds.length) {
+            console.warn("Some lesson IDs were not found:", lessonIds);
+          }
+
+          // Update lessons to reference this planet
+          await Lesson.updateMany(
+            { _id: { $in: lessonIds } },
+            { planet: id }
+          );
+
+          console.log(`Updated ${existingLessons.length} lessons to reference planet ${id}`);
+        } catch (error) {
+          console.error("Error updating lessons:", error);
+          return {
+            statusCode: 500,
+            message: "Error updating lessons"
+          };
+        }
+      }
+
+      // Update HolyProject to reference this planet
+      if (projectId) {
+        try {
+          // Validate that the project ID exists
+          const existingProject = await HolyProject.findById(projectId);
+          if (!existingProject) {
+            console.warn("Project ID not found:", projectId);
+          } else {
+            // Update project to reference this planet
+            await HolyProject.findByIdAndUpdate(projectId, { planet: id });
+            console.log(`Updated project ${projectId} to reference planet ${id}`);
+          }
+        } catch (error) {
+          console.error("Error updating project:", error);
+          return {
+            statusCode: 500,
+            message: "Error updating project"
+          };
+        }
+      }
 
       return {
         statusCode: 200,

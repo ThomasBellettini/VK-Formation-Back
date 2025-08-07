@@ -6,7 +6,6 @@ export interface IPolaris extends Document {
     url: string;
     identifier: string;
 
-    level: number;
     name: string;
     description: string;
 
@@ -22,10 +21,6 @@ const polarisSchema: Schema<IPolaris> = new mongoose.Schema({
     },
     url: {
         type: String,
-        required: true,
-    },
-    level: {
-        type: Number,
         required: true,
     },
     name: {

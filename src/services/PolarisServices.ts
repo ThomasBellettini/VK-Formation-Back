@@ -238,7 +238,6 @@ class PolarisServices {
       const updateData: Partial<IPolaris> = {};
       if (name !== undefined) updateData.name = name;
       if (description !== undefined) updateData.description = description;
-      if (level !== undefined) updateData.level = level;
       if (url !== undefined) updateData.url = url;
       if (identifier !== undefined) updateData.identifier = identifier;
       if (planets !== undefined) updateData.planets = planets;

@@ -6,6 +6,7 @@ import * as sea from "node:sea";
 import {generateToken} from "../utils/JWTUtils.js";
 import Evaluation from "../model/learning/Evaluation.js";
 import {IHolyProject} from "../model/learning/HolyProject.js";
+import Planet from "../model/learning/Planet.js";
 import axios from "axios";
 
 class UserServices {
@@ -138,13 +139,19 @@ class UserServices {
 
       let evaluation = await Evaluation.findOne({user: userDb._id, discord: true}).populate("project");
       if (evaluation) {
+        const holyProject = evaluation.project as IHolyProject;
+        const planet = await Planet.findById(holyProject.planet).populate('polaris').lean();
+        const polarisIdentifier = planet?.polaris && typeof planet.polaris === 'object' && 'identifier' in planet.polaris 
+          ? (planet.polaris as any).identifier 
+          : "";
+        
         userDb.holyProjects.push({
           project: evaluation.project,
           resultPercent: 100,
-          evaluator: null
+          evaluator: null,
+          polaris: polarisIdentifier
         })
         let project = evaluation.project as IHolyProject;
-        userDb.xp += project.xp;
         await Evaluation.findByIdAndDelete(evaluation._id);
       }
 
