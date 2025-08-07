@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import {Request} from "express";
 import {sendTemplateEmail} from "../utils/BrevoUtils.js";
 import axios from "axios";
+import Polaris from "model/learning/Polaris.js";
+import { getUserLevelForPolaris } from "utils/utils.js";
 
 class AuthServices {
   constructor() {
@@ -23,12 +25,27 @@ class AuthServices {
       if (!userDb) throw "No user found !";
       let userData = userDb.toObject();
 
+      const allPolaris = await Polaris.find({}).lean();
+
+      const polarisLevels: { polaris: string; level: number }[] = [];
+
+      for (const polaris of allPolaris) {
+        if (!polaris.identifier) continue;
+        const level = await getUserLevelForPolaris(userDb, polaris.identifier);
+
+        polarisLevels.push({
+          polaris: polaris.identifier,
+          level: level
+        });
+      }
+
       return {
         success: true,
         statusCode: 201,
         errors: null,
         data: {
           user: userData,
+          polarisLevels
         },
       };
     } catch (err) {

@@ -57,7 +57,7 @@ async function getUserLevelForPolaris(user: IUser, polarisIdentifier: string): P
             typeof planet === 'string' ? planet : planet._id.toString()
         );
 
-        let maxLevel = 0;
+        let maxLevel = 1;
         const sortedLevels = Array.from(planetsByLevel.keys()).sort((a, b) => a - b);
 
         for (const level of sortedLevels) {
