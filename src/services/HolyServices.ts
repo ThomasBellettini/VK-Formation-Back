@@ -946,7 +946,7 @@ class HolyServices {
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
-      if (evaluation.discord === false && evaluation.channelId === null)
+      if (!evaluation.discord && !evaluation.channelId)
         evaluation.evaluator = null;
       if (evaluation.evaluator !== null) {
         throw new Error("Un evaluateur a déjà été assigné à cette évaluation !");
