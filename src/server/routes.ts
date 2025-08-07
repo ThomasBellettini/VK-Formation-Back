@@ -17,6 +17,7 @@ import PlanetController from "../controller/PlanetController.js";
 import PolarisController from "../controller/PolarisController.js";
 import UserPlanetController from "../controller/UserPlanetController.js";
 import NotificationController from "../controller/NotificationController.js";
+import DriveResourceController from "../controller/DriveResourceController.js";
 
 const router = Router();
 
@@ -239,6 +240,13 @@ router.post("/notifications/add", authJwt, NotificationController.add)
 router.delete("/notifications/delete/:id", authJwt, NotificationController.delete)
 router.delete("/notifications/delete-all/:userId?", authJwt, NotificationController.deleteAll)
 router.get("/notifications/list/:userId?", authJwt, NotificationController.list)
+
+// DriveResource routes
+router.get("/resources/list", authJwt, DriveResourceController.list)
+router.post("/resources/add", authJwt, checkRole("admin"), DriveResourceController.add)
+router.get("/resources/info/:id", authJwt, DriveResourceController.info)
+router.patch("/resources/update/:id", authJwt, checkRole("admin"), DriveResourceController.update)
+router.delete("/resources/delete/:id", authJwt, checkRole("admin"), DriveResourceController.delete)
 
 
 export default router;
