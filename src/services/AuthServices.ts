@@ -1,10 +1,9 @@
 import User, { IUser } from "../model/User.js";
 import { generateToken } from "../utils/JWTUtils.js";
-import mongoose from "mongoose";
 import {Request} from "express";
 import {sendTemplateEmail} from "../utils/BrevoUtils.js";
 import axios from "axios";
-import Polaris from "model/learning/Polaris.js";
+import Polaris from "../model/learning/Polaris.js";
 import { getUserLevelForPolaris } from "utils/utils.js";
 
 class AuthServices {
