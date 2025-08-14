@@ -25,6 +25,8 @@ export interface IUser extends Document {
 
     lastLogin: Date;
 
+    tutoVideo: boolean;
+
     lessonsFinished: (mongoose.Types.ObjectId | ILesson)[];
     planetsFinished: (mongoose.Types.ObjectId | IPlanet)[];
 
@@ -123,6 +125,11 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         required: false,
         default: null
     },
+    tutoVideo: {
+        type: Boolean,
+        required: false,
+        default: false
+    }
 
 }, {
     timestamps: true

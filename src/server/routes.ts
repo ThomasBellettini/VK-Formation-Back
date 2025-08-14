@@ -147,6 +147,7 @@ router.post("/register/webhook/fcuaimvsdqicchpknzzzqotc", AuthController.registe
 
 router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
+router.patch("/tuto-video", authJwt, AuthController.tutoVideo)
 router.get("/discord", authJwt, UserController.generateDiscordLink)
 router.get("/discord", authJwt, UserController.generateDiscordLink)
 
@@ -238,7 +239,7 @@ router.get("/user/planets/:planetId/progress", authJwt, UserPlanetController.get
 // Notification routes
 router.post("/notifications/add", authJwt, NotificationController.add)
 router.delete("/notifications/delete/:id", authJwt, NotificationController.delete)
-router.delete("/notifications/delete-all/:userId?", authJwt, NotificationController.deleteAll)
+router.delete("/notifications/delete-all", authJwt, NotificationController.deleteAll)
 router.get("/notifications/list/:userId?", authJwt, NotificationController.list)
 
 // DriveResource routes

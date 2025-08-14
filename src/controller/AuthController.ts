@@ -17,6 +17,7 @@ class AuthController {
     this.resetPassword = this.resetPassword.bind(this);
     this.registerWebhook = this.registerWebhook.bind(this);
     this.deleteWebhook = this.deleteWebhook.bind(this);
+    this.tutoVideo = this.tutoVideo.bind(this);
   }
 
   public async me(req: Request, res: any) {
@@ -66,6 +67,12 @@ class AuthController {
     const r = await this.service.accountConfirmation(
         req.body.code
     );
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async tutoVideo(req: Request, res: Response) {
+    // @ts-ignore
+    const r = await this.service.tutoVideo(req.user);
     return res.status(r.statusCode).send(r);
   }
 

@@ -6,6 +6,8 @@ import axios from "axios";
 import Polaris from "../model/learning/Polaris.js";
 import { getUserLevelForPolaris } from "../utils/utils.js";
 import Notification from "../model/Notification.js";
+import {IHolyProject} from "../model/learning/HolyProject";
+import Planet from "../model/learning/Planet";
 
 class AuthServices {
   constructor() {
@@ -17,6 +19,7 @@ class AuthServices {
     this.resetPassword = this.resetPassword.bind(this);
     this.forgotPassword = this.forgotPassword.bind(this);
     this.deleteWebhook = this.deleteWebhook.bind(this);
+    this.tutoVideo = this.tutoVideo.bind(this);
   }
 
   async me(user: IUser) {
@@ -26,8 +29,15 @@ class AuthServices {
       let userData = userDb.toObject();
 
       const allPolaris = await Polaris.find({}).lean();
-
       const polarisLevels: { polaris: string; level: number }[] = [];
+
+      for (let hInit of userData.holyProjects) {
+        let project = hInit.project as IHolyProject;
+        let planet = await Planet.findOne({ _id: project.planet }).populate("polaris").lean();
+        if (!planet || planet.polaris) continue;
+        // @ts-ignore
+        hInit.polaris = planet.polaris.identifier;
+      }
 
       for (const polaris of allPolaris) {
         if (!polaris.identifier) continue;
@@ -388,6 +398,35 @@ class AuthServices {
         errors: err,
         data: {
           message: "Error in user creation !",
+        },
+      };
+    }
+  }
+
+  async tutoVideo(user: IUser) {
+    try {
+      const userDB = await User.findOne({ email: user.email });
+      if (!userDB) throw "No user found !";
+
+      userDB.tutoVideo = true;
+      await user.save();
+
+      return {
+        success: true,
+        statusCode: 200,
+        errors: null,
+        data: {
+          message: "Video Watched !",
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error in user edition !",
         },
       };
     }
