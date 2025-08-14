@@ -6,8 +6,8 @@ import axios from "axios";
 import Polaris from "../model/learning/Polaris.js";
 import { getUserLevelForPolaris } from "../utils/utils.js";
 import Notification from "../model/Notification.js";
-import {IHolyProject} from "../model/learning/HolyProject";
-import Planet from "../model/learning/Planet";
+import {IHolyProject} from "../model/learning/HolyProject.js";
+import Planet from "../model/learning/Planet.js";
 
 class AuthServices {
   constructor() {
