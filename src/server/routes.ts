@@ -158,11 +158,11 @@ router.delete("/users/delete/:id", authJwt, checkRole("admin"), UserController.d
 router.get("/users/info/:id", authJwt, checkRole("admin"), UserController.info)
 router.post("/users/connect-as/:id", authJwt, checkRole("admin"), UserController.connectedAs)
 
-router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
-router.post("/holygraph/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
-router.delete("/holygraph/delete/:id", authJwt, checkRole("admin"), HolyController.delete)
-router.patch("/holygraph/update/:id", authJwt, checkRole("admin"), upload.single('video'), HolyController.update)
-router.get("/holygraph/info/:url", authJwt, HolyController.info)
+router.get("/project/list", authJwtNotMandatory, HolyController.list)
+router.post("/project/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
+router.delete("/project/delete/:id", authJwt, checkRole("admin"), HolyController.delete)
+router.patch("/project/update/:id", authJwt, checkRole("admin"), upload.single('video'), HolyController.update)
+router.get("/project/info/:url", authJwt, HolyController.info)
 
 router.get("/evaluation/info/:id", authJwt, HolyController.evaluateInfo)
 router.patch("/evaluation/update/:id", authJwt, HolyController.evaluateUpdateUser)

@@ -409,7 +409,7 @@ class AuthServices {
       if (!userDB) throw "No user found !";
 
       userDB.tutoVideo = true;
-      await user.save();
+      await userDB.save();
 
       return {
         success: true,
