@@ -26,7 +26,7 @@ class ActualityController {
   }
 
   public async info(req: Request, res: Response) {
-    const r = await this.service.info(req, req.params.url);
+    const r = await this.service.info(req, req.params.id);
     return res.status(r.statusCode).send(r);
   }
 

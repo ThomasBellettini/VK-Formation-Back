@@ -1,14 +1,16 @@
 import mongoose, {Document, Schema} from 'mongoose';
 
+export enum POSITION {
+    RIGHT = "right",
+    LEFT = "left"
+}
+
 export interface IActuality extends Document {
     _id: mongoose.Types.ObjectId;
 
-    title: string;
-    description: string;
-    position: number;
-    url: string;
-
-    imageUrl: string[];
+    position: POSITION;
+    order: number
+    imageUrl: string;
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -17,29 +19,21 @@ export interface IActuality extends Document {
 
 
 const actualitySchema: Schema<IActuality> = new mongoose.Schema({
-    title: {
+    position: {
+        type: String,
+        enum: Object.values(POSITION),
+        required: true,
+        default: POSITION.LEFT
+    },
+    order: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    imageUrl: {
         type: String,
         required: true,
-        trim: true
-    },
-    description: {
-        type: String,
-        required: true
-    },
-    position: {
-        type: Number,
-        required: false,
-        unique: true
-    },
-    url: {
-        type: String,
-        required: false,
-        trim: true
-    },
-    imageUrl: [{
-        type: String,
-        required: false
-    }]
+    }
 
 }, {
     timestamps: true

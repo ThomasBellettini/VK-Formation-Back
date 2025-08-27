@@ -1,6 +1,6 @@
 import { Request } from "express";
 import mongoose from "mongoose";
-import Actuality, { IActuality } from "../model/Actualities.js";
+import Actuality, { IActuality, POSITION } from "../model/Actualities.js";
 import StorageCdn from "../utils/StorageCdn.js";
 
 interface IActualityResponse {
@@ -18,13 +18,10 @@ class ActualityServices {
     this.delete = this.delete.bind(this);
   }
 
-  private async handlePositionConflict(position?: number, excludeId?: string) {
+  private async handlePositionConflict(position?: POSITION, excludeId?: string) {
     if (position === undefined || position === null) return;
-    if (position !== 1 && position !== 2) {
-      throw new Error("Position must be 1 or 2");
-    }
 
-    const filter: any = { position };
+    const filter: any = { position } as any;
     if (excludeId) {
       filter._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
     }
@@ -55,41 +52,32 @@ class ActualityServices {
 
   async add(req: Request): Promise<IActualityResponse> {
     try {
-      const { title, description, url } = req.body;
-      let { position } = req.body as any;
+      const { order } = req.body as any;
+      let { position } = req.body as { position?: POSITION | string };
 
-      if (!title || !description) {
-        return { statusCode: 400, message: "Missing required fields: title, description" };
-      }
-
-      if (url) {
-        const existingByUrl = await Actuality.findOne({ url }).lean();
-        if (existingByUrl) {
-          return { statusCode: 409, message: "Actuality with this URL already exists" };
+      if (position !== undefined && position !== null) {
+        // normalize to enum value
+        position = String(position).toLowerCase() as POSITION;
+        if (position !== POSITION.LEFT && position !== POSITION.RIGHT) {
+          return { statusCode: 400, message: "Position must be 'left' or 'right'" };
         }
+        await this.handlePositionConflict(position as POSITION);
       }
 
-      if (position !== undefined) {
-        position = Number(position);
-        await this.handlePositionConflict(position);
-      }
-
-      const imageUrls: string[] = [];
-      const files = (req.files as Express.Multer.File[]) || [];
-      for (const file of files) {
+      let imageUrl: string | undefined;
+      const file = (req.file as Express.Multer.File | undefined);
+      if (file) {
         const identifier = await StorageCdn.generateRandomFilename(file.originalname);
         const filePath = `actuality/${identifier}`;
         const { bunnyFilePath } = await StorageCdn.uploadFile(file.path, filePath, file.originalname, false);
-        imageUrls.push(bunnyFilePath);
+        imageUrl = bunnyFilePath;
       }
 
       const actuality = await Actuality.create({
-        title,
-        description,
-        url,
-        position: position !== undefined ? Number(position) : undefined,
-        imageUrl: imageUrls,
-      });
+        position: position as POSITION | undefined,
+        order: order !== undefined ? Number(order) : 0,
+        imageUrl: imageUrl as string,
+      } as any);
 
       return {
         statusCode: 201,
@@ -106,9 +94,9 @@ class ActualityServices {
     }
   }
 
-  async info(req: Request, url: string): Promise<IActualityResponse> {
+  async info(req: Request, id: string): Promise<IActualityResponse> {
     try {
-      const actuality = await Actuality.findOne({ url }).lean();
+      const actuality = await Actuality.findById(id).lean();
       if (!actuality) {
         return { statusCode: 404, message: "Actuality not found" };
       }
@@ -134,42 +122,29 @@ class ActualityServices {
         return { statusCode: 404, message: "Actuality not found" };
       }
 
-      const { title, description, url } = req.body;
-      let { position } = req.body as any;
-
-      if (url && url !== actuality.url) {
-        const existingByUrl = await Actuality.findOne({ url, _id: { $ne: id } }).lean();
-        if (existingByUrl) {
-          return { statusCode: 409, message: "Actuality with this URL already exists" };
-        }
-      }
-
-      if (position !== undefined && position !== null) {
-        position = Number(position);
-        await this.handlePositionConflict(position, id);
-      }
-
+      const { order } = req.body as any;
+      let { position } = req.body as { position?: POSITION | string };
       const updateData: Partial<IActuality> = {} as any;
-      if (title !== undefined) updateData.title = title;
-      if (description !== undefined) updateData.description = description;
-      if (url !== undefined) (updateData as any).url = url as any;
-      if (position === null || position === "" || Number.isNaN(Number(position))) {
+
+      if (position === null || position === "") {
         (updateData as any).position = undefined as any;
         await Actuality.updateOne({ _id: id }, { $unset: { position: 1 } });
       } else if (position !== undefined) {
-        (updateData as any).position = Number(position) as any;
-      }
-
-      const files = (req.files as Express.Multer.File[]) || [];
-      if (files.length > 0) {
-        const imageUrls: string[] = [];
-        for (const file of files) {
-          const identifier = await StorageCdn.generateRandomFilename(file.originalname);
-          const filePath = `images/${identifier}`;
-          const { bunnyFilePath } = await StorageCdn.uploadFile(file.path, filePath, file.originalname, false);
-          imageUrls.push(bunnyFilePath);
+        position = String(position).toLowerCase() as POSITION;
+        if (position !== POSITION.LEFT && position !== POSITION.RIGHT) {
+          return { statusCode: 400, message: "Position must be 'left' or 'right'" };
         }
-        (updateData as any).imageUrl = imageUrls as any;
+        await this.handlePositionConflict(position as POSITION, id);
+        (updateData as any).position = position as any;
+      }
+      if (order !== undefined) (updateData as any).order = Number(order) as any;
+
+      const file = (req.file as Express.Multer.File | undefined);
+      if (file) {
+        const identifier = await StorageCdn.generateRandomFilename(file.originalname);
+        const filePath = `images/${identifier}`;
+        const { bunnyFilePath } = await StorageCdn.uploadFile(file.path, filePath, file.originalname, false);
+        (updateData as any).imageUrl = bunnyFilePath as any;
       }
 
       const updatedActuality = await Actuality.findByIdAndUpdate(

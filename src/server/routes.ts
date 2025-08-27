@@ -193,9 +193,9 @@ router.patch("/lessons/complete/:url", authJwt, LessonController.completeLesson)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
 
 router.get("/actuality/list", authJwt, ActualityController.list)
-router.post("/actuality/add", authJwt, checkRole("admin"), upload.array('files'), ActualityController.add)
-router.get("/actuality/info/:url", authJwt, ActualityController.info)
-router.patch("/actuality/update/:id", authJwt, checkRole("admin"), upload.array('files'), ActualityController.update)
+router.post("/actuality/add", authJwt, checkRole("admin"), upload.single('image'), ActualityController.add)
+router.get("/actuality/info/:id", authJwt, ActualityController.info)
+router.patch("/actuality/update/:id", authJwt, checkRole("admin"), upload.single('image'), ActualityController.update)
 router.delete("/actuality/delete/:id", authJwt, checkRole("admin"), ActualityController.delete)
 
 // Home route
