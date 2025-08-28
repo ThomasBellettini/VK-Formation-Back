@@ -36,6 +36,12 @@ class ActualityServices {
     try {
       const actualities = await Actuality.find().sort({ createdAt: -1 }).lean();
 
+      for (let actuality of actualities) {
+        if (actuality.imageUrl) {
+          actuality.imageUrl = StorageCdn.generateSecureLink(actuality.imageUrl);
+        }
+      }
+
       return {
         statusCode: 200,
         message: "Actualities retrieved successfully",
