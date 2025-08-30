@@ -231,7 +231,7 @@ router.patch("/recruit-video-maker/update/:id", authJwt, checkRole("admin"), Rec
 
 // Planet routes
 router.get("/planets/list", authJwt, PlanetController.list)
-router.post("/planets/add", authJwt, checkRole("admin"), upload.fields([{ name: 'model' }, { name: 'planetImage' }]), PlanetController.add)
+router.post("/planets/add", authJwt, checkRole("admin"), upload.fields([{ name: 'modelName' }, { name: 'planetImage' }]), PlanetController.add)
 router.get("/planets/info/:url", authJwt, PlanetController.info)
 router.patch("/planets/update/:id", authJwt, checkRole("admin"), upload.fields([{ name: 'model' }, { name: 'planetImage' }]), PlanetController.update)
 router.delete("/planets/delete/:id", authJwt, checkRole("admin"), PlanetController.delete)

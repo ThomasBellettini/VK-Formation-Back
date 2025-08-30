@@ -71,7 +71,7 @@ class PlanetServices {
       }
 
       const files = (req.files ?? {}) as FilesMap;
-      const modelFile = files.model?.[0];
+      const modelFile = files.modelName?.[0];
       const planetFile = files.planetImage?.[0];
       let modelName = "";
       let planetImage = "";
