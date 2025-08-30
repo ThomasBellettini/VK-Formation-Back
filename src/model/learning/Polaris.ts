@@ -1,44 +1,56 @@
-import mongoose, {Document, mongo, Schema} from 'mongoose';
-import { IPlanet } from './Planet.js';
+import mongoose, { Document, mongo, Schema } from "mongoose";
+import { IPlanet } from "./Planet.js";
 
 export interface IPolaris extends Document {
-    _id: mongoose.Types.ObjectId;
-    url: string;
-    identifier: string;
+  _id: mongoose.Types.ObjectId;
+  url: string;
+  identifier: string;
 
-    name: string;
-    description: string;
+  name: string;
+  description: string;
 
-    planets: (IPlanet | mongoose.Types.ObjectId)[];
-    createdAt?: Date;
-    updatedAt?: Date;
+  planets: (IPlanet | mongoose.Types.ObjectId)[];
+
+  level: number;
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const polarisSchema: Schema<IPolaris> = new mongoose.Schema({
+const polarisSchema: Schema<IPolaris> = new mongoose.Schema(
+  {
     identifier: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     url: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     name: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     description: {
-        type: String,
-        required: false
+      type: String,
+      required: false,
     },
-    planets: [{
+    planets: [
+      {
         type: mongoose.Types.ObjectId,
-        ref: 'Planet',
-    }]
-}, {
-    timestamps: true
-});
+        ref: "Planet",
+      },
+    ],
+    level: {
+      type: Number,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-const Polaris = mongoose.model<IPolaris>('Polaris', polarisSchema);
+const Polaris = mongoose.model<IPolaris>("Polaris", polarisSchema);
 
 export default Polaris;
