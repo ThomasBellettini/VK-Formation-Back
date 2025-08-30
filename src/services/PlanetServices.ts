@@ -363,6 +363,11 @@ class PlanetServices {
         updateData.projects = new mongoose.Types.ObjectId(projectId);
       }
 
+      console.log(
+        "HERE DUDE UPDATE DATA",
+        updateData.courses,
+        updateData.projects
+      );
       // Update the planet
       const updatedPlanet = await Planet.findByIdAndUpdate(id, updateData, {
         new: true,
