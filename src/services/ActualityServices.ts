@@ -33,7 +33,7 @@ class ActualityServices {
     if (existing) {
       await Actuality.updateOne(
         { _id: existing._id },
-        { $unset: { position: 1 } }
+        { $unset: { position: 1 } } // Unset causing errors
       );
     }
   }
@@ -160,7 +160,6 @@ class ActualityServices {
             message: "Position must be 'left' or 'right'",
           };
         }
-        await this.handlePositionConflict(position as POSITION, id);
         (updateData as any).position = position as any;
       }
       if (order !== undefined) (updateData as any).order = Number(order) as any;
