@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 import CST from "../server/constants.js";
 
+type FilesMap = Record<string, Express.Multer.File[]>;
+
 interface IPlanetResponse {
   statusCode: number;
   message: string;
@@ -68,21 +70,44 @@ class PlanetServices {
         };
       }
 
+      const files = (req.files ?? {}) as FilesMap;
+      const modelFile = files.model?.[0];
+      const planetFile = files.planetImage?.[0];
       let modelName = "";
-      if (req.file) {
+      let planetImage = "";
+
+      if (modelFile) {
         const identifier = await StorageCdn.generateRandomFilename(
-          req.file.originalname
+          modelFile.originalname
         );
         let filePath = `model/${identifier}`;
         let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
-          req.file.path,
+          modelFile.path,
           filePath,
-          req.file.originalname,
+          modelFile.originalname,
           false
         );
         req.body.modelName = bunnyFilePath;
+        modelName = bunnyFilePath;
       } else {
-        throw new Error("Missing image file");
+        throw new Error("Missing model file");
+      }
+
+      if (planetFile) {
+        const identifier = await StorageCdn.generateRandomFilename(
+          planetFile.originalname
+        );
+        let filePath = `planetImage/${identifier}`;
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
+          planetFile.path,
+          filePath,
+          planetFile.originalname,
+          false
+        );
+        req.body.planetImage = bunnyFilePath;
+        planetImage = bunnyFilePath;
+      } else {
+        throw new Error("Missing planet snapshot file");
       }
       let lessonIds: string[] = [];
       if (lessons) {
@@ -123,6 +148,7 @@ class PlanetServices {
         level,
         url,
         modelName,
+        planetImage,
         isDone: false,
         projects: projectId
           ? new mongoose.Types.ObjectId(projectId)

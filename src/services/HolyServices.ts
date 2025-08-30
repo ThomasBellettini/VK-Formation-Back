@@ -1,13 +1,18 @@
-import HolyProject, {EvaluationType, EvaluatorType, IHolyProject, QCMType} from "../model/learning/HolyProject.js";
-import User, {IUser} from "../model/User.js";
-import {Request} from "express";
+import HolyProject, {
+  EvaluationType,
+  EvaluatorType,
+  IHolyProject,
+  QCMType,
+} from "../model/learning/HolyProject.js";
+import User, { IUser } from "../model/User.js";
+import { Request } from "express";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
-import Evaluation, {IEvaluation} from "../model/learning/Evaluation.js";
+import Evaluation, { IEvaluation } from "../model/learning/Evaluation.js";
 import CST from "../server/constants.js";
 import holyProject from "../model/learning/HolyProject.js";
 import axios from "axios";
-import Resource, {IResource} from "../model/Resource.js";
+import Resource, { IResource } from "../model/Resource.js";
 import * as process from "node:process";
 import Planet, { IPlanet } from "../model/learning/Planet.js";
 import Polaris, { IPolaris } from "../model/learning/Polaris.js";
@@ -15,75 +20,78 @@ import { getUserLevelForPolaris } from "../utils/utils.js";
 import Lesson from "../model/learning/Lesson.js";
 
 interface IHolyGraph {
-    _id: mongoose.Types.ObjectId;
-    name: string;
-    description: string;
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  description: string;
 
+  url: string;
+  evaluationText: string | null;
+  content: string | null;
+
+  cdnVideoContent: string | null;
+  cdnAudioContent: string | null;
+
+  evaluationType: EvaluationType;
+  evaluatorType: EvaluatorType;
+
+  uploadFilesDescription: string | null;
+  uploadFilesCount: number | null;
+
+  qcmContent: {
+    question: string;
+    type: QCMType;
+    options: string[];
+    correctAnswers: string[];
+  }[];
+
+  shareLinksDescription: string | null;
+  shareLinksCount: string | null;
+
+  hasPermission: boolean;
+  projectDone: boolean;
+
+  percent: number | null;
+  cost: number;
+
+  links: {
     url: string;
-    evaluationText: string | null;
-    content: string | null;
+    name: string;
+  }[];
 
-    cdnVideoContent: string | null;
-    cdnAudioContent: string | null;
-
-    evaluationType: EvaluationType;
-    evaluatorType: EvaluatorType;
-
-    uploadFilesDescription: string | null;
-    uploadFilesCount: number | null;
-
-    qcmContent: {
-      question: string;
-      type: QCMType;
-      options: string[];
-      correctAnswers: string[];
-    }[];
-
-    shareLinksDescription: string | null;
-    shareLinksCount: string | null;
-
-    hasPermission: boolean;
-    projectDone: boolean;
-
-    percent: number | null;
-    cost: number;
-
-   links: {
-      url: string;
-      name: string;
-    }[]
-
-    createdAt?: Date;
-    updatedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 class HolyServices {
-
-  async notifyDiscordIfLevelCompleted(user: IUser, currentProject: IHolyProject) {
+  async notifyDiscordIfLevelCompleted(
+    user: IUser,
+    currentProject: IHolyProject
+  ) {
     if (!user.discordId) return;
 
-    const planet = await Planet.findById(currentProject.planet).populate('polaris').lean();
+    const planet = await Planet.findById(currentProject.planet)
+      .populate("polaris")
+      .lean();
     if (!planet || !planet.polaris) return;
 
     const polaris = planet.polaris as any;
-    
-    const polarisData = await Polaris.findOne({ identifier: polaris.identifier })
-      .populate('planets')
+
+    const polarisData = await Polaris.findOne({
+      identifier: polaris.identifier,
+    })
+      .populate("planets")
       .lean();
-    
+
     if (!polarisData) return;
     const userLevel = await getUserLevelForPolaris(user, polaris.identifier);
-  
-  
-      await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/0`, {
-        data: {
-          userId: user.discordId,
-          level: userLevel
-        }
-      });
-    
-  }
 
+    await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/0`, {
+      data: {
+        userId: user.discordId,
+        level: userLevel,
+      },
+    });
+  }
 
   constructor() {
     this.list = this.list.bind(this);
@@ -100,16 +108,24 @@ class HolyServices {
   }
 
   async list(req: Request) {
+    const { type } = req.query;
+    const filter =
+      type === "admin"
+        ? { $or: [{ polaris: { $exists: false } }, { polaris: null }] }
+        : {};
+
     try {
       // @ts-ignore
       let user = req.user as IUser;
       let holyProject: IHolyGraph[] = [];
       if (user) {
-        const holyProjectDatabase = await HolyProject.find({}).lean();
-        
+        const holyProjectDatabase = await HolyProject.find(filter).lean();
+
         holyProject = holyProjectDatabase.map((iterator) => {
-          const userProject = user.holyProjects.filter(hp =>
-            hp.project.toString() === iterator._id.toString() && hp.resultPercent >= 80
+          const userProject = user.holyProjects.filter(
+            (hp) =>
+              hp.project.toString() === iterator._id.toString() &&
+              hp.resultPercent >= 80
           );
           let projectDone = false;
           let percent = 0;
@@ -121,17 +137,18 @@ class HolyServices {
               }
             }
           }
-          
+
           let hasPermission = false;
-          
-          let qcm = iterator.qcmContent.map((qcm => {
+
+          let qcm = iterator.qcmContent.map((qcm) => {
             return {
-                question: qcm.question,
-                type: qcm.type,
-                options: qcm.options,
-                correctAnswers: (user.permission === "admin" ? qcm.correctAnswers : [])
-            }
-          }));
+              question: qcm.question,
+              type: qcm.type,
+              options: qcm.options,
+              correctAnswers:
+                user.permission === "admin" ? qcm.correctAnswers : [],
+            };
+          });
 
           return {
             _id: iterator._id,
@@ -155,7 +172,7 @@ class HolyServices {
             shareLinksCount: iterator.shareLinksCount,
             qcmContent: qcm,
             evaluationType: iterator.evaluationType,
-            evaluatorType: iterator.evaluatorType
+            evaluatorType: iterator.evaluatorType,
           };
         });
       }
@@ -164,7 +181,7 @@ class HolyServices {
         success: true,
         statusCode: 200,
         errors: null,
-        data: holyProject
+        data: holyProject,
       };
     } catch (error) {
       console.error("Error in list holy projects:", error);
@@ -172,7 +189,7 @@ class HolyServices {
         success: false,
         statusCode: 500,
         errors: ["Internal server error"],
-        data: null
+        data: null,
       };
     }
   }
@@ -181,11 +198,14 @@ class HolyServices {
     try {
       //@ts-ignore
       const user = req.user as IUser;
-      const holyProjectDatabase = await HolyProject.findOne({ url: url }).lean();
-      if (!holyProjectDatabase) throw new Error("No Project found with this id !");
+      const holyProjectDatabase = await HolyProject.findOne({
+        url: url,
+      }).lean();
+      if (!holyProjectDatabase)
+        throw new Error("No Project found with this id !");
 
-      const userProject = user.holyProjects.filter(hp =>
-          hp.project.toString() === holyProjectDatabase._id.toString()
+      const userProject = user.holyProjects.filter(
+        (hp) => hp.project.toString() === holyProjectDatabase._id.toString()
       );
 
       let projectDone = false;
@@ -201,14 +221,14 @@ class HolyServices {
 
       let hasPermission = false;
 
-      let qcmContent = holyProjectDatabase.qcmContent.map((qcm => {
+      let qcmContent = holyProjectDatabase.qcmContent.map((qcm) => {
         return {
           question: qcm.question,
           type: qcm.type,
           options: qcm.options,
-          correctAnswers: []
-        }
-      }));
+          correctAnswers: [],
+        };
+      });
 
       let holyProject: IHolyGraph = {
         _id: holyProjectDatabase._id,
@@ -232,7 +252,7 @@ class HolyServices {
         shareLinksCount: holyProjectDatabase.shareLinksCount,
         qcmContent: qcmContent,
         evaluationType: holyProjectDatabase.evaluationType,
-        evaluatorType: holyProjectDatabase.evaluatorType
+        evaluatorType: holyProjectDatabase.evaluatorType,
       };
 
       return {
@@ -240,7 +260,7 @@ class HolyServices {
         statusCode: 201,
         errors: null,
         data: {
-          holyProject
+          holyProject,
         },
       };
     } catch (err) {
@@ -259,15 +279,22 @@ class HolyServices {
 
   async add(req: Request) {
     try {
-      const {name, description, url} = req.body;
+      const { name, description, url } = req.body;
       if (!name || !description || !url) {
-        throw new Error("Missing mandatory fields name, description, url")
+        throw new Error("Missing mandatory fields name, description, url");
       }
 
       if (req.file) {
-        const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
+        const identifier = await StorageCdn.generateRandomFilename(
+          req.file.originalname
+        );
         let filePath = `upload/${identifier}`;
-        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, true);
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
+          req.file.path,
+          filePath,
+          req.file.originalname,
+          true
+        );
         req.body.cdnVideoContent = bunnyFilePath;
       }
       if (req.body.courses) {
@@ -275,10 +302,11 @@ class HolyServices {
         if (!Array.isArray(coursesID)) {
           coursesID = JSON.parse(coursesID);
         }
-        req.body.courses = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
+        req.body.courses = coursesID.map(
+          (id: string) => new mongoose.Types.ObjectId(id)
+        );
       }
-      if (req.body.links)
-        req.body.links = JSON.parse(req.body.links);
+      if (req.body.links) req.body.links = JSON.parse(req.body.links);
       if (req.body.qcmContent) {
         let qcmContent = JSON.parse(req.body.qcmContent);
         req.body.qcmContent = qcmContent.map((qcm: any) => {
@@ -286,17 +314,17 @@ class HolyServices {
             question: qcm.question,
             type: qcm.type,
             options: qcm.options,
-            correctAnswers: qcm.correctAnswers
-          }
+            correctAnswers: qcm.correctAnswers,
+          };
         });
       }
-      if (req.body.uploadFilesDescription === 'undefined')
+      if (req.body.uploadFilesDescription === "undefined")
         req.body.uploadFilesDescription = null;
-      if (req.body.uploadFilesCount === 'undefined')
+      if (req.body.uploadFilesCount === "undefined")
         req.body.uploadFilesCount = 0;
-      if (req.body.shareLinksDescription === 'undefined')
+      if (req.body.shareLinksDescription === "undefined")
         req.body.shareLinksDescription = null;
-      if (req.body.shareLinksCount === 'undefined')
+      if (req.body.shareLinksCount === "undefined")
         req.body.shareLinksCount = 0;
       let holyProject = await HolyProject.create(req.body);
 
@@ -306,7 +334,7 @@ class HolyServices {
         errors: null,
         data: {
           message: "Holy Project created with success",
-          holyProject
+          holyProject,
         },
       };
     } catch (err) {
@@ -317,7 +345,7 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
@@ -331,9 +359,16 @@ class HolyServices {
       }
 
       if (req.file) {
-        const identifier = await StorageCdn.generateRandomFilename(req.file.originalname);
+        const identifier = await StorageCdn.generateRandomFilename(
+          req.file.originalname
+        );
         let filePath = `upload/${identifier}`;
-        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(req.file.path, filePath, req.file.originalname, true);
+        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
+          req.file.path,
+          filePath,
+          req.file.originalname,
+          true
+        );
         req.body.cdnVideoContent = bunnyFilePath;
       }
       if (req.body.courses) {
@@ -341,30 +376,33 @@ class HolyServices {
         if (!Array.isArray(coursesID)) {
           coursesID = JSON.parse(coursesID);
         }
-        req.body.courses = coursesID.map((id: string) => new mongoose.Types.ObjectId(id));
+        req.body.courses = coursesID.map(
+          (id: string) => new mongoose.Types.ObjectId(id)
+        );
       }
-        if (req.body.qcmContent) {
-          let qcmContent = JSON.parse(req.body.qcmContent);
-          req.body.qcmContent = qcmContent.map((qcm: any) => {
-            return {
-                question: qcm.question,
-                type: qcm.type,
-                options: qcm.options,
-                correctAnswers: qcm.correctAnswers
-            }
-          });
-        }
-      if (req.body.uploadFilesDescription === 'undefined')
+      if (req.body.qcmContent) {
+        let qcmContent = JSON.parse(req.body.qcmContent);
+        req.body.qcmContent = qcmContent.map((qcm: any) => {
+          return {
+            question: qcm.question,
+            type: qcm.type,
+            options: qcm.options,
+            correctAnswers: qcm.correctAnswers,
+          };
+        });
+      }
+      if (req.body.uploadFilesDescription === "undefined")
         req.body.uploadFilesDescription = null;
-      if (req.body.uploadFilesCount === 'undefined')
+      if (req.body.uploadFilesCount === "undefined")
         req.body.uploadFilesCount = 0;
-      if (req.body.shareLinksDescription === 'undefined')
+      if (req.body.shareLinksDescription === "undefined")
         req.body.shareLinksDescription = null;
-      if (req.body.shareLinksCount === 'undefined')
+      if (req.body.shareLinksCount === "undefined")
         req.body.shareLinksCount = 0;
-      if (req.body.links)
-        req.body.links = JSON.parse(req.body.links);
-      holyProject = await HolyProject.findByIdAndUpdate(id, req.body, {new: true});
+      if (req.body.links) req.body.links = JSON.parse(req.body.links);
+      holyProject = await HolyProject.findByIdAndUpdate(id, req.body, {
+        new: true,
+      });
 
       return {
         success: true,
@@ -372,7 +410,7 @@ class HolyServices {
         errors: null,
         data: {
           message: "Holy Project created with success",
-          holyProject
+          holyProject,
         },
       };
     } catch (err) {
@@ -383,7 +421,7 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
@@ -396,14 +434,14 @@ class HolyServices {
         throw new Error("No Holy Project found with this id !");
       }
 
-     await HolyProject.findByIdAndDelete(id);
+      await HolyProject.findByIdAndDelete(id);
 
       return {
         success: true,
         statusCode: 201,
         errors: null,
         data: {
-          message: "Holy Project deleted with success"
+          message: "Holy Project deleted with success",
         },
       };
     } catch (err) {
@@ -414,7 +452,7 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
@@ -425,13 +463,18 @@ class HolyServices {
       if (!url) {
         throw new Error("Url is mandatory !");
       }
-      const holyProject = await HolyProject.findOne({url: url}) as IHolyProject;
+      const holyProject = (await HolyProject.findOne({
+        url: url,
+      })) as IHolyProject;
       if (!holyProject) {
         throw new Error("No Holy Project found with this url !");
       }
       // @ts-ignore
       let user = req.user as IUser;
-      let evaluationDB = await Evaluation.findOne({user: user._id, project: holyProject._id});
+      let evaluationDB = await Evaluation.findOne({
+        user: user._id,
+        project: holyProject._id,
+      });
       if (evaluationDB && !evaluationDB.project) {
         await Evaluation.findByIdAndDelete(evaluationDB._id);
         return {
@@ -439,9 +482,9 @@ class HolyServices {
           statusCode: 200,
           errors: null,
           data: {
-            exist: false
+            exist: false,
           },
-        }
+        };
       }
       if (evaluationDB) {
         return {
@@ -450,7 +493,7 @@ class HolyServices {
           errors: null,
           data: {
             exist: true,
-            evaluationID: evaluationDB._id
+            evaluationID: evaluationDB._id,
           },
         };
       } else {
@@ -459,7 +502,7 @@ class HolyServices {
           statusCode: 201,
           errors: null,
           data: {
-            exist: false
+            exist: false,
           },
         };
       }
@@ -471,19 +514,20 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
   }
-
 
   async generateEvaluation(req: Request, url: string) {
     try {
       if (!url) {
         throw new Error("Url is mandatory !");
       }
-      const holyProject = await HolyProject.findOne({url: url}) as IHolyProject;
+      const holyProject = (await HolyProject.findOne({
+        url: url,
+      })) as IHolyProject;
       if (!holyProject) {
         throw new Error("No Holy Project found with this url !");
       }
@@ -497,21 +541,28 @@ class HolyServices {
         throw new Error("Not enough coin to generate evaluation !");
       }
 
-      let userProject = user.holyProjects.find(hp => hp.project.toString() === holyProject._id.toString() && hp.resultPercent >= 80);
+      let userProject = user.holyProjects.find(
+        (hp) =>
+          hp.project.toString() === holyProject._id.toString() &&
+          hp.resultPercent >= 80
+      );
       if (userProject?.resultPercent) {
         throw new Error("Project already done !");
       }
 
-      let evaluationDB = await Evaluation.findOne({user: user._id, project: holyProject._id});
+      let evaluationDB = await Evaluation.findOne({
+        user: user._id,
+        project: holyProject._id,
+      });
       if (evaluationDB) {
         return {
-            success: true,
-            statusCode: 201,
-            errors: null,
-            data: {
-              message: "Evaluation already exist !",
-              evaluationID: evaluationDB._id
-            },
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {
+            message: "Evaluation already exist !",
+            evaluationID: evaluationDB._id,
+          },
         };
       }
 
@@ -523,28 +574,38 @@ class HolyServices {
         case EvaluationType.DISCORD:
           if (user.discordId && user.discordId !== "") {
             // Récupérer la planète et l'identifiant du polaris
-            const planet = await Planet.findById(holyProject.planet).populate('polaris').lean();
-            const polarisIdentifier = planet?.polaris && typeof planet.polaris === 'object' && 'identifier' in planet.polaris 
-              ? (planet.polaris as any).identifier 
-              : "";
-            
+            const planet = await Planet.findById(holyProject.planet)
+              .populate("polaris")
+              .lean();
+            const polarisIdentifier =
+              planet?.polaris &&
+              typeof planet.polaris === "object" &&
+              "identifier" in planet.polaris
+                ? (planet.polaris as any).identifier
+                : "";
+
             databaseUser.holyProjects.push({
-                project: holyProject._id,
-                resultPercent: 100,
-                evaluator: null,
-                polaris: polarisIdentifier
+              project: holyProject._id,
+              resultPercent: 100,
+              evaluator: null,
+              polaris: polarisIdentifier,
             });
-            
+
             if (planet) {
-              const allPlanetLessons = await Lesson.find({ planet: planet._id }).lean();
-              const allPlanetLessonIds = allPlanetLessons.map((l: any) => l._id.toString());
-              
-              const userFinishedLessonIds = databaseUser.lessonsFinished.map((lessonId: any) => 
-                typeof lessonId === 'string' ? lessonId : lessonId.toString()
+              const allPlanetLessons = await Lesson.find({
+                planet: planet._id,
+              }).lean();
+              const allPlanetLessonIds = allPlanetLessons.map((l: any) =>
+                l._id.toString()
               );
-              
-              const allLessonsFinished = allPlanetLessonIds.every((lessonId: string) => 
-                userFinishedLessonIds.includes(lessonId)
+
+              const userFinishedLessonIds = databaseUser.lessonsFinished.map(
+                (lessonId: any) =>
+                  typeof lessonId === "string" ? lessonId : lessonId.toString()
+              );
+
+              const allLessonsFinished = allPlanetLessonIds.every(
+                (lessonId: string) => userFinishedLessonIds.includes(lessonId)
               );
 
               if (allLessonsFinished) {
@@ -553,8 +614,8 @@ class HolyServices {
                 }
               }
             }
-            
-            databaseUser.coin -= (holyProject.cost || 1);
+
+            databaseUser.coin -= holyProject.cost || 1;
             await databaseUser.save();
             await this.notifyDiscordIfLevelCompleted(databaseUser, holyProject);
             return {
@@ -564,14 +625,14 @@ class HolyServices {
               data: {
                 message: "Evaluation finished with success",
                 percent: 100,
-                evaluationID: null
+                evaluationID: null,
               },
-            }
+            };
           }
           evaluation = await Evaluation.create({
             user: user._id,
             project: holyProject._id,
-            discord: true
+            discord: true,
           });
           break;
         case EvaluationType.STANDARD:
@@ -583,11 +644,18 @@ class HolyServices {
           }
           // @ts-ignore
           for (let file of req.files) {
-            const identifier = await StorageCdn.generateRandomFilename(file.originalname);
+            const identifier = await StorageCdn.generateRandomFilename(
+              file.originalname
+            );
             let filePath = `evaluation/${identifier}`;
-            let { bunnyFilePath, duration } = await StorageCdn.uploadEvaluationFile(file.path, filePath, file.originalname);
+            let { bunnyFilePath, duration } =
+              await StorageCdn.uploadEvaluationFile(
+                file.path,
+                filePath,
+                file.originalname
+              );
             if (bunnyFilePath && bunnyFilePath !== "") {
-                additionalInformation.push(`${CST.URL.REDIRECT}${identifier}`);
+              additionalInformation.push(`${CST.URL.REDIRECT}${identifier}`);
             } else {
               throw new Error("Error during upload file !");
             }
@@ -595,16 +663,16 @@ class HolyServices {
           discordChannel = true;
           break;
         case EvaluationType.SHARE_LINKS:
-            if (!req.body.shareLinks || req.body.shareLinks.length === 0) {
-                throw new Error("Share links is mandatory !");
-            }
-            let shareLinks = JSON.parse(req.body.shareLinks);
-            if (shareLinks.length !== holyProject.shareLinksCount) {
-                throw new Error("You must provide all share links !");
-            }
-            additionalInformation = shareLinks;
-            discordChannel = true;
-            break;
+          if (!req.body.shareLinks || req.body.shareLinks.length === 0) {
+            throw new Error("Share links is mandatory !");
+          }
+          let shareLinks = JSON.parse(req.body.shareLinks);
+          if (shareLinks.length !== holyProject.shareLinksCount) {
+            throw new Error("You must provide all share links !");
+          }
+          additionalInformation = shareLinks;
+          discordChannel = true;
+          break;
         case EvaluationType.QCM:
           const bodyQcm = JSON.parse(req.body.answers);
           console.log(bodyQcm);
@@ -631,38 +699,52 @@ class HolyServices {
             const expectedAnswers = qcm.correctAnswers;
             const allOptions = qcm.options;
 
-            const hasAllCorrect = expectedAnswers.every(ans => submittedAnswers.includes(ans));
-            const hasNoWrong = submittedAnswers.every(ans => expectedAnswers.includes(ans));
+            const hasAllCorrect = expectedAnswers.every((ans) =>
+              submittedAnswers.includes(ans)
+            );
+            const hasNoWrong = submittedAnswers.every((ans) =>
+              expectedAnswers.includes(ans)
+            );
 
             if (hasAllCorrect && hasNoWrong) {
               correctCount++;
             }
           }
           let percent = Math.round((correctCount / totalQuestions) * 100);
-          
+
           // Récupérer la planète et l'identifiant du polaris
-          const planet = await Planet.findById(holyProject.planet).populate('polaris').lean();
-          const polarisIdentifier = planet?.polaris && typeof planet.polaris === 'object' && 'identifier' in planet.polaris 
-            ? (planet.polaris as any).identifier 
-            : "";
-          
+          const planet = await Planet.findById(holyProject.planet)
+            .populate("polaris")
+            .lean();
+          const polarisIdentifier =
+            planet?.polaris &&
+            typeof planet.polaris === "object" &&
+            "identifier" in planet.polaris
+              ? (planet.polaris as any).identifier
+              : "";
+
           databaseUser.holyProjects.push({
             project: holyProject._id,
             resultPercent: percent,
             evaluator: null,
-            polaris: polarisIdentifier
+            polaris: polarisIdentifier,
           });
-          
+
           if (percent >= 80 && planet) {
-            const allPlanetLessons = await Lesson.find({ planet: planet._id }).lean();
-            const allPlanetLessonIds = allPlanetLessons.map((l: any) => l._id.toString());
-            
-            const userFinishedLessonIds = databaseUser.lessonsFinished.map((lessonId: any) => 
-              typeof lessonId === 'string' ? lessonId : lessonId.toString()
+            const allPlanetLessons = await Lesson.find({
+              planet: planet._id,
+            }).lean();
+            const allPlanetLessonIds = allPlanetLessons.map((l: any) =>
+              l._id.toString()
             );
-            
-            const allLessonsFinished = allPlanetLessonIds.every((lessonId: string) => 
-              userFinishedLessonIds.includes(lessonId)
+
+            const userFinishedLessonIds = databaseUser.lessonsFinished.map(
+              (lessonId: any) =>
+                typeof lessonId === "string" ? lessonId : lessonId.toString()
+            );
+
+            const allLessonsFinished = allPlanetLessonIds.every(
+              (lessonId: string) => userFinishedLessonIds.includes(lessonId)
             );
 
             if (allLessonsFinished) {
@@ -671,8 +753,8 @@ class HolyServices {
               }
             }
           }
-          
-          databaseUser.coin -= (holyProject.cost || 1);
+
+          databaseUser.coin -= holyProject.cost || 1;
           await databaseUser.save();
           if (percent >= 80) {
             await this.notifyDiscordIfLevelCompleted(databaseUser, holyProject);
@@ -684,27 +766,35 @@ class HolyServices {
             data: {
               message: "Evaluation finished with success",
               percent: percent,
-              evaluationID: null
+              evaluationID: null,
             },
-          }
+          };
         default:
-            throw new Error("No evaluation type found !");
+          throw new Error("No evaluation type found !");
       }
       evaluation = await Evaluation.create({
         user: user._id,
         project: holyProject._id,
-        uploadFiles: (holyProject.evaluationType === EvaluationType.UPLOAD ? additionalInformation : []),
-        shareLinks: (holyProject.evaluationType === EvaluationType.SHARE_LINKS ? additionalInformation : []),
+        uploadFiles:
+          holyProject.evaluationType === EvaluationType.UPLOAD
+            ? additionalInformation
+            : [],
+        shareLinks:
+          holyProject.evaluationType === EvaluationType.SHARE_LINKS
+            ? additionalInformation
+            : [],
       });
       evaluation.project = holyProject as unknown as IHolyProject;
       evaluation.user = user;
 
-      await User.findByIdAndUpdate(user._id, {coin: user.coin - (holyProject.cost || 1)});
+      await User.findByIdAndUpdate(user._id, {
+        coin: user.coin - (holyProject.cost || 1),
+      });
 
       if (discordChannel) {
         await axios.post(`${CST.DISCORD.API_URL}/evaluation/add`, {
-          evaluation: evaluation
-        })
+          evaluation: evaluation,
+        });
       }
 
       return {
@@ -714,7 +804,7 @@ class HolyServices {
         data: {
           message: "Evaluation created with success",
           evaluationID: evaluation._id,
-          percent: 0
+          percent: 0,
         },
       };
     } catch (err) {
@@ -725,7 +815,7 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
@@ -735,11 +825,14 @@ class HolyServices {
     try {
       // @ts-ignore
       let requestUser = req.user as IUser;
-      const evaluation = await Evaluation.findById(id).populate("project").populate("evaluator").lean();
+      const evaluation = await Evaluation.findById(id)
+        .populate("project")
+        .populate("evaluator")
+        .lean();
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
-      let user = await User.findById(evaluation.user) as IUser;
+      let user = (await User.findById(evaluation.user)) as IUser;
       if (!user) {
         throw new Error("No evaluable user found !");
       }
@@ -762,7 +855,7 @@ class HolyServices {
         statusCode: 201,
         errors: null,
         data: {
-          evaluation: evaluation
+          evaluation: evaluation,
         },
       };
     } catch (err) {
@@ -773,7 +866,7 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
@@ -783,12 +876,16 @@ class HolyServices {
     try {
       // @ts-ignore
       let requestUser = req.user as IUser;
-      if (req.body.percent === null || req.body.percent === undefined || req.body.percent < 0) {
+      if (
+        req.body.percent === null ||
+        req.body.percent === undefined ||
+        req.body.percent < 0
+      ) {
         throw new Error("Percent is mandatory and must be greater than 0 !");
       }
-      let evaluation = await Evaluation.findById(id)
-          .populate("evaluator")
-          .lean() as IEvaluation;
+      let evaluation = (await Evaluation.findById(id)
+        .populate("evaluator")
+        .lean()) as IEvaluation;
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
@@ -799,7 +896,9 @@ class HolyServices {
       if (evaluator._id.toString() !== requestUser._id.toString()) {
         throw new Error("You are not the evaluator of this evaluation !");
       }
-      let user = await User.findById(evaluation.user).populate("holyProjects.project") as IUser;
+      let user = (await User.findById(evaluation.user).populate(
+        "holyProjects.project"
+      )) as IUser;
 
       if (!user) {
         throw new Error("No evaluable user found !");
@@ -807,7 +906,9 @@ class HolyServices {
       if (user._id.toString() === requestUser._id.toString()) {
         throw new Error("You can't evaluate yourself !");
       }
-      let project = await HolyProject.findById(evaluation.project).lean() as IHolyProject;
+      let project = (await HolyProject.findById(
+        evaluation.project
+      ).lean()) as IHolyProject;
       if (!project) {
         throw new Error("No project found !");
       }
@@ -816,36 +917,48 @@ class HolyServices {
         for (let file of evaluation.uploadFiles) {
           let path = file.replace(`${CST.URL.REDIRECT}`, "");
 
-          let resource = await Resource.findOne({ pathFile: `evaluation/${path}` }) as IResource;
+          let resource = (await Resource.findOne({
+            pathFile: `evaluation/${path}`,
+          })) as IResource;
           if (resource) {
             await StorageCdn.deleteEvaluationFile(resource.pathFile);
             await Resource.findByIdAndDelete(resource._id);
           }
         }
       }
-      const planet = await Planet.findById(project.planet).populate('polaris').lean();
-      
-      const polarisIdentifier = planet?.polaris && typeof planet.polaris === 'object' && 'identifier' in planet.polaris 
-        ? (planet.polaris as any).identifier 
-        : "";
-      
+      const planet = await Planet.findById(project.planet)
+        .populate("polaris")
+        .lean();
+
+      const polarisIdentifier =
+        planet?.polaris &&
+        typeof planet.polaris === "object" &&
+        "identifier" in planet.polaris
+          ? (planet.polaris as any).identifier
+          : "";
+
       user.holyProjects.push({
         project: project,
         resultPercent: req.body.percent,
         evaluator: evaluator._id,
-        polaris: polarisIdentifier
-      })
+        polaris: polarisIdentifier,
+      });
 
       if (req.body.percent >= 80 && planet) {
-        const allPlanetLessons = await Lesson.find({ planet: planet._id }).lean();
-        const allPlanetLessonIds = allPlanetLessons.map((l: any) => l._id.toString());
-        
-        const userFinishedLessonIds = user.lessonsFinished.map((lessonId: any) => 
-          typeof lessonId === 'string' ? lessonId : lessonId.toString()
+        const allPlanetLessons = await Lesson.find({
+          planet: planet._id,
+        }).lean();
+        const allPlanetLessonIds = allPlanetLessons.map((l: any) =>
+          l._id.toString()
         );
-        
-        const allLessonsFinished = allPlanetLessonIds.every((lessonId: string) => 
-          userFinishedLessonIds.includes(lessonId)
+
+        const userFinishedLessonIds = user.lessonsFinished.map(
+          (lessonId: any) =>
+            typeof lessonId === "string" ? lessonId : lessonId.toString()
+        );
+
+        const allLessonsFinished = allPlanetLessonIds.every(
+          (lessonId: string) => userFinishedLessonIds.includes(lessonId)
         );
 
         if (allLessonsFinished) {
@@ -860,19 +973,27 @@ class HolyServices {
         level = await getUserLevelForPolaris(user, polarisIdentifier);
       }
 
-      await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/${(evaluation.channelId && evaluation.channelId !== "") ? evaluation.channelId : 0}`, {
-        data: {
-          userId: user.discordId,
-          level: level
+      await axios.delete(
+        `${CST.DISCORD.API_URL}/evaluation/finish/${
+          evaluation.channelId && evaluation.channelId !== ""
+            ? evaluation.channelId
+            : 0
+        }`,
+        {
+          data: {
+            userId: user.discordId,
+            level: level,
+          },
         }
-      });
+      );
 
       await Evaluation.findByIdAndDelete(id);
 
-    
       let cost = (project.cost || 1) + 200;
       await user.save();
-      await User.findByIdAndUpdate(requestUser._id, {coin: requestUser.coin + cost});
+      await User.findByIdAndUpdate(requestUser._id, {
+        coin: requestUser.coin + cost,
+      });
 
       return {
         success: true,
@@ -880,7 +1001,7 @@ class HolyServices {
         errors: null,
         data: {
           message: "User has been evaluated with success",
-          evaluation: evaluation
+          evaluation: evaluation,
         },
       };
     } catch (err) {
@@ -891,7 +1012,7 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
@@ -910,8 +1031,8 @@ class HolyServices {
       }
 
       let evaluation = await Evaluation.findById(id)
-          .populate("project")
-          .populate("user");
+        .populate("project")
+        .populate("user");
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
@@ -919,9 +1040,11 @@ class HolyServices {
         evaluation.evaluator = null;
 
       if (evaluation.evaluator !== null) {
-        throw new Error("Un evaluateur a déjà été assigné à cette évaluation !");
+        throw new Error(
+          "Un evaluateur a déjà été assigné à cette évaluation !"
+        );
       }
-      let evaluator = await User.findOne({discordId: requestUser}) as IUser;
+      let evaluator = (await User.findOne({ discordId: requestUser })) as IUser;
       if (!evaluator) {
         throw new Error("No evaluator user found !");
       }
@@ -931,22 +1054,35 @@ class HolyServices {
       let project = evaluation.project as IHolyProject;
       let user = evaluation.user as IUser;
       if (project.evaluatorType === EvaluatorType.EVALUATOR) {
-        if (evaluator.permission !== "evaluateur" && evaluator.permission !== "admin" && evaluator.permission !== "formateur") {
+        if (
+          evaluator.permission !== "evaluateur" &&
+          evaluator.permission !== "admin" &&
+          evaluator.permission !== "formateur"
+        ) {
           throw new Error("Vous n'êtes pas évaluateur !");
         }
       } else if (project.evaluatorType === EvaluatorType.FORMATOR) {
-        if (evaluator.permission !== "admin" && evaluator.permission !== "formateur") {
+        if (
+          evaluator.permission !== "admin" &&
+          evaluator.permission !== "formateur"
+        ) {
           throw new Error("Vous n'êtes pas formateur !");
         }
       }
-      evaluation = await Evaluation.findByIdAndUpdate(id, {evaluator: evaluator._id}, {new: true}).populate("project").populate("user");
+      evaluation = await Evaluation.findByIdAndUpdate(
+        id,
+        { evaluator: evaluator._id },
+        { new: true }
+      )
+        .populate("project")
+        .populate("user");
       return {
         success: true,
         statusCode: 201,
         errors: null,
         data: {
           message: "Evaluation has been claimed with success !",
-          evaluation
+          evaluation,
         },
       };
     } catch (err: any) {
@@ -957,7 +1093,7 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err.message,
+          message: err.message,
         },
       };
     }
@@ -975,12 +1111,11 @@ class HolyServices {
         throw new Error("Evaluation ID is mandatory !");
       }
 
-      let evaluation = await Evaluation.findById(id)
-          .lean();
+      let evaluation = await Evaluation.findById(id).lean();
       if (!evaluation) {
         throw new Error("No Evaluation found with this id !");
       }
-      await Evaluation.findByIdAndUpdate(id, {channelId: channelId});
+      await Evaluation.findByIdAndUpdate(id, { channelId: channelId });
       return {
         success: true,
         statusCode: 201,
@@ -997,11 +1132,10 @@ class HolyServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
   }
-
 }
 export default HolyServices;
