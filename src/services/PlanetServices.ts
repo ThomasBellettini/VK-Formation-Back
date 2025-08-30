@@ -25,7 +25,7 @@ class PlanetServices {
     const { type } = req.query;
     const filter =
       type === "admin"
-        ? { polaris: { $or: [{ $exists: false }, { $eq: null }] } }
+        ? { $or: [{ polaris: { $exists: false } }, { polaris: null }] }
         : {};
 
     try {
