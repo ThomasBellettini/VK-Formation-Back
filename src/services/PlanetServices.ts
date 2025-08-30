@@ -288,8 +288,6 @@ class PlanetServices {
         );
         req.body.modelName = bunnyFilePath;
         modelName = bunnyFilePath;
-      } else {
-        throw new Error("Missing model file");
       }
 
       if (planetFile) {
@@ -305,8 +303,6 @@ class PlanetServices {
         );
         req.body.planetImage = bunnyFilePath;
         planetImage = bunnyFilePath;
-      } else {
-        throw new Error("Missing planet snapshot file");
       }
 
       // Parse lessons array if provided
@@ -351,8 +347,9 @@ class PlanetServices {
       if (url !== undefined) updateData.url = url;
       if (modelName !== undefined) updateData.modelName = modelName;
       if (isDone !== undefined) updateData.isDone = isDone;
-      if (modelName !== planet.modelName) updateData.modelName = modelName;
-      if (planetImage !== planet.planetImage)
+      if (modelName && modelName !== planet.modelName)
+        updateData.modelName = modelName;
+      if (planetImage && planetImage !== planet.planetImage)
         updateData.planetImage = planetImage;
 
       if (lessonIds.length > 0) {
