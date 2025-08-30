@@ -352,6 +352,8 @@ class PlanetServices {
       if (modelName !== undefined) updateData.modelName = modelName;
       if (isDone !== undefined) updateData.isDone = isDone;
       if (modelName !== planet.modelName) updateData.modelName = modelName;
+      if (planetImage !== planet.planetImage)
+        updateData.planetImage = planetImage;
 
       if (lessonIds.length > 0) {
         updateData.courses = lessonIds.map(
