@@ -76,6 +76,7 @@ class PlanetServices {
         const identifier = await StorageCdn.generateRandomFilename(
           modelFile.originalname
         );
+        console.log("HERE DUDE", identifier);
         let filePath = `model/${identifier}`;
         let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
           modelFile.path,
@@ -279,6 +280,7 @@ class PlanetServices {
         const identifier = await StorageCdn.generateRandomFilename(
           modelFile.originalname
         );
+        console.log("HERE DUDE 2", identifier);
         let filePath = `model/${identifier}`;
         let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
           modelFile.path,
