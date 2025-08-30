@@ -276,6 +276,9 @@ class PlanetServices {
       let modelName = "";
       let planetImage = "";
 
+      // Sûrement ici si on a encore des soucis de fichiers qui n'existent plus alors qu'ils ont été uploadés
+      // Hypothèse : lors d'un update sans modification de fichier, modelFile/planetFile n'est pas null, on rentre dans la condition et on génère un nouveau lien sauf que :
+      // 1. Le fichier n'existe pas ; 2. L'url généré du CDN n'est pas mise à jour lors du planet update
       if (modelFile) {
         const identifier = await StorageCdn.generateRandomFilename(
           modelFile.originalname
