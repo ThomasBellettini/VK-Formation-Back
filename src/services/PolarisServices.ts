@@ -1,7 +1,7 @@
 import Polaris, { IPolaris } from "../model/learning/Polaris.js";
 import Planet, { IPlanet } from "../model/learning/Planet.js";
 import { Request } from "express";
-import mongoose from "mongoose";
+import mongoose, { model, modelNames } from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 import CST from "../server/constants.js";
 import User, { IUser } from "../model/User.js";
@@ -169,6 +169,8 @@ class PolarisServices {
       const planetsWithPermission = polaris.planets.map((planet: any) => {
         return {
           ...planet,
+          modelName: StorageCdn.generateSecureLink(planet.modelName),
+          planetImage: StorageCdn.generateSecureLink(planet.planetImage),
           hasPermission: userLevel >= planet.level,
         };
       });
