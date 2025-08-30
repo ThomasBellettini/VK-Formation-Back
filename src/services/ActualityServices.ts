@@ -18,26 +18,6 @@ class ActualityServices {
     this.delete = this.delete.bind(this);
   }
 
-  private async handlePositionConflict(
-    position?: POSITION,
-    excludeId?: string
-  ) {
-    if (position === undefined || position === null) return;
-
-    const filter: any = { position } as any;
-    if (excludeId) {
-      filter._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
-    }
-
-    const existing = await Actuality.findOne(filter).lean();
-    if (existing) {
-      await Actuality.updateOne(
-        { _id: existing._id },
-        { $unset: { position: 1 } } // Unset causing errors
-      );
-    }
-  }
-
   async list(req: Request): Promise<IActualityResponse> {
     try {
       const actualities = await Actuality.find().sort({ createdAt: -1 }).lean();
