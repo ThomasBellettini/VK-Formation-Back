@@ -194,9 +194,10 @@ class PolarisServices {
 
   async update(req: Request, id: string): Promise<IPolarisResponse> {
     try {
-      const { name, description, level, url, identifier, planets } = req.body;
-
+      const { name, description, level, url, identifier } = req.body;
+      const planets = JSON.parse(req.body.planets || "[]");
       const polaris = await Polaris.findById(id);
+
       if (!polaris) {
         return {
           statusCode: 404,
