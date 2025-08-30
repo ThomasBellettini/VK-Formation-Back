@@ -228,6 +228,9 @@ class PlanetServices {
         };
       }
 
+      planet.modelName = StorageCdn.generateSecureLink(planet.modelName);
+      planet.planetImage = StorageCdn.generateSecureLink(planet.planetImage);
+
       return {
         statusCode: 200,
         message: "Planet retrieved successfully",
