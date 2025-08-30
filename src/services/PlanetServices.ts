@@ -25,13 +25,9 @@ class PlanetServices {
 
   async list(req: Request): Promise<IPlanetResponse> {
     const { type } = req.query;
-    const filter =
-      type === "admin"
-        ? { $or: [{ polaris: { $exists: false } }, { polaris: null }] }
-        : {};
 
     try {
-      const planets = await Planet.find(filter)
+      const planets = await Planet.find()
         .populate("courses", "name description url")
         .populate("projects", "name description url")
         .lean();

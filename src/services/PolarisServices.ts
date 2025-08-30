@@ -24,20 +24,18 @@ class PolarisServices {
 
   async list(req: Request): Promise<IPolarisResponse> {
     try {
-      const polarisList = await Polaris.find()
-        .populate('planets')
-        .lean();
+      const polarisList = await Polaris.find().populate("planets").lean();
 
       return {
         statusCode: 200,
         message: "Polaris list retrieved successfully",
-        data: polarisList
+        data: polarisList,
       };
     } catch (error) {
       console.error("Error in list polaris:", error);
       return {
         statusCode: 500,
-        message: "Internal server error"
+        message: "Internal server error",
       };
     }
   }
@@ -45,11 +43,11 @@ class PolarisServices {
   async add(req: Request): Promise<IPolarisResponse> {
     try {
       const { name, description, level, url, identifier, planets } = req.body;
-      
+
       if (!name || !level || !url || !identifier) {
         return {
           statusCode: 400,
-          message: "Missing required fields: name, level, url, identifier"
+          message: "Missing required fields: name, level, url, identifier",
         };
       }
 
@@ -58,7 +56,7 @@ class PolarisServices {
       if (existingPolaris) {
         return {
           statusCode: 409,
-          message: "Polaris with this URL already exists"
+          message: "Polaris with this URL already exists",
         };
       }
 
@@ -67,7 +65,7 @@ class PolarisServices {
       if (existingPolarisByIdentifier) {
         return {
           statusCode: 409,
-          message: "Polaris with this identifier already exists"
+          message: "Polaris with this identifier already exists",
         };
       }
 
@@ -79,11 +77,27 @@ class PolarisServices {
           if (!planet) {
             return {
               statusCode: 404,
-              message: `Planet with id ${planetId} not found`
+              message: `Planet with id ${planetId} not found`,
             };
           }
         }
         planetIds = planets;
+      }
+
+      let imageUrl: string | undefined;
+      const file = req.file as Express.Multer.File | undefined;
+      if (file) {
+        const identifier = await StorageCdn.generateRandomFilename(
+          file.originalname
+        );
+        const filePath = `polaris/${identifier}`;
+        const { bunnyFilePath } = await StorageCdn.uploadFile(
+          file.path,
+          filePath,
+          file.originalname,
+          false
+        );
+        imageUrl = bunnyFilePath;
       }
 
       const polaris = new Polaris({
@@ -92,7 +106,8 @@ class PolarisServices {
         level,
         url,
         identifier,
-        planets: planetIds
+        planets: planetIds,
+        imageUrl,
       });
 
       await polaris.save();
@@ -107,13 +122,13 @@ class PolarisServices {
       return {
         statusCode: 201,
         message: "Polaris created successfully",
-        data: polaris
+        data: polaris,
       };
     } catch (error) {
       console.error("Error in add polaris:", error);
       return {
         statusCode: 500,
-        message: "Internal server error"
+        message: "Internal server error",
       };
     }
   }
@@ -122,27 +137,27 @@ class PolarisServices {
     try {
       // @ts-ignore
       const user = req.user as IUser;
-      
+
       const polaris = await Polaris.findOne({ url })
         .populate({
-          path: 'planets',
+          path: "planets",
           populate: [
             {
-              path: 'courses',
-              model: 'Lesson'
+              path: "courses",
+              model: "Lesson",
             },
             {
-              path: 'projects',
-              model: 'HolyProject'
-            }
-          ]
+              path: "projects",
+              model: "HolyProject",
+            },
+          ],
         })
         .lean();
 
       if (!polaris) {
         return {
           statusCode: 404,
-          message: "Polaris not found"
+          message: "Polaris not found",
         };
       }
 
@@ -154,25 +169,25 @@ class PolarisServices {
       const planetsWithPermission = polaris.planets.map((planet: any) => {
         return {
           ...planet,
-          hasPermission: userLevel >= planet.level
+          hasPermission: userLevel >= planet.level,
         };
       });
 
       const polarisWithPermissions = {
         ...polaris,
-        planets: planetsWithPermission
+        planets: planetsWithPermission,
       };
 
       return {
         statusCode: 200,
         message: "Polaris retrieved successfully",
-        data: polarisWithPermissions
+        data: polarisWithPermissions,
       };
     } catch (error) {
       console.error("Error in info polaris:", error);
       return {
         statusCode: 500,
-        message: "Internal server error"
+        message: "Internal server error",
       };
     }
   }
@@ -180,31 +195,37 @@ class PolarisServices {
   async update(req: Request, id: string): Promise<IPolarisResponse> {
     try {
       const { name, description, level, url, identifier, planets } = req.body;
-      
+
       const polaris = await Polaris.findById(id);
       if (!polaris) {
         return {
           statusCode: 404,
-          message: "Polaris not found"
+          message: "Polaris not found",
         };
       }
 
       if (url && url !== polaris.url) {
-        const existingPolaris = await Polaris.findOne({ url, _id: { $ne: id } });
+        const existingPolaris = await Polaris.findOne({
+          url,
+          _id: { $ne: id },
+        });
         if (existingPolaris) {
           return {
             statusCode: 409,
-            message: "Polaris with this URL already exists"
+            message: "Polaris with this URL already exists",
           };
         }
       }
 
       if (identifier && identifier !== polaris.identifier) {
-        const existingPolaris = await Polaris.findOne({ identifier, _id: { $ne: id } });
+        const existingPolaris = await Polaris.findOne({
+          identifier,
+          _id: { $ne: id },
+        });
         if (existingPolaris) {
           return {
             statusCode: 409,
-            message: "Polaris with this identifier already exists"
+            message: "Polaris with this identifier already exists",
           };
         }
       }
@@ -216,22 +237,16 @@ class PolarisServices {
             if (!planet) {
               return {
                 statusCode: 404,
-                message: `Planet with id ${planetId} not found`
+                message: `Planet with id ${planetId} not found`,
               };
             }
           }
         }
 
-        await Planet.updateMany(
-          { polaris: id },
-          { $unset: { polaris: 1 } }
-        );
+        await Planet.updateMany({ polaris: id }, { $unset: { polaris: 1 } });
 
         if (planets.length > 0) {
-          await Planet.updateMany(
-            { _id: { $in: planets } },
-            { polaris: id }
-          );
+          await Planet.updateMany({ _id: { $in: planets } }, { polaris: id });
         }
       }
 
@@ -242,24 +257,37 @@ class PolarisServices {
       if (identifier !== undefined) updateData.identifier = identifier;
       if (planets !== undefined) updateData.planets = planets;
 
-      const updatedPolaris = await Polaris.findByIdAndUpdate(
-        id,
-        updateData,
-        { new: true }
-      )
-        .populate('planets', 'name description url level isDone')
+      const file = req.file as Express.Multer.File | undefined;
+      if (file) {
+        const identifier = await StorageCdn.generateRandomFilename(
+          file.originalname
+        );
+        const filePath = `polaris/${identifier}`;
+        const { bunnyFilePath } = await StorageCdn.uploadFile(
+          file.path,
+          filePath,
+          file.originalname,
+          false
+        );
+        (updateData as any).imageUrl = bunnyFilePath as any;
+      }
+
+      const updatedPolaris = await Polaris.findByIdAndUpdate(id, updateData, {
+        new: true,
+      })
+        .populate("planets", "name description url level isDone")
         .lean();
 
       return {
         statusCode: 200,
         message: "Polaris updated successfully",
-        data: updatedPolaris
+        data: updatedPolaris,
       };
     } catch (error) {
       console.error("Error in update polaris:", error);
       return {
         statusCode: 500,
-        message: "Internal server error"
+        message: "Internal server error",
       };
     }
   }
@@ -267,35 +295,30 @@ class PolarisServices {
   async delete(id: string): Promise<IPolarisResponse> {
     try {
       const polaris = await Polaris.findById(id);
-      
+
       if (!polaris) {
         return {
           statusCode: 404,
-          message: "Polaris not found"
+          message: "Polaris not found",
         };
       }
 
-      await Planet.updateMany(
-        { polaris: id },
-        { $unset: { polaris: 1 } }
-      );
+      await Planet.updateMany({ polaris: id }, { $unset: { polaris: 1 } });
 
       await Polaris.findByIdAndDelete(id);
 
       return {
         statusCode: 200,
-        message: "Polaris deleted successfully"
+        message: "Polaris deleted successfully",
       };
     } catch (error) {
       console.error("Error in delete polaris:", error);
       return {
         statusCode: 500,
-        message: "Internal server error"
+        message: "Internal server error",
       };
     }
   }
-
-
 }
 
-export default PolarisServices; 
+export default PolarisServices;

@@ -238,9 +238,9 @@ router.delete("/planets/delete/:id", authJwt, checkRole("admin"), PlanetControll
 
 // Polaris routes
 router.get("/polaris/list", authJwt, PolarisController.list)
-router.post("/polaris/add", authJwt, checkRole("admin"), PolarisController.add)
+router.post("/polaris/add", authJwt, checkRole("admin"), upload.single('image'), PolarisController.add)
 router.get("/polaris/info/:url", authJwt, PolarisController.info)
-router.patch("/polaris/update/:id", authJwt, checkRole("admin"), PolarisController.update)
+router.patch("/polaris/update/:id", authJwt, checkRole("admin"), upload.single('image'), PolarisController.update)
 router.delete("/polaris/delete/:id", authJwt, checkRole("admin"), PolarisController.delete)
 
 // User Planet routes

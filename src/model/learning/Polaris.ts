@@ -13,6 +13,8 @@ export interface IPolaris extends Document {
 
   level: number;
 
+  imageUrl: string;
+
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -44,6 +46,10 @@ const polarisSchema: Schema<IPolaris> = new mongoose.Schema(
     level: {
       type: Number,
       required: true,
+    },
+    imageUrl: {
+      type: String,
+      required: false,
     },
   },
   {

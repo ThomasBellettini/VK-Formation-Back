@@ -109,17 +109,13 @@ class HolyServices {
 
   async list(req: Request) {
     const { type } = req.query;
-    const filter =
-      type === "admin"
-        ? { $or: [{ polaris: { $exists: false } }, { polaris: null }] }
-        : {};
 
     try {
       // @ts-ignore
       let user = req.user as IUser;
       let holyProject: IHolyGraph[] = [];
       if (user) {
-        const holyProjectDatabase = await HolyProject.find(filter).lean();
+        const holyProjectDatabase = await HolyProject.find().lean();
 
         holyProject = holyProjectDatabase.map((iterator) => {
           const userProject = user.holyProjects.filter(

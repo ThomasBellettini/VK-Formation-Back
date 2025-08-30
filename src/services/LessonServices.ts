@@ -20,13 +20,9 @@ class LessonServices {
 
   async list(req: Request) {
     const { type } = req.query;
-    const filter =
-      type === "admin"
-        ? { $or: [{ polaris: { $exists: false } }, { polaris: null }] }
-        : {};
 
     try {
-      let lessons = await Lesson.find(filter).lean();
+      let lessons = await Lesson.find().lean();
       return {
         success: true,
         statusCode: 201,
