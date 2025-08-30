@@ -26,6 +26,10 @@ class PolarisServices {
     try {
       const polarisList = await Polaris.find().populate("planets").lean();
 
+      for (const polaris of polarisList) {
+        polaris.imageUrl = StorageCdn.generateSecureLink(polaris.imageUrl);
+      }
+
       return {
         statusCode: 200,
         message: "Polaris list retrieved successfully",
