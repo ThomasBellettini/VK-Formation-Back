@@ -217,7 +217,7 @@ class PlanetServices {
   async info(req: Request, url: string): Promise<IPlanetResponse> {
     try {
       const planet = await Planet.findOne({ url })
-        .populate("courses", "name description url")
+        .populate("courses", "title description url")
         .populate("projects", "name description url")
         .lean();
 

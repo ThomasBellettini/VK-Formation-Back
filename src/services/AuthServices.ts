@@ -1,12 +1,12 @@
 import User, { IUser } from "../model/User.js";
 import { generateToken } from "../utils/JWTUtils.js";
-import {Request} from "express";
-import {sendTemplateEmail} from "../utils/BrevoUtils.js";
+import { Request } from "express";
+import { sendTemplateEmail } from "../utils/BrevoUtils.js";
 import axios from "axios";
 import Polaris from "../model/learning/Polaris.js";
 import { getUserLevelForPolaris } from "../utils/utils.js";
 import Notification from "../model/Notification.js";
-import {IHolyProject} from "../model/learning/HolyProject.js";
+import { IHolyProject } from "../model/learning/HolyProject.js";
 import Planet from "../model/learning/Planet.js";
 
 class AuthServices {
@@ -24,7 +24,9 @@ class AuthServices {
 
   async me(user: IUser) {
     try {
-      let userDb = await User.findOne({ email: user.email }).populate("lessonsFinished").populate("holyProjects.project");
+      let userDb = await User.findOne({ email: user.email })
+        .populate("lessonsFinished")
+        .populate("holyProjects.project");
       if (!userDb) throw "No user found !";
       let userData = userDb.toObject();
 
@@ -33,7 +35,9 @@ class AuthServices {
 
       for (let hInit of userData.holyProjects) {
         let project = hInit.project as IHolyProject;
-        let planet = await Planet.findOne({ _id: project.planet }).populate("polaris").lean();
+        let planet = await Planet.findOne({ _id: project.planet })
+          .populate("polaris")
+          .lean();
         if (!planet || planet.polaris) continue;
         // @ts-ignore
         hInit.polaris = planet.polaris.identifier;
@@ -45,7 +49,7 @@ class AuthServices {
 
         polarisLevels.push({
           polaris: polaris.identifier,
-          level: level
+          level: level,
         });
       }
 
@@ -60,7 +64,7 @@ class AuthServices {
         data: {
           user: userData,
           polarisLevels,
-          notifications
+          notifications,
         },
       };
     } catch (err) {
@@ -106,7 +110,7 @@ class AuthServices {
         errors: err,
         token: null,
         data: {
-          message: err
+          message: err,
         },
       };
     }
@@ -144,40 +148,63 @@ class AuthServices {
         resetCode: Math.random().toString(36) + Math.random().toString(36),
       });
 
-      let response = await axios.get(`https://api.systeme.io/api/contacts?email=${email}`, {
-        headers: {
-          "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+      let response = await axios.get(
+        `https://api.systeme.io/api/contacts?email=${email}`,
+        {
+          headers: {
+            "X-API-Key":
+              "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy",
+          },
         }
-      });
-      if (response.status === 200 && response.data.items && response.data.items.length > 0) {
+      );
+      if (
+        response.status === 200 &&
+        response.data.items &&
+        response.data.items.length > 0
+      ) {
         let items = response.data.items;
         for (let i = 0; i < items.length; i++) {
           let items = response.data.items[i] as {
             id: string;
             tags: {
-                id: string;
-                name: string;
+              id: string;
+              name: string;
             }[];
           };
           for (let j = 0; j < items.tags.length; j++) {
             let tag = items.tags[j];
-            await axios.delete(`https://api.systeme.io/api/contacts/${items.id}/tags/${tag.id}`, {
-              headers: {
-                "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+            await axios.delete(
+              `https://api.systeme.io/api/contacts/${items.id}/tags/${tag.id}`,
+              {
+                headers: {
+                  "X-API-Key":
+                    "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy",
+                },
               }
-            });
+            );
           }
-          await axios.post(`https://api.systeme.io/api/contacts/${items.id}/tags`, {
-            tagId: 1439804
-          }, {
-            headers: {
-              "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+          await axios.post(
+            `https://api.systeme.io/api/contacts/${items.id}/tags`,
+            {
+              tagId: 1439804,
+            },
+            {
+              headers: {
+                "X-API-Key":
+                  "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy",
+              },
             }
-          });
+          );
         }
       }
 
-      await sendTemplateEmail(1, {vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`}, newUser.email);
+      await sendTemplateEmail(
+        1,
+        {
+          vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`,
+        },
+        newUser.email
+      );
       return {
         success: true,
         statusCode: 201,
@@ -209,7 +236,7 @@ class AuthServices {
         fullAccess = true;
       }
       let email = req.body.data.customer.email;
-      if (!email ) {
+      if (!email) {
         throw "Missing data ! Fields Required: email";
       }
       const user = await User.findOne({ email: email });
@@ -235,10 +262,16 @@ class AuthServices {
         password: password,
         isConfirmed: true,
         resetCode: Math.random().toString(36) + Math.random().toString(36),
-        discordAccess: fullAccess
+        discordAccess: fullAccess,
       });
 
-      await sendTemplateEmail(1, {vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`}, newUser.email);
+      await sendTemplateEmail(
+        1,
+        {
+          vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`,
+        },
+        newUser.email
+      );
 
       return {
         success: true,
@@ -268,7 +301,7 @@ class AuthServices {
         throw "Missing data ! Fields Required: email";
       }
       let email = req.body.data.customer.email;
-      if (!email ) {
+      if (!email) {
         throw "Missing data ! Fields Required: email";
       }
       const user = await User.findOne({ email: email });
@@ -298,7 +331,6 @@ class AuthServices {
       };
     }
   }
-
 
   async accountConfirmation(confirmationCode: string) {
     try {
@@ -330,7 +362,7 @@ class AuthServices {
         errors: err,
         token: null,
         data: {
-          message:err,
+          message: err,
         },
       };
     }
@@ -347,7 +379,13 @@ class AuthServices {
 
       user.resetCode = Math.random().toString(36) + Math.random().toString(36);
       await user.save();
-      await sendTemplateEmail(2, {vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${user.resetCode}`}, user.email);
+      await sendTemplateEmail(
+        2,
+        {
+          vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${user.resetCode}`,
+        },
+        user.email
+      );
 
       return {
         success: true,
