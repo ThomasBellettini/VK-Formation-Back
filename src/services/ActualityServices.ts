@@ -18,7 +18,10 @@ class ActualityServices {
     this.delete = this.delete.bind(this);
   }
 
-  private async handlePositionConflict(position?: POSITION, excludeId?: string) {
+  private async handlePositionConflict(
+    position?: POSITION,
+    excludeId?: string
+  ) {
     if (position === undefined || position === null) return;
 
     const filter: any = { position } as any;
@@ -28,7 +31,10 @@ class ActualityServices {
 
     const existing = await Actuality.findOne(filter).lean();
     if (existing) {
-      await Actuality.updateOne({ _id: existing._id }, { $unset: { position: 1 } });
+      await Actuality.updateOne(
+        { _id: existing._id },
+        { $unset: { position: 1 } }
+      );
     }
   }
 
@@ -38,7 +44,9 @@ class ActualityServices {
 
       for (let actuality of actualities) {
         if (actuality.imageUrl) {
-          actuality.imageUrl = StorageCdn.generateSecureLink(actuality.imageUrl);
+          actuality.imageUrl = StorageCdn.generateSecureLink(
+            actuality.imageUrl
+          );
         }
       }
 
@@ -65,17 +73,26 @@ class ActualityServices {
         // normalize to enum value
         position = String(position).toLowerCase() as POSITION;
         if (position !== POSITION.LEFT && position !== POSITION.RIGHT) {
-          return { statusCode: 400, message: "Position must be 'left' or 'right'" };
+          return {
+            statusCode: 400,
+            message: "Position must be 'left' or 'right'",
+          };
         }
-        await this.handlePositionConflict(position as POSITION);
       }
 
       let imageUrl: string | undefined;
-      const file = (req.file as Express.Multer.File | undefined);
+      const file = req.file as Express.Multer.File | undefined;
       if (file) {
-        const identifier = await StorageCdn.generateRandomFilename(file.originalname);
+        const identifier = await StorageCdn.generateRandomFilename(
+          file.originalname
+        );
         const filePath = `actuality/${identifier}`;
-        const { bunnyFilePath } = await StorageCdn.uploadFile(file.path, filePath, file.originalname, false);
+        const { bunnyFilePath } = await StorageCdn.uploadFile(
+          file.path,
+          filePath,
+          file.originalname,
+          false
+        );
         imageUrl = bunnyFilePath;
       }
 
@@ -138,18 +155,28 @@ class ActualityServices {
       } else if (position !== undefined) {
         position = String(position).toLowerCase() as POSITION;
         if (position !== POSITION.LEFT && position !== POSITION.RIGHT) {
-          return { statusCode: 400, message: "Position must be 'left' or 'right'" };
+          return {
+            statusCode: 400,
+            message: "Position must be 'left' or 'right'",
+          };
         }
         await this.handlePositionConflict(position as POSITION, id);
         (updateData as any).position = position as any;
       }
       if (order !== undefined) (updateData as any).order = Number(order) as any;
 
-      const file = (req.file as Express.Multer.File | undefined);
+      const file = req.file as Express.Multer.File | undefined;
       if (file) {
-        const identifier = await StorageCdn.generateRandomFilename(file.originalname);
+        const identifier = await StorageCdn.generateRandomFilename(
+          file.originalname
+        );
         const filePath = `images/${identifier}`;
-        const { bunnyFilePath } = await StorageCdn.uploadFile(file.path, filePath, file.originalname, false);
+        const { bunnyFilePath } = await StorageCdn.uploadFile(
+          file.path,
+          filePath,
+          file.originalname,
+          false
+        );
         (updateData as any).imageUrl = bunnyFilePath as any;
       }
 
@@ -196,5 +223,3 @@ class ActualityServices {
 }
 
 export default ActualityServices;
-
-
