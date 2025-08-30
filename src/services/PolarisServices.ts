@@ -255,7 +255,7 @@ class PolarisServices {
       if (description !== undefined) updateData.description = description;
       if (url !== undefined) updateData.url = url;
       if (identifier !== undefined) updateData.identifier = identifier;
-      if (planets !== undefined) updateData.planets = planets[0];
+      if (planets !== undefined) updateData.planets = planets;
 
       const file = req.file as Express.Multer.File | undefined;
       if (file) {
