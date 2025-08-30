@@ -248,7 +248,7 @@ class PlanetServices {
 
   async update(req: Request, id: string): Promise<IPlanetResponse> {
     try {
-      const { name, description, level, url, isDone, lessons, projects } =
+      const { name, description, level, url, isDone, courses, projects } =
         req.body;
 
       const planet = await Planet.findById(id);
@@ -309,9 +309,9 @@ class PlanetServices {
 
       // Parse lessons array if provided
       let lessonIds: string[] = [];
-      if (lessons) {
+      if (courses) {
         try {
-          lessonIds = JSON.parse(lessons);
+          lessonIds = JSON.parse(courses);
           if (!Array.isArray(lessonIds)) {
             lessonIds = [lessonIds];
           }
