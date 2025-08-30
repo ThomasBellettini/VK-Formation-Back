@@ -343,15 +343,24 @@ class PlanetServices {
       }
 
       const updateData: Partial<IPlanet> = {};
+
+      console.log("HERE DUDE FILES", modelName, planetImage);
       if (name !== undefined) updateData.name = name;
       if (description !== undefined) updateData.description = description;
       if (level !== undefined) updateData.level = level;
       if (url !== undefined) updateData.url = url;
-      if (modelName !== undefined) updateData.modelName = modelName;
       if (isDone !== undefined) updateData.isDone = isDone;
-      if (modelName && modelName !== planet.modelName)
+      if (
+        modelName &&
+        modelName !== undefined &&
+        modelName !== planet.modelName
+      )
         updateData.modelName = modelName;
-      if (planetImage && planetImage !== planet.planetImage)
+      if (
+        planetImage &&
+        planetImage !== undefined &&
+        planetImage !== planet.planetImage
+      )
         updateData.planetImage = planetImage;
 
       if (lessonIds.length > 0) {
