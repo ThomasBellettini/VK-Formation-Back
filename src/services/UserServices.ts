@@ -1,11 +1,11 @@
 import User, { IUser } from "../model/User.js";
-import {Request} from "express";
+import { Request } from "express";
 import Transaction from "../model/Transaction.js";
-import {getOrCreateDiscordData} from "../model/Discord.js";
+import { getOrCreateDiscordData } from "../model/Discord.js";
 import * as sea from "node:sea";
-import {generateToken} from "../utils/JWTUtils.js";
+import { generateToken } from "../utils/JWTUtils.js";
 import Evaluation from "../model/learning/Evaluation.js";
-import {IHolyProject} from "../model/learning/HolyProject.js";
+import { IHolyProject } from "../model/learning/HolyProject.js";
 import Planet from "../model/learning/Planet.js";
 import axios from "axios";
 
@@ -31,22 +31,24 @@ class UserServices {
       let page = Number(req.query.page) || 1;
       let userDb: IUser[] = [];
       let search = req.query.search;
-      let filter: any = {};
+      let filter: any = {
+        email: { $ne: "antoane.gasser@gmail.com" },
+      };
       let field = req.query.field;
 
       if (search && field) {
         // @ts-ignore
         filter[field] = { $regex: search, $options: "i" };
       } else if (search) {
-        filter.email = { $regex: search, $options: "i" };
+        filter.email = { ...filter.email, $regex: search, $options: "i" };
       }
 
       userDb = await User.find(filter)
-          .populate("holyProjects.project")
-          .populate("lessonsFinished")
-          .sort({permission: {$eq: ["$permission", "admin"]} ? 1 : -1})
-          .skip((page - 1) * limit)
-          .limit(limit);
+        .populate("holyProjects.project")
+        .populate("lessonsFinished")
+        .sort({ permission: { $eq: ["$permission", "admin"] } ? 1 : -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
 
       return {
         success: true,
@@ -99,7 +101,7 @@ class UserServices {
 
   async banByDiscord(discordID: string) {
     try {
-      let userDb = await User.findOne({discordId: discordID});
+      let userDb = await User.findOne({ discordId: discordID });
       if (!userDb) throw new Error("No user found !");
       userDb.permission = "ban";
       await userDb.save();
@@ -127,30 +129,41 @@ class UserServices {
 
   async linkDiscord(req: Request) {
     try {
-      let {code, discordId} = req.body;
+      let { code, discordId } = req.body;
       if (!code || !discordId) {
         throw new Error("Il manque des informations !");
       }
-      let userDb = await User.findOne({discordLinkCode: code});
-      if (!userDb) throw new Error("aucun utilisateur trouvé avec ce code. Vous pouvez trouver votre code de liasion directement sur votre page profil !");
+      let userDb = await User.findOne({ discordLinkCode: code });
+      if (!userDb)
+        throw new Error(
+          "aucun utilisateur trouvé avec ce code. Vous pouvez trouver votre code de liasion directement sur votre page profil !"
+        );
 
       userDb.discordId = discordId;
       userDb.discordLinkCode = "";
 
-      let evaluation = await Evaluation.findOne({user: userDb._id, discord: true}).populate("project");
+      let evaluation = await Evaluation.findOne({
+        user: userDb._id,
+        discord: true,
+      }).populate("project");
       if (evaluation) {
         const holyProject = evaluation.project as IHolyProject;
-        const planet = await Planet.findById(holyProject.planet).populate('polaris').lean();
-        const polarisIdentifier = planet?.polaris && typeof planet.polaris === 'object' && 'identifier' in planet.polaris 
-          ? (planet.polaris as any).identifier 
-          : "";
-        
+        const planet = await Planet.findById(holyProject.planet)
+          .populate("polaris")
+          .lean();
+        const polarisIdentifier =
+          planet?.polaris &&
+          typeof planet.polaris === "object" &&
+          "identifier" in planet.polaris
+            ? (planet.polaris as any).identifier
+            : "";
+
         userDb.holyProjects.push({
           project: evaluation.project,
           resultPercent: 100,
           evaluator: null,
-          polaris: polarisIdentifier
-        })
+          polaris: polarisIdentifier,
+        });
         let project = evaluation.project as IHolyProject;
         await Evaluation.findByIdAndDelete(evaluation._id);
       }
@@ -162,7 +175,7 @@ class UserServices {
         statusCode: 201,
         errors: null,
         data: {
-          user: userDb
+          user: userDb,
         },
       };
     } catch (err: any) {
@@ -180,7 +193,9 @@ class UserServices {
 
   async userByDiscord(discordID: string) {
     try {
-      let userDb = await User.findOne({discordId: discordID}).populate("holyProjects");
+      let userDb = await User.findOne({ discordId: discordID }).populate(
+        "holyProjects"
+      );
       if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
 
       return {
@@ -188,7 +203,7 @@ class UserServices {
         statusCode: 201,
         errors: null,
         data: {
-          user: userDb
+          user: userDb,
         },
       };
     } catch (err: any) {
@@ -206,7 +221,7 @@ class UserServices {
 
   async giveMoney(discordID: string, money: number) {
     try {
-      let userDb = await User.findOne({discordId: discordID});
+      let userDb = await User.findOne({ discordId: discordID });
       if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
       userDb.coin += money;
       await userDb.save();
@@ -233,27 +248,31 @@ class UserServices {
 
   async makeTransaction(discordID: string, orderID: string) {
     try {
-      let userDb = await User.findOne({discordId: discordID});
+      let userDb = await User.findOne({ discordId: discordID });
       if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
       let discordData = await getOrCreateDiscordData();
-      const item = discordData.shopItems.find(item => item._id.toString() === orderID);
+      const item = discordData.shopItems.find(
+        (item) => item._id.toString() === orderID
+      );
       if (!item) {
         throw new Error("Aucun item trouvé avec cet id !");
       }
       let buyEvaluator = false;
       if (item.name === "Grade évaluateur") {
-        if (userDb.permission === "evaluateur") throw new Error("Vous êtes déjà évaluateur !");
+        if (userDb.permission === "evaluateur")
+          throw new Error("Vous êtes déjà évaluateur !");
         userDb.permission = "evaluateur";
         buyEvaluator = true;
       }
-      if (userDb.coin < item.cost) throw new Error("Vous n'avez pas assez de valek coins !");
+      if (userDb.coin < item.cost)
+        throw new Error("Vous n'avez pas assez de valek coins !");
       userDb.coin -= item.cost;
 
       await Transaction.create({
         user: userDb._id,
         productName: item.name,
-        cost: item.cost
-      })
+        cost: item.cost,
+      });
       await userDb.save();
 
       return {
@@ -263,7 +282,7 @@ class UserServices {
         data: {
           item: item,
           user: userDb,
-          evaluator: buyEvaluator
+          evaluator: buyEvaluator,
         },
       };
     } catch (err: any) {
@@ -288,7 +307,9 @@ class UserServices {
         throw new Error("Discord access not granted !");
       }
       let link = Math.random().toString(36) + Math.random().toString(36);
-      let editedUser = await User.findByIdAndUpdate(user._id, { discordLinkCode: link });
+      let editedUser = await User.findByIdAndUpdate(user._id, {
+        discordLinkCode: link,
+      });
 
       return {
         success: true,
@@ -296,7 +317,7 @@ class UserServices {
         errors: null,
         data: {
           code: link,
-          user: editedUser
+          user: editedUser,
         },
       };
     } catch (err: any) {
@@ -306,7 +327,7 @@ class UserServices {
         statusCode: 500,
         errors: err.message,
         data: {
-          message: err.message
+          message: err.message,
         },
       };
     }
@@ -362,16 +383,18 @@ class UserServices {
         errors: err,
         token: null,
         data: {
-          message: err
+          message: err,
         },
       };
     }
   }
 
-
   async info(id: string) {
     try {
-      let userDb = await User.findById(id).populate("holyProjects.project").populate("lessonsFinished").lean();
+      let userDb = await User.findById(id)
+        .populate("holyProjects.project")
+        .populate("lessonsFinished")
+        .lean();
       if (!userDb) throw new Error("No user found !");
 
       return {
@@ -379,7 +402,7 @@ class UserServices {
         statusCode: 201,
         errors: null,
         data: {
-          user: userDb
+          user: userDb,
         },
       };
     } catch (err) {
@@ -425,42 +448,55 @@ class UserServices {
 
   async sioFormContact(req: Request) {
     try {
-      if (!req.body.email || !req.body.firstname || !req.body.lastname || !req.body.phone) {
+      if (
+        !req.body.email ||
+        !req.body.firstname ||
+        !req.body.lastname ||
+        !req.body.phone
+      ) {
         throw new Error("Missing fields");
       }
-      let {email, firstname, lastname, phone} = req.body;
-      let response = await axios.post(`https://api.systeme.io/api/contacts`, {
-
-        email: email,
-        fields: [
-          {
-            slug: "first_name",
-            value: firstname
+      let { email, firstname, lastname, phone } = req.body;
+      let response = await axios.post(
+        `https://api.systeme.io/api/contacts`,
+        {
+          email: email,
+          fields: [
+            {
+              slug: "first_name",
+              value: firstname,
+            },
+            {
+              slug: "surname",
+              value: lastname,
+            },
+            {
+              slug: "phone_number",
+              value: phone,
+            },
+          ],
+        },
+        {
+          headers: {
+            "X-API-Key":
+              "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy",
           },
-          {
-            slug: "surname",
-            value: lastname
-          },
-          {
-            slug: "phone_number",
-            value: phone
-          }
-        ]
-      }, {
-        headers: {
-          "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
         }
-      });
+      );
 
       if (response.data.id) {
-        await axios.post(`https://api.systeme.io/api/contacts/${response.data.id}/tags`, {
-
-          tagId: 1439803
-        }, {
-          headers: {
-            "X-API-Key": "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy"
+        await axios.post(
+          `https://api.systeme.io/api/contacts/${response.data.id}/tags`,
+          {
+            tagId: 1439803,
+          },
+          {
+            headers: {
+              "X-API-Key":
+                "83ws3dbyupzeidbls2xczalyjcqacg91n4sospp1fyanno72vsw71hkysf7guucy",
+            },
           }
-        });
+        );
       }
 
       return {
@@ -483,8 +519,6 @@ class UserServices {
       };
     }
   }
-
-
 }
 
 export default UserServices;
