@@ -172,7 +172,8 @@ class PolarisServices {
 
       const planetsWithPermission = polaris.planets.map((planet: any) => {
         const secureLinkModel = StorageCdn.generateSecureLink(planet.modelName);
-        console.log("HERE DUDE", planet.modelName, secureLinkModel);
+        console.log("HERE DUDE MODEL", planet.modelName);
+        console.log("HERE DUDE URL", secureLinkModel);
         return {
           ...planet,
           modelName: secureLinkModel,
