@@ -178,7 +178,7 @@ class PolarisServices {
           ...planet,
           modelName: secureLinkModel,
           planetImage: StorageCdn.generateSecureLink(planet.planetImage),
-          hasPermission: userLevel >= planet.level,
+          hasPermission: user.permission === 'admin' || 'formateur' ? true : userLevel >= planet.level,
         };
       });
 
