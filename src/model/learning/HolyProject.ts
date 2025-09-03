@@ -1,5 +1,6 @@
 import mongoose, {Document, Schema} from 'mongoose';
 import {ICourseBundle} from "./CourseBundle.js";
+import { IPlanet } from './Planet.js';
 
 export enum EvaluationType {
     STANDARD = "standard",
@@ -25,12 +26,11 @@ export interface IHolyProject extends Document {
     name: string;
     description: string;
 
-    level: number;
-    xp: number;
+    planet: IPlanet | mongoose.Types.ObjectId;
+
     url: string;
     content: string;
     evaluationText: string | null;
-    linkedProjectId: string;
 
     evaluationType: EvaluationType;
     evaluatorType: EvaluatorType;
@@ -69,18 +69,6 @@ const holyProjectSchema: Schema<IHolyProject> = new mongoose.Schema({
     description: {
         type: String,
         required: true
-    },
-    linkedProjectId: {
-        type: String,
-        required: false
-    },
-    level: {
-        type: Number,
-        default: 1
-    },
-    xp: {
-        type: Number,
-        default: 1
     },
     url: {
         type: String,
@@ -170,7 +158,12 @@ const holyProjectSchema: Schema<IHolyProject> = new mongoose.Schema({
             type: [String],
             required: true
         }
-    }]
+    }],
+    planet: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Planet',
+        required: false
+    }
 
 }, {
     timestamps: true

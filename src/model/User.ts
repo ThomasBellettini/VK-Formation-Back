@@ -1,7 +1,8 @@
 import mongoose, {Document, Schema} from 'mongoose';
 import bcrypt from 'bcryptjs';
 import {ILesson} from "./learning/Lesson.js";
-import {IHolyProject} from "./learning/HolyProject";
+import {IHolyProject} from "./learning/HolyProject.js";
+import { IPlanet } from './learning/Planet.js';
 
 const saltRounds = 10;
 
@@ -24,12 +25,16 @@ export interface IUser extends Document {
 
     lastLogin: Date;
 
+    tutoVideo: boolean;
+
     lessonsFinished: (mongoose.Types.ObjectId | ILesson)[];
+    planetsFinished: (mongoose.Types.ObjectId | IPlanet)[];
 
     holyProjects: {
         project: mongoose.Types.ObjectId | IHolyProject;
         resultPercent: number;
         evaluator: (mongoose.Types.ObjectId | IUser) | null;
+        polaris: string;
     }[];
 
     createdAt?: Date;
@@ -79,6 +84,10 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Lesson'
     }],
+    planetsFinished: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Planet'
+    }],
     holyProjects: [{
         project: {
             type: mongoose.Schema.Types.ObjectId,
@@ -91,6 +100,10 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         evaluator: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
+            default: null
+        },
+        polaris: {
+            type: String,
             default: null
         }
     }],
@@ -112,6 +125,11 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         required: false,
         default: null
     },
+    tutoVideo: {
+        type: Boolean,
+        required: false,
+        default: false
+    }
 
 }, {
     timestamps: true

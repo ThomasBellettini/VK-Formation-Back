@@ -1,4 +1,5 @@
 import mongoose, {Document, Schema} from 'mongoose';
+import { IPlanet } from './Planet.js';
 
 export interface ILesson extends Document {
     _id: mongoose.Types.ObjectId;
@@ -9,6 +10,8 @@ export interface ILesson extends Document {
     content: string;
 
     order: number;
+
+    planet: IPlanet | mongoose.Types.ObjectId;
 
     cdnVideoContent: string | null;
     cdnAudioContent: string | null;
@@ -70,7 +73,12 @@ const lessonSchema: Schema<ILesson> = new mongoose.Schema({
             required: false,
             default: ""
         }
-    }]
+    }],
+    planet: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Planet',
+        required: false
+    }
 
 }, {
     timestamps: true

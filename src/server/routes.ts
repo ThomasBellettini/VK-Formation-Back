@@ -13,6 +13,13 @@ import DiscordController from "../controller/DiscordController.js";
 import FolderController from "../controller/FolderController.js";
 import ContributorController from "../controller/ContributorController.js";
 import RecruitmentController from "../controller/RecruitmentController.js";
+import PlanetController from "../controller/PlanetController.js";
+import ActualityController from "../controller/ActualityController.js";
+import PolarisController from "../controller/PolarisController.js";
+import UserPlanetController from "../controller/UserPlanetController.js";
+import NotificationController from "../controller/NotificationController.js";
+import DriveResourceController from "../controller/DriveResourceController.js";
+import HomeController from "../controller/HomeController.js";
 
 const router = Router();
 
@@ -142,6 +149,7 @@ router.post("/register/webhook/fcuaimvsdqicchpknzzzqotc", AuthController.registe
 
 router.patch("/register", AuthController.accountConfirmation)
 router.get("/me", authJwt, AuthController.me)
+router.patch("/tuto-video", authJwt, AuthController.tutoVideo)
 router.get("/discord", authJwt, UserController.generateDiscordLink)
 router.get("/discord", authJwt, UserController.generateDiscordLink)
 
@@ -152,11 +160,11 @@ router.delete("/users/delete/:id", authJwt, checkRole("admin"), UserController.d
 router.get("/users/info/:id", authJwt, checkRole("admin"), UserController.info)
 router.post("/users/connect-as/:id", authJwt, checkRole("admin"), UserController.connectedAs)
 
-router.get("/holygraph/list", authJwtNotMandatory, HolyController.list)
-router.post("/holygraph/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
-router.delete("/holygraph/delete/:id", authJwt, checkRole("admin"), HolyController.delete)
-router.patch("/holygraph/update/:id", authJwt, checkRole("admin"), upload.single('video'), HolyController.update)
-router.get("/holygraph/info/:url", authJwt, HolyController.info)
+router.get("/project/list", authJwtNotMandatory, HolyController.list)
+router.post("/project/add", authJwt, checkRole("admin"), upload.single('video'), HolyController.add)
+router.delete("/project/delete/:id", authJwt, checkRole("admin"), HolyController.delete)
+router.patch("/project/update/:id", authJwt, checkRole("admin"), upload.single('video'), HolyController.update)
+router.get("/project/info/:url", authJwt, HolyController.info)
 
 router.get("/evaluation/info/:id", authJwt, HolyController.evaluateInfo)
 router.patch("/evaluation/update/:id", authJwt, HolyController.evaluateUpdateUser)
@@ -183,6 +191,15 @@ router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.single("
 router.get("/lessons/info/:url", authJwt, LessonController.info)
 router.patch("/lessons/complete/:url", authJwt, LessonController.completeLesson)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
+
+router.get("/actuality/list", authJwt, ActualityController.list)
+router.post("/actuality/add", authJwt, checkRole("admin"), upload.single('image'), ActualityController.add)
+router.get("/actuality/info/:id", authJwt, ActualityController.info)
+router.patch("/actuality/update/:id", authJwt, checkRole("admin"), upload.single('image'), ActualityController.update)
+router.delete("/actuality/delete/:id", authJwt, checkRole("admin"), ActualityController.delete)
+
+// Home route
+router.get("/home", HomeController.getHome)
 
 router.get("/collaborators/list", ContributorController.list)
 router.post("/collaborators/add", authJwt, checkRole("admin"), upload.single('image'), ContributorController.add)
@@ -211,6 +228,37 @@ router.post("/sio-form/add", UserController.sioFormContact)
 router.get("/recruit-video-maker/list", authJwt, checkRole("admin"), RecruitmentController.list)
 router.post("/recruit-video-maker/add", RecruitmentController.add)
 router.patch("/recruit-video-maker/update/:id", authJwt, checkRole("admin"), RecruitmentController.update)
+
+// Planet routes
+router.get("/planets/list", authJwt, PlanetController.list)
+router.post("/planets/add", authJwt, checkRole("admin"), upload.fields([{ name: 'modelName' }, { name: 'planetImage' }]), PlanetController.add)
+router.get("/planets/info/:url", authJwt, PlanetController.info)
+router.patch("/planets/update/:id", authJwt, checkRole("admin"), upload.fields([{ name: 'modelName' }, { name: 'planetImage' }]), PlanetController.update)
+router.delete("/planets/delete/:id", authJwt, checkRole("admin"), PlanetController.delete)
+
+// Polaris routes
+router.get("/polaris/list", authJwt, PolarisController.list)
+router.post("/polaris/add", authJwt, checkRole("admin"), upload.single('image'), PolarisController.add)
+router.get("/polaris/info/:url", authJwt, PolarisController.info)
+router.patch("/polaris/update/:id", authJwt, checkRole("admin"), upload.single('image'), PolarisController.update)
+router.delete("/polaris/delete/:id", authJwt, checkRole("admin"), PolarisController.delete)
+
+// User Planet routes
+router.get("/user/planets/finished", authJwt, UserPlanetController.getUserFinishedPlanets)
+router.get("/user/planets/:planetId/progress", authJwt, UserPlanetController.getUserPlanetProgress)
+
+// Notification routes
+router.post("/notifications/add", authJwt, NotificationController.add)
+router.delete("/notifications/delete/:id", authJwt, NotificationController.delete)
+router.delete("/notifications/delete-all", authJwt, NotificationController.deleteAll)
+router.get("/notifications/list/:userId?", authJwt, NotificationController.list)
+
+// DriveResource routes
+router.get("/resources/list", authJwt, DriveResourceController.list)
+router.post("/resources/add", authJwt, checkRole("admin"), DriveResourceController.add)
+router.get("/resources/info/:id", authJwt, DriveResourceController.info)
+router.patch("/resources/update/:id", authJwt, checkRole("admin"), DriveResourceController.update)
+router.delete("/resources/delete/:id", authJwt, checkRole("admin"), DriveResourceController.delete)
 
 
 export default router;

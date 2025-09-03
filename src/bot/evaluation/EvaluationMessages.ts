@@ -101,7 +101,6 @@ export const EvaluationButton = {
                        const studentDiscordId = student.discordId;
                        const studentTag = studentDiscordId ? `<@${studentDiscordId}>` : "Non renseigné";
                        const projectName = project.name;
-                       const xp = project.xp;
                        const evaluationText = project.evaluationText;
                        const uploadFiles = evaluation.uploadFiles || [];
                        const shareLinks = evaluation.shareLinks || [];
@@ -113,7 +112,6 @@ export const EvaluationButton = {
                                {name: "🧑‍🏫 Évaluateur", value: user.tag, inline: true},
                                {name: "👨‍🎓 Élève", value: studentTag, inline: true},
                                {name: "📘 Projet", value: projectName, inline: false},
-                               {name: "✨ XP Gagnée", value: `${xp} XP`, inline: true},
                                {
                                    name: "🖋️ Lien d'évaluation (Concerne le formateur)",
                                    value: `🔗 ${process.env.FRONTEND_URL}/${evaluation._id}`,

@@ -2,3 +2,6 @@
 node_modules
 .idea
 reverse_proxy
+dist/
+tmp/
+data.json
