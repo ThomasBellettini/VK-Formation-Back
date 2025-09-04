@@ -201,7 +201,7 @@ class AuthServices {
       await sendTemplateEmail(
         1,
         {
-          vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`,
+          vkStudioRedirectUrl: `https://intra.vkstudio.fr/reset-password/${newUser.resetCode}`,
         },
         newUser.email
       );
@@ -268,7 +268,7 @@ class AuthServices {
       await sendTemplateEmail(
         1,
         {
-          vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${newUser.resetCode}`,
+          vkStudioRedirectUrl: `https://intra.vkstudio.fr/reset-password/${newUser.resetCode}`,
         },
         newUser.email
       );
@@ -382,7 +382,7 @@ class AuthServices {
       await sendTemplateEmail(
         2,
         {
-          vkStudioRedirectUrl: `https://valekstudio.com/reset-password/${user.resetCode}`,
+          vkStudioRedirectUrl: `https://intra.vkstudio.fr/reset-password/${user.resetCode}`,
         },
         user.email
       );

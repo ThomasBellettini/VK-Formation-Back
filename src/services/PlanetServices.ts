@@ -76,7 +76,6 @@ class PlanetServices {
         const identifier = await StorageCdn.generateRandomFilename(
           modelFile.originalname
         );
-        console.log("HERE DUDE", identifier);
         let filePath = `model/${identifier}`;
         let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
           modelFile.path,
@@ -283,7 +282,7 @@ class PlanetServices {
         const identifier = await StorageCdn.generateRandomFilename(
           modelFile.originalname
         );
-        console.log("HERE DUDE 2", identifier);
+
         let filePath = `model/${identifier}`;
         let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
           modelFile.path,
@@ -347,7 +346,6 @@ class PlanetServices {
 
       const updateData: Partial<IPlanet> = {};
 
-      console.log("HERE DUDE FILES", modelName, planetImage);
       if (name !== undefined) updateData.name = name;
       if (description !== undefined) updateData.description = description;
       if (level !== undefined) updateData.level = level;
@@ -375,11 +373,6 @@ class PlanetServices {
         updateData.projects = new mongoose.Types.ObjectId(projectId);
       }
 
-      console.log(
-        "HERE DUDE UPDATE DATA",
-        updateData.courses,
-        updateData.projects
-      );
       // Update the planet
       const updatedPlanet = await Planet.findByIdAndUpdate(id, updateData, {
         new: true,
