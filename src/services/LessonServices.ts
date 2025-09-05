@@ -48,88 +48,163 @@ class LessonServices {
   async completeLesson(req: Request, url: string) {
     try {
       // @ts-ignore
-      let user = req.user as IUser;
-      let databaseUser = await User.findOne({ email: user.email });
-      let lesson = await Lesson.findOne({ url: url }).populate("planet").lean();
+      const authUser = req.user;
+      if (!authUser?.email) throw new Error("Unauthenticated.");
+
+      const [databaseUser, lesson] = await Promise.all([
+        User.findOne({email: authUser.email}),
+        Lesson.findOne({url}).populate("planet").lean(),
+      ]);
+
       if (!lesson) throw new Error("No lesson was founded !");
       if (!databaseUser) throw new Error("No user found !");
-      if (!databaseUser.lessonsFinished.includes(lesson._id)) {
-        databaseUser.lessonsFinished.push(lesson._id);
-        databaseUser.coin += 25;
-        await databaseUser.save();
-        // @ts-ignore
-        lesson.finished = true;
 
-        if (lesson.planet) {
-          const planet = lesson.planet as any;
-          console.log(JSON.stringify(planet))
-          const allPlanetLessons = await Lesson.find({
-            planet: planet._id,
-          }).lean();
-          const allPlanetLessonIds = allPlanetLessons.map((l) => {
-                console.log("PLANNETS :: " + l._id.toString())
-                return l._id.toString();
-              }
-          );
+      const lessonId = lesson._id as mongoose.Types.ObjectId;
 
-          const userFinishedLessonIds = databaseUser.lessonsFinished.map(
-            (lessonId) => {
-              console.log("user :: " + lessonId.toString());
-              return lessonId.toString();
-            }
-          );
+      const res = await User.updateOne(
+          {_id: databaseUser._id, lessonsFinished: {$ne: lessonId}},
+          {$addToSet: {lessonsFinished: lessonId}, $inc: {coin: 25}}
+      );
 
-          const allLessonsFinished = allPlanetLessonIds.every((lessonId) =>
-            userFinishedLessonIds.includes(lessonId)
-          );
+      // @ts-ignore
+      lesson.finished = true;
 
-          if (allLessonsFinished) {
-            const planetProject = await HolyProject.findOne({
-              planet: planet._id,
-            }).lean();
-
-            if (planetProject) {
-              const userProject = databaseUser.holyProjects.find(
-                (project) =>
-                  project.polaris === planet.polaris?.identifier ||
-                  (typeof project.project === "string"
-                    ? project.project === planetProject._id.toString()
-                    : project.project._id.toString() ===
-                      planetProject._id.toString())
-              );
-
-              if (userProject && userProject.resultPercent >= 80) {
-                if (!databaseUser.planetsFinished.includes(planet._id)) {
-                  databaseUser.planetsFinished.push(planet._id);
-                  await databaseUser.save();
-                }
-              }
-            }
-          }
-        }
+      if (res.matchedCount === 0) {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {lesson, planetJustCompleted: false},
+        };
       }
+
+      let planetDoc:
+          | (Awaited<ReturnType<typeof Planet.findById>> & { polaris?: any })
+          | null = null;
+
+      if (lesson.planet) {
+        planetDoc = await Planet.findById((lesson.planet as any)._id)
+            .populate("polaris")
+            .lean();
+      } else {
+        planetDoc = await Planet.findOne({courses: lessonId})
+            .populate("polaris")
+            .lean();
+      }
+
+      // @ts-ignore
+      if (!planetDoc?._id) {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {lesson, planetJustCompleted: false},
+        };
+      }
+
+      // @ts-ignore
+      const planetId = planetDoc._id;
+
+      let planetLessonIds: string[] = [];
+
+      const lessonsByPlanet = await Lesson.find({planet: planetId})
+          .select("_id")
+          .lean();
+
+      if (lessonsByPlanet.length > 0) {
+        planetLessonIds = lessonsByPlanet.map((l) => l._id.toString());
+      } else {
+        const planetFromCourses = await Planet.findById(planetId)
+            .select("courses")
+            .lean();
+        planetLessonIds = (planetFromCourses?.courses ?? []).map((id: any) =>
+            id.toString()
+        );
+      }
+
+      const freshUser = await User.findById(databaseUser._id)
+          .select("lessonsFinished holyProjects planetsFinished")
+          .lean();
+
+      const userFinishedLessonIds = (freshUser?.lessonsFinished ?? []).map(
+          (id: any) => id.toString()
+      );
+
+      const allLessonsFinished =
+          planetLessonIds.length > 0 &&
+          planetLessonIds.every((id) => userFinishedLessonIds.includes(id));
+
+      if (!allLessonsFinished) {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {lesson, planetJustCompleted: false},
+        };
+      }
+
+      const planetProject = await HolyProject.findOne({planet: planetId})
+          .select("_id")
+          .lean();
+
+      let projectOk = false;
+
+      if (planetProject?._id) {
+        const targetId = planetProject._id.toString();
+        projectOk =
+            projectOk ||
+            (freshUser?.holyProjects ?? []).some((p: any) => {
+              const projId =
+                  typeof p.project === "string"
+                      ? p.project
+                      : p.project?._id?.toString();
+              return projId === targetId && (p.resultPercent ?? 0) >= 80;
+            });
+      }
+
+      const polarisIdentifier = planetDoc?.polaris?.identifier
+          ? String(planetDoc.polaris.identifier)
+          : null;
+
+      if (!projectOk && polarisIdentifier) {
+        projectOk =
+            (freshUser?.holyProjects ?? []).some(
+                (p: any) => p.polaris === polarisIdentifier && (p.resultPercent ?? 0) >= 80
+            ) || false;
+      }
+
+      if (!projectOk) {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: {lesson, planetJustCompleted: false},
+        };
+      }
+
+      const addPlanetRes = await User.updateOne(
+          {_id: databaseUser._id, planetsFinished: {$ne: planetId}},
+          {$addToSet: {planetsFinished: planetId}}
+      );
+
+      const planetJustCompleted = addPlanetRes.modifiedCount > 0;
+
       return {
         success: true,
         statusCode: 201,
         errors: null,
-        data: {
-          lesson,
-        },
+        data: {lesson, planetJustCompleted},
       };
-    } catch (err) {
-      console.log(err);
+    } catch (err: any) {
+      console.error(err);
       return {
         success: false,
         statusCode: 500,
-        errors: err,
-        token: null,
-        data: {
-          message: err,
-        },
+        errors: err?.message ?? String(err),
+        data: {message: err?.message ?? String(err)},
       };
     }
   }
-
   async info(req: Request, url: string) {
     try {
       // @ts-ignore
