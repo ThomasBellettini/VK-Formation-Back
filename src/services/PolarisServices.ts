@@ -172,13 +172,19 @@ class PolarisServices {
 
       const planetsWithPermission = polaris.planets.map((planet: any) => {
         const secureLinkModel = StorageCdn.generateSecureLink(planet.modelName);
-        console.log("HERE DUDE MODEL", planet.name, planet.modelName);
-        console.log("HERE DUDE URL", secureLinkModel);
+
+        let hasPermission = userLevel >= planet.level;
+        if (user.permission) {
+          if (user.permission === "admin" || user.permission === "formateur") {
+            hasPermission = true;
+          }
+        }
+
         return {
           ...planet,
           modelName: secureLinkModel,
           planetImage: StorageCdn.generateSecureLink(planet.planetImage),
-          hasPermission: user.permission === 'admin' || 'formateur' ? true : userLevel >= planet.level,
+          hasPermission: hasPermission
         };
       });
 
