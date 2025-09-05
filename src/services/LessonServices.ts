@@ -62,17 +62,21 @@ class LessonServices {
 
         if (lesson.planet) {
           const planet = lesson.planet as any;
-
+          console.log(JSON.stringify(planet))
           const allPlanetLessons = await Lesson.find({
             planet: planet._id,
           }).lean();
-          const allPlanetLessonIds = allPlanetLessons.map((l) =>
-            l._id.toString()
+          const allPlanetLessonIds = allPlanetLessons.map((l) => {
+                console.log("PLANNETS :: " + l._id.toString())
+                return l._id.toString();
+              }
           );
 
           const userFinishedLessonIds = databaseUser.lessonsFinished.map(
-            (lessonId) =>
-              typeof lessonId === "string" ? lessonId : lessonId.toString()
+            (lessonId) => {
+              console.log("user :: " + lessonId.toString());
+              return lessonId.toString();
+            }
           );
 
           const allLessonsFinished = allPlanetLessonIds.every((lessonId) =>
