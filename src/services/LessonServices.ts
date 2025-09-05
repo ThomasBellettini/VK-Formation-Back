@@ -139,12 +139,6 @@ class LessonServices {
         lesson.finished = true;
       }
 
-      if (lesson.cdnVideoContent) {
-        lesson.cdnVideoContent = StorageCdn.generateSecureLink(
-          lesson.cdnVideoContent
-        );
-      }
-
       return {
         success: true,
         statusCode: 201,
