@@ -57,8 +57,10 @@ const authJwt = async (req: any, res: Response, next: NextFunction) => {
       res.status(403).send("Access Forbidden");
       return;
     }
-    dbUser.lastLogin = new Date();
-    dbUser = await dbUser.save();
+    await User.updateOne(
+        { _id: dbUser._id },
+        { $set: { lastLogin: new Date() } }
+    );
 
     const dbUserWithToken = dbUser.toObject();
     // @ts-ignore
