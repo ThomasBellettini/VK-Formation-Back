@@ -1,4 +1,4 @@
-import { IUser } from '../model/User.js';
+import User, { IUser } from '../model/User.js';
 import { IPolaris } from '../model/learning/Polaris.js';
 import { IPlanet } from '../model/learning/Planet.js';
 import Polaris from '../model/learning/Polaris.js';
@@ -29,55 +29,54 @@ function formatTime(seconds: number) {
  * @param polarisIdentifier L'identifiant du Polaris
  * @returns Le niveau de l'utilisateur pour ce Polaris (0 si aucune planète terminée)
  */
-async function getUserLevelForPolaris(user: IUser, polarisIdentifier: string): Promise<number> {
-    try {
-        const polaris = await Polaris.findOne({ identifier: polarisIdentifier })
-            .populate({
-                path: 'planets',
-                model: 'Planet',
-                select: '_id level name'
-            })
-            .lean();
+async function getUserLevelForPolaris(
+    user: IUser,
+    polarisIdentifier: string
+): Promise<number> {
+    const polaris = await Polaris.findOne({ identifier: polarisIdentifier })
+        .populate({
+            path: "planets",
+            model: "Planet",
+            select: "_id level name",
+        })
+        .lean();
 
-        if (!polaris) {
-            throw new Error(`Polaris avec l'identifiant ${polarisIdentifier} non trouvé`);
-        }
+    if (!polaris) {
+        throw new Error(`Polaris avec l'identifiant ${polarisIdentifier} non trouvé`);
+    }
 
-        const planetsByLevel = new Map<number, IPlanet[]>();
-        
-        for (const planet of polaris.planets as IPlanet[]) {
-            const level = planet.level;
-            if (!planetsByLevel.has(level)) {
-                planetsByLevel.set(level, []);
-            }
-            planetsByLevel.get(level)!.push(planet);
-        }
+    // Map level -> planets[]
+    const planetsByLevel = new Map<number, IPlanet[]>();
+    for (const planet of (polaris.planets as IPlanet[]) || []) {
+        const lvl = planet.level;
+        if (!planetsByLevel.has(lvl)) planetsByLevel.set(lvl, []);
+        planetsByLevel.get(lvl)!.push(planet);
+    }
 
-        const userFinishedPlanetIds = user.planetsFinished.map(planet => 
-            typeof planet === 'string' ? planet : planet._id.toString()
+    // Normaliser l’ID des planètes finies côté user
+    const userFinishedPlanetIds = (user.planetsFinished || []).map((p: any) =>
+        typeof p === "string" ? p : (p?._id ?? p).toString()
+    );
+
+    let maxLevel = 1; // mets 0 si tu préfères
+    const sortedLevels = Array.from(planetsByLevel.keys()).sort((a, b) => a - b);
+
+    for (const level of sortedLevels) {
+        const planetsInLevel = planetsByLevel.get(level)!;
+        if (planetsInLevel.length === 0) continue;
+
+        const allPlanetsInLevelFinished = planetsInLevel.every((planet) =>
+            userFinishedPlanetIds.includes(planet._id.toString())
         );
 
-        let maxLevel = 1;
-        const sortedLevels = Array.from(planetsByLevel.keys()).sort((a, b) => a - b);
-
-        for (const level of sortedLevels) {
-            const planetsInLevel = planetsByLevel.get(level)!;
-            const allPlanetsInLevelFinished = planetsInLevel.every(planet => 
-                userFinishedPlanetIds.includes(planet._id.toString())
-            );
-
-            if (allPlanetsInLevelFinished) {
-                maxLevel = level;
-            } else {
-                break;
-            }
+        if (allPlanetsInLevelFinished) {
+            maxLevel = level + 1;
+        } else {
+            break;
         }
-
-        return maxLevel;
-    } catch (error) {
-        console.error('Erreur lors du calcul du niveau utilisateur:', error);
-        throw error;
     }
+
+    return maxLevel;
 }
 
 export {dateFormat, formatTime, getUserLevelForPolaris};
