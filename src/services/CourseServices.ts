@@ -125,17 +125,32 @@ class CourseServices {
     try {
       // @ts-ignore
       let user = req.user as IUser;
-      let courseBundle = await CourseBundle.findOne({ url: url })
-          .populate({
-            path: "folders",
-            model: "Folder",
-            populate: {
-              path: "lessons",
-              model: "Lesson",
-              options: { sort: { createdAt: -1 } }
-            }
-          })
-          .lean();
+      let courseBundle;
+      if (url === "rediffusion") {
+        courseBundle = await CourseBundle.findOne({ url: url })
+            .populate({
+              path: "folders",
+              model: "Folder",
+              populate: {
+                path: "lessons",
+                model: "Lesson",
+                options: { sort: { createdAt: -1 } }
+              }
+            })
+            .lean();
+      } else {
+        courseBundle = await CourseBundle.findOne({ url: url })
+            .populate({
+              path: "folders",
+              model: "Folder",
+              populate: {
+                path: "lessons",
+                model: "Lesson"
+              }
+            })
+            .lean();
+      }
+
 
       if (!courseBundle) throw new Error("No Course found with this ID!");
       if (!courseBundle.folders) courseBundle.folders = [];

@@ -871,125 +871,101 @@ class HolyServices {
   async evaluateUpdateUser(req: Request, id: string) {
     try {
       // @ts-ignore
-      let requestUser = req.user as IUser;
-      if (
-        req.body.percent === null ||
-        req.body.percent === undefined ||
-        req.body.percent < 0
-      ) {
-        throw new Error("Percent is mandatory and must be greater than 0 !");
+      const requestUser = req.user as IUser;
+
+      // 0) Validation percent (null-safe + cast)
+      const percentRaw = req.body?.percent;
+      const percent = typeof percentRaw === "number" ? percentRaw : Number(percentRaw);
+      if (!Number.isFinite(percent) || percent < 0) {
+        throw new Error("Percent is mandatory and must be greater than or equal to 0 !");
       }
-      let evaluation = (await Evaluation.findById(id)
-        .populate("evaluator")
-        .lean()) as IEvaluation;
-      if (!evaluation) {
-        throw new Error("No Evaluation found with this id !");
-      }
-      let evaluator = evaluation.evaluator as IUser;
-      if (!evaluator) {
-        throw new Error("No evaluator found !");
-      }
+
+      // 1) Eval + sécurités
+      const evaluation = await Evaluation.findById(id).populate("evaluator").lean<IEvaluation>();
+      if (!evaluation) throw new Error("No Evaluation found with this id !");
+      const evaluator = evaluation.evaluator as unknown as IUser;
+      if (!evaluator) throw new Error("No evaluator found !");
       if (evaluator._id.toString() !== requestUser._id.toString()) {
         throw new Error("You are not the evaluator of this evaluation !");
       }
-      let user = (await User.findById(evaluation.user).populate(
-        "holyProjects.project"
-      )) as IUser;
 
-      if (!user) {
-        throw new Error("No evaluable user found !");
-      }
+      // 2) User visé
+      const user = await User.findById(evaluation.user)
+          .select("_id lessonsFinished holyProjects planetsFinished discordId coin")
+          .lean<IUser>();
+      if (!user) throw new Error("No evaluable user found !");
       if (user._id.toString() === requestUser._id.toString()) {
         throw new Error("You can't evaluate yourself !");
       }
-      let project = (await HolyProject.findById(
-        evaluation.project
-      ).lean()) as IHolyProject;
-      if (!project) {
-        throw new Error("No project found !");
-      }
 
+      // 3) Projet (source de vérité pour la planète)
+      const project = await HolyProject.findById(evaluation.project)
+          .select("_id planet cost evaluationType")
+          .populate("planet")
+          .lean<IHolyProject>();
+      if (!project) throw new Error("No project found !");
+
+      // 4) Nettoyage fichiers (UPLOAD)
       if (project.evaluationType === EvaluationType.UPLOAD) {
-        for (let file of evaluation.uploadFiles) {
-          let path = file.replace(`${CST.URL.REDIRECT}`, "");
-
-          let resource = (await Resource.findOne({
-            pathFile: `evaluation/${path}`,
-          })) as IResource;
+        for (const file of evaluation.uploadFiles ?? []) {
+          const path = file.replace(`${CST.URL.REDIRECT}`, "");
+          const resource = await Resource.findOne({ pathFile: `evaluation/${path}` }) as IResource | null;
           if (resource) {
             await StorageCdn.deleteEvaluationFile(resource.pathFile);
             await Resource.findByIdAndDelete(resource._id);
           }
         }
       }
-      const planet = await Planet.findById(project.planet)
-        .populate("polaris")
-        .lean();
+      // @ts-ignore
+      const polaris = Polaris.findById(project.planet.polaris).lean() as IPolaris;
+      if (!polaris) throw new Error("No polaris found for this project !");
 
-      const polarisIdentifier =
-        planet?.polaris &&
-        typeof planet.polaris === "object" &&
-        "identifier" in planet.polaris
-          ? (planet.polaris as any).identifier
-          : "";
+      await User.updateOne(
+          { _id: user._id },
+          {
+            $push: {
+              holyProjects: {
+                project: project._id,
+                resultPercent: percent,
+                evaluator: evaluator._id,
+                polaris: polaris.identifier,
+              },
+            },
+          }
+      );
 
-      user.holyProjects.push({
-        project: project,
-        resultPercent: req.body.percent,
-        evaluator: evaluator._id,
-        polaris: polarisIdentifier,
-      });
+      if (percent >= 80 && project.planet) {
+        const planetId = project.planet as unknown as mongoose.Types.ObjectId;
 
-      if (req.body.percent >= 80 && planet) {
-        const allPlanetLessons = await Lesson.find({
-          planet: planet._id,
-        }).lean();
-        const allPlanetLessonIds = allPlanetLessons.map((l: any) =>
-          l._id.toString()
-        );
+        let planetDoc = await Planet.findById(planetId).select("_id courses").lean<{ _id: any; courses: mongoose.Types.ObjectId[] }>();
+        let planetLessonIds: string[] = (planetDoc?.courses ?? []).map((id: any) => id.toString());
 
-        const userFinishedLessonIds = user.lessonsFinished.map(
-          (lessonId: any) =>
-            typeof lessonId === "string" ? lessonId : lessonId.toString()
-        );
+        if (planetLessonIds.length === 0) {
+          const byPlanet = await Lesson.find({ planet: planetId }).select("_id").lean();
+          planetLessonIds = byPlanet.map(l => l._id.toString());
+        }
 
-        const allLessonsFinished = allPlanetLessonIds.every(
-          (lessonId: string) => userFinishedLessonIds.includes(lessonId)
-        );
+        if (planetLessonIds.length > 0) {
+          const userFinishedLessonIds = (user.lessonsFinished ?? []).map((id: any) => id.toString());
+          const allLessonsFinished = planetLessonIds.every(id => userFinishedLessonIds.includes(id));
 
-        if (allLessonsFinished) {
-          if (!user.planetsFinished.includes(planet._id)) {
-            user.planetsFinished.push(planet._id);
+          if (allLessonsFinished) {
+            await User.updateOne(
+                { _id: user._id, planetsFinished: { $ne: planetId } },
+                { $addToSet: { planetsFinished: planetId } }
+            );
           }
         }
       }
 
-      let level = 0;
-      if (polarisIdentifier) {
-        level = await getUserLevelForPolaris(user, polarisIdentifier);
-      }
-
       await axios.delete(
-        `${CST.DISCORD.API_URL}/evaluation/finish/${
-          evaluation.channelId && evaluation.channelId !== ""
-            ? evaluation.channelId
-            : 0
-        }`,
-        {
-          data: {
-            userId: user.discordId,
-            level: level,
-          },
-        }
+          `${CST.DISCORD.API_URL}/evaluation/finish/${evaluation.channelId && evaluation.channelId !== "" ? evaluation.channelId : 0}`,
+          { data: { userId: user.discordId, level: 0 } }
       );
 
       await Evaluation.findByIdAndDelete(id);
-
-      let cost = (project.cost || 1) + 200;
-      await user.save();
-      await User.findByIdAndUpdate(requestUser._id, {
-        coin: requestUser.coin + cost,
-      });
+      const cost = (project.cost || 1) + 200;
+      await User.findByIdAndUpdate(requestUser._id, { $inc: { coin: cost } });
 
       return {
         success: true,
@@ -1007,9 +983,7 @@ class HolyServices {
         statusCode: 500,
         errors: err,
         token: null,
-        data: {
-          message: err,
-        },
+        data: { message: err },
       };
     }
   }

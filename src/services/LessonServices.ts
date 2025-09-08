@@ -45,50 +45,63 @@ class LessonServices {
     }
   }
 
+  hasProjectAtLeast80 (p: any) {
+    const raw = p?.resultPercent;
+    const pct = typeof raw === "number" ? raw : Number(raw ?? 0);
+    return Number.isFinite(pct) && pct >= 80;
+  }
+
   async completeLesson(req: Request, url: string) {
     try {
       // @ts-ignore
       const authUser = req.user;
       if (!authUser?.email) throw new Error("Unauthenticated.");
 
+      // 1) User + Lesson (+ planetId si présent)
       const [databaseUser, lesson] = await Promise.all([
-        User.findOne({email: authUser.email}),
-        Lesson.findOne({url}).populate("planet").lean(),
+        User.findOne({ email: authUser.email }).select("_id").lean(),
+        Lesson.findOne({ url }).populate({ path: "planet", select: "_id" }).lean(),
       ]);
 
-      if (!lesson) throw new Error("No lesson was founded !");
       if (!databaseUser) throw new Error("No user found !");
+      if (!lesson) throw new Error("No lesson was founded !");
 
       const lessonId = lesson._id as mongoose.Types.ObjectId;
 
-      const res = await User.updateOne(
-          {_id: databaseUser._id, lessonsFinished: {$ne: lessonId}},
-          {$addToSet: {lessonsFinished: lessonId}, $inc: {coin: 25}}
+      // 2) Marquer la leçon finie (idempotent) + coins
+      const addLessonRes = await User.updateOne(
+          { _id: databaseUser._id, lessonsFinished: { $ne: lessonId } },
+          { $addToSet: { lessonsFinished: lessonId }, $inc: { coin: 25 } }
       );
 
-      // @ts-ignore
-      lesson.finished = true;
+      // @ts-ignore pour la réponse
+      (lesson as any).finished = true;
 
-      if (res.matchedCount === 0) {
+      // Si c'était déjà fini -> on sort tôt
+      if (addLessonRes.matchedCount === 0) {
         return {
           success: true,
           statusCode: 201,
           errors: null,
-          data: {lesson, planetJustCompleted: false},
+          data: { lesson, planetJustCompleted: false },
         };
       }
 
+      // 3) Identifier la planète + récupérer courses & projects d’un coup
       let planetDoc:
-          | (Awaited<ReturnType<typeof Planet.findById>> & { polaris?: any })
+          | (Awaited<ReturnType<typeof Planet.findById>> & { courses?: any[]; projects?: any })
           | null = null;
 
-      if (lesson.planet) {
-        planetDoc = await Planet.findById((lesson.planet as any)._id)
-            .populate("polaris")
+      const planetIdFromLesson =
+          (lesson as any)?.planet?._id ?? null;
+
+      if (planetIdFromLesson) {
+        planetDoc = await Planet.findById(planetIdFromLesson)
+            .select("_id courses projects")
             .lean();
       } else {
-        planetDoc = await Planet.findOne({courses: lessonId})
-            .populate("polaris")
+        planetDoc = await Planet.findOne({ courses: lessonId })
+            .select("_id courses projects")
             .lean();
       }
 
@@ -98,93 +111,72 @@ class LessonServices {
           success: true,
           statusCode: 201,
           errors: null,
-          data: {lesson, planetJustCompleted: false},
+          data: { lesson, planetJustCompleted: false },
         };
       }
 
       // @ts-ignore
-      const planetId = planetDoc._id;
+      const planetId = planetDoc._id as mongoose.Types.ObjectId;
+      let planetLessonIds = (planetDoc.courses ?? []) as mongoose.Types.ObjectId[];
 
-      let planetLessonIds: string[] = [];
-
-      const lessonsByPlanet = await Lesson.find({planet: planetId})
-          .select("_id")
-          .lean();
-
-      if (lessonsByPlanet.length > 0) {
-        planetLessonIds = lessonsByPlanet.map((l) => l._id.toString());
-      } else {
-        const planetFromCourses = await Planet.findById(planetId)
-            .select("courses")
-            .lean();
-        planetLessonIds = (planetFromCourses?.courses ?? []).map((id: any) =>
-            id.toString()
-        );
+      if (!planetLessonIds.length) {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: { lesson, planetJustCompleted: false },
+        };
       }
 
       const freshUser = await User.findById(databaseUser._id)
           .select("lessonsFinished holyProjects planetsFinished")
           .lean();
 
-      const userFinishedLessonIds = (freshUser?.lessonsFinished ?? []).map(
-          (id: any) => id.toString()
+      const finishedSet = new Set(
+          (freshUser?.lessonsFinished ?? []).map((id: any) => id.toString())
       );
 
       const allLessonsFinished =
           planetLessonIds.length > 0 &&
-          planetLessonIds.every((id) => userFinishedLessonIds.includes(id));
+          planetLessonIds.every((id: any) => finishedSet.has(id.toString()));
 
       if (!allLessonsFinished) {
         return {
           success: true,
           statusCode: 201,
           errors: null,
-          data: {lesson, planetJustCompleted: false},
+          data: { lesson, planetJustCompleted: false },
         };
       }
 
-      const planetProject = await HolyProject.findOne({planet: planetId})
-          .select("_id")
-          .lean();
-
-      let projectOk = false;
-
-      if (planetProject?._id) {
-        const targetId = planetProject._id.toString();
-        projectOk =
-            projectOk ||
-            (freshUser?.holyProjects ?? []).some((p: any) => {
-              const projId =
-                  typeof p.project === "string"
-                      ? p.project
-                      : p.project?._id?.toString();
-              return projId === targetId && (p.resultPercent ?? 0) >= 80;
-            });
+      const projectId = planetDoc.projects as mongoose.Types.ObjectId | undefined;
+      if (!projectId) {
+        return {
+          success: true,
+          statusCode: 201,
+          errors: null,
+          data: { lesson, planetJustCompleted: false },
+        };
       }
 
-      const polarisIdentifier = planetDoc?.polaris?.identifier
-          ? String(planetDoc.polaris.identifier)
-          : null;
-
-      if (!projectOk && polarisIdentifier) {
-        projectOk =
-            (freshUser?.holyProjects ?? []).some(
-                (p: any) => p.polaris === polarisIdentifier && (p.resultPercent ?? 0) >= 80
-            ) || false;
-      }
+      const projectOk = (freshUser?.holyProjects ?? []).some((p: any) => {
+        const projId =
+            typeof p.project === "string" ? p.project : p.project?._id?.toString();
+        return projId === projectId.toString() && this.hasProjectAtLeast80(p);
+      });
 
       if (!projectOk) {
         return {
           success: true,
           statusCode: 201,
           errors: null,
-          data: {lesson, planetJustCompleted: false},
+          data: { lesson, planetJustCompleted: false },
         };
       }
 
       const addPlanetRes = await User.updateOne(
-          {_id: databaseUser._id, planetsFinished: {$ne: planetId}},
-          {$addToSet: {planetsFinished: planetId}}
+          { _id: databaseUser._id, planetsFinished: { $ne: planetId } },
+          { $addToSet: { planetsFinished: planetId } }
       );
 
       const planetJustCompleted = addPlanetRes.modifiedCount > 0;
@@ -193,7 +185,7 @@ class LessonServices {
         success: true,
         statusCode: 201,
         errors: null,
-        data: {lesson, planetJustCompleted},
+        data: { lesson, planetJustCompleted },
       };
     } catch (err: any) {
       console.error(err);
@@ -201,10 +193,11 @@ class LessonServices {
         success: false,
         statusCode: 500,
         errors: err?.message ?? String(err),
-        data: {message: err?.message ?? String(err)},
+        data: { message: err?.message ?? String(err) },
       };
     }
   }
+
   async info(req: Request, url: string) {
     try {
       // @ts-ignore
