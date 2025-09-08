@@ -48,6 +48,7 @@ class CourseServices {
             populate: {
               path: "lessons",
               model: "Lesson",
+              options: { sort: { createdAt: -1 } }
             }
           })
           .lean();
