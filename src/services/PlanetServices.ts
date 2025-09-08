@@ -161,7 +161,8 @@ class PlanetServices {
       );
 
       // @ts-ignore
-      await HolyProject.updateOne(projectId,
+      await HolyProject.updateMany(
+          { _id: { $in: projectId } },
           { $set: { planet: planet._id } }
       );
 
@@ -305,7 +306,8 @@ class PlanetServices {
             ? parsedProject[0]
             : parsedProject;
           // @ts-ignore
-          await HolyProject.updateOne(projectId,
+          await HolyProject.updateMany(
+              { _id: { $in: projectId } },
               { $set: { planet: planet._id } }
           );
         } catch (error) {
