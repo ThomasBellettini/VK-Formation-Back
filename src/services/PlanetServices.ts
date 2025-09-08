@@ -155,45 +155,15 @@ class PlanetServices {
 
       await planet.save();
 
-      if (lessonIds.length > 0) {
-        try {
-          const existingLessons = await Lesson.find({
-            _id: { $in: lessonIds },
-          });
-          if (existingLessons.length !== lessonIds.length) {
-            console.warn("Some lesson IDs were not found:", lessonIds);
-          }
+      await Planet.updateMany(
+          { _id: { $in: lessonIds } },
+          { $set: { planet: planet._id } }
+      );
 
-          await Lesson.updateMany(
-            { _id: { $in: lessonIds } },
-            { planet: planet._id }
-          );
-
-          console.log(
-            `Updated ${existingLessons.length} lessons to reference planet ${planet._id}`
-          );
-        } catch (error) {
-          console.error("Error updating lessons:", error);
-        }
-      }
-
-      if (projectId) {
-        try {
-          const existingProject = await HolyProject.findById(projectId);
-          if (!existingProject) {
-            console.warn("Project ID not found:", projectId);
-          } else {
-            await HolyProject.findByIdAndUpdate(projectId, {
-              planet: planet._id,
-            });
-            console.log(
-              `Updated project ${projectId} to reference planet ${planet._id}`
-            );
-          }
-        } catch (error) {
-          console.error("Error updating project:", error);
-        }
-      }
+      await HolyProject.updateMany(
+          { _id: { $in: projectId } },
+          { $set: { planet: planet._id } }
+      );
 
       const populatedPlanet = await Planet.findById(planet._id)
         .populate("courses", "name description url")
@@ -258,7 +228,6 @@ class PlanetServices {
         };
       }
 
-      // Check if URL is being changed and if it conflicts with another planet
       if (url && url !== planet.url) {
         const existingPlanet = await Planet.findOne({ url, _id: { $ne: id } });
         if (existingPlanet) {
@@ -275,9 +244,6 @@ class PlanetServices {
       let modelName = "";
       let planetImage = "";
 
-      // Sûrement ici si on a encore des soucis de fichiers qui n'existent plus alors qu'ils ont été uploadés
-      // Hypothèse : lors d'un update sans modification de fichier, modelFile/planetFile n'est pas null, on rentre dans la condition et on génère un nouveau lien sauf que :
-      // 1. Le fichier n'existe pas ; 2. L'url généré du CDN n'est pas mise à jour lors du planet update
       if (modelFile) {
         const identifier = await StorageCdn.generateRandomFilename(
           modelFile.originalname
@@ -373,7 +339,6 @@ class PlanetServices {
         updateData.projects = new mongoose.Types.ObjectId(projectId);
       }
 
-      // Update the planet
       const updatedPlanet = await Planet.findByIdAndUpdate(id, updateData, {
         new: true,
       })
@@ -381,54 +346,15 @@ class PlanetServices {
         .populate("projects", "name description url")
         .lean();
 
-      // Update lessons to reference this planet
-      if (lessonIds.length > 0) {
-        try {
-          // Validate that all lesson IDs exist
-          const existingLessons = await Lesson.find({
-            _id: { $in: lessonIds },
-          });
-          if (existingLessons.length !== lessonIds.length) {
-            console.warn("Some lesson IDs were not found:", lessonIds);
-          }
+      await Planet.updateMany(
+          { _id: { $in: lessonIds } },
+          { $set: { planet: planet._id } }
+      );
 
-          // Update lessons to reference this planet
-          await Lesson.updateMany({ _id: { $in: lessonIds } }, { planet: id });
-
-          console.log(
-            `Updated ${existingLessons.length} lessons to reference planet ${id}`
-          );
-        } catch (error) {
-          console.error("Error updating lessons:", error);
-          return {
-            statusCode: 500,
-            message: "Error updating lessons",
-          };
-        }
-      }
-
-      // Update HolyProject to reference this planet
-      if (projectId) {
-        try {
-          // Validate that the project ID exists
-          const existingProject = await HolyProject.findById(projectId);
-          if (!existingProject) {
-            console.warn("Project ID not found:", projectId);
-          } else {
-            // Update project to reference this planet
-            await HolyProject.findByIdAndUpdate(projectId, { planet: id });
-            console.log(
-              `Updated project ${projectId} to reference planet ${id}`
-            );
-          }
-        } catch (error) {
-          console.error("Error updating project:", error);
-          return {
-            statusCode: 500,
-            message: "Error updating project",
-          };
-        }
-      }
+      await HolyProject.updateMany(
+          { _id: { $in: projectId } },
+          { $set: { planet: planet._id } }
+      );
 
       return {
         statusCode: 200,
