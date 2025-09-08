@@ -155,13 +155,13 @@ class PlanetServices {
 
       await planet.save();
 
-      await Planet.updateMany(
+      await Lesson.updateMany(
           { _id: { $in: lessonIds } },
           { $set: { planet: planet._id } }
       );
 
-      await HolyProject.updateMany(
-          { _id: { $in: projectId } },
+      // @ts-ignore
+      await HolyProject.updateOne(projectId,
           { $set: { planet: planet._id } }
       );
 
@@ -283,6 +283,10 @@ class PlanetServices {
           if (!Array.isArray(lessonIds)) {
             lessonIds = [lessonIds];
           }
+          await Lesson.updateMany(
+              { _id: { $in: lessonIds } },
+              { $set: { planet: planet._id } }
+          );
         } catch (error) {
           console.error("Error parsing lessons:", error);
           return {
@@ -300,6 +304,10 @@ class PlanetServices {
           projectId = Array.isArray(parsedProject)
             ? parsedProject[0]
             : parsedProject;
+          // @ts-ignore
+          await HolyProject.updateOne(projectId,
+              { $set: { planet: planet._id } }
+          );
         } catch (error) {
           console.error("Error parsing project:", error);
           return {
@@ -345,16 +353,6 @@ class PlanetServices {
         .populate("courses", "name description url")
         .populate("projects", "name description url")
         .lean();
-
-      await Planet.updateMany(
-          { _id: { $in: lessonIds } },
-          { $set: { planet: planet._id } }
-      );
-
-      await HolyProject.updateMany(
-          { _id: { $in: projectId } },
-          { $set: { planet: planet._id } }
-      );
 
       return {
         statusCode: 200,
