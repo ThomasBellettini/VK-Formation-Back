@@ -5,6 +5,7 @@ import { Request } from "express";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 import CST from "../server/constants.js";
+import User from "../model/User.js";
 
 type FilesMap = Record<string, Express.Multer.File[]>;
 
@@ -187,32 +188,92 @@ class PlanetServices {
 
   async info(req: Request, url: string): Promise<IPlanetResponse> {
     try {
+      // @ts-ignore
+      const authUser = req.user;
+      if (!authUser?.email) {
+        return { statusCode: 401, message: "Unauthenticated." };
+      }
+
       const planet = await Planet.findOne({ url })
-        .populate("courses", "title description url")
-        .populate("projects", "name description url")
-        .lean();
+          .select("_id name description modelName planetImage level courses projects")
+          .populate({ path: "courses", select: "title description url" })
+          .populate({ path: "projects", select: "name description url" })
+          .lean();
 
       if (!planet) {
-        return {
-          statusCode: 404,
-          message: "Planet not found",
+        return { statusCode: 404, message: "Planet not found" };
+      }
+
+      const user = await User.findOne({ email: authUser.email })
+          .select("lessonsFinished holyProjects")
+          .lean();
+      if (!user) {
+        return { statusCode: 404, message: "User not found" };
+      }
+
+      const finishedLessonIds = new Set(
+          (user.lessonsFinished ?? []).map((id: any) =>
+              typeof id === "string" ? id : id?.toString?.()
+          )
+      );
+
+      const courses = (planet.courses as any[] | undefined)?.map((l) => ({
+        _id: l._id,
+        title: l.title,
+        description: l.description,
+        url: l.url,
+        isDone: finishedLessonIds.has(l._id.toString()),
+      })) ?? [];
+
+      let project: any = planet.projects || null;
+      let successPercent: number | undefined;
+
+      if (project?._id) {
+        const projectIdStr = project._id.toString();
+
+        const best = (user.holyProjects ?? [])
+            .filter((p: any) => {
+              const pid =
+                  typeof p.project === "string"
+                      ? p.project
+                      : p.project?._id?.toString();
+              return pid === projectIdStr;
+            })
+            .map((p: any) => {
+              const raw = p?.resultPercent;
+              const val = typeof raw === "number" ? raw : Number(raw ?? 0);
+              return Number.isFinite(val) ? val : 0;
+            })
+            .reduce((a: number, b: number) => Math.max(a, b), 0);
+
+        if (best >= 80) successPercent = best;
+
+        project = {
+          _id: project._id,
+          name: project.name,
+          description: project.description,
+          url: project.url,
+          ...(successPercent !== undefined ? { percent: successPercent } : {}),
         };
       }
 
-      planet.modelName = StorageCdn.generateSecureLink(planet.modelName);
-      planet.planetImage = StorageCdn.generateSecureLink(planet.planetImage);
+      const modelName = StorageCdn.generateSecureLink(planet.modelName);
+      const planetImage = StorageCdn.generateSecureLink(planet.planetImage);
 
       return {
         statusCode: 200,
         message: "Planet retrieved successfully",
-        data: planet,
+        data: {
+          ...planet,
+          modelName,
+          planetImage,
+          courses,
+          projects: project,
+        },
       };
     } catch (error) {
       console.error("Error in info planet:", error);
-      return {
-        statusCode: 500,
-        message: "Internal server error",
-      };
+      return { statusCode: 500, message: "Internal server error" };
     }
   }
 
