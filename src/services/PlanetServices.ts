@@ -222,7 +222,7 @@ class PlanetServices {
         title: l.title,
         description: l.description,
         url: l.url,
-        isDone: finishedLessonIds.has(l._id.toString()),
+        finished: finishedLessonIds.has(l._id.toString()),
       })) ?? [];
 
       let project: any = planet.projects || null;
