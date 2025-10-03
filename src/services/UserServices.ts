@@ -31,16 +31,19 @@ class UserServices {
       let page = Number(req.query.page) || 1;
       let userDb: IUser[] = [];
       let search = req.query.search;
+      let field = req.query.field as string;
       let filter: any = {
-        email: { $ne: "antoane.gasser@gmail.com" },
+        $and: [{ email: { $ne: "antoane.gasser@gmail.com" } }],
       };
-      let field = req.query.field;
 
       if (search && field) {
-        // @ts-ignore
-        filter[field] = { $regex: search, $options: "i" };
+        filter.$and.push({
+          [field]: { $regex: search, $options: "i" },
+        });
       } else if (search) {
-        filter.email = { ...filter.email, $regex: search, $options: "i" };
+        filter.$and.push({
+          email: { $regex: search, $options: "i" },
+        });
       }
 
       userDb = await User.find(filter)
