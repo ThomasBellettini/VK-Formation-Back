@@ -20,6 +20,8 @@ class StorageCdn {
 
     private readonly storageZoneName: string;
     private readonly accessKey: string;
+    private readonly accessKeyStream: string;
+    private readonly libsID: string;
     private readonly ftpPassword: string;
     private readonly cdnUrl: string;
     private readonly securityKey: string | undefined;
@@ -28,9 +30,12 @@ class StorageCdn {
     constructor() {
         this.storageZoneName = CST.STORAGE.BUNNY_STORAGE_NAME!;
         this.accessKey = CST.STORAGE.BUNNY_ACCESS_KEY!;
+        this.accessKeyStream = CST.STORAGE.BUNNY_STREAM_ACCESS_KEY!;
         this.cdnUrl = CST.STORAGE.BUNNY_CDN_URL!;
         this.ftpPassword = CST.STORAGE.BUNNY_FTP_PASSWORD!;
         this.securityKey = CST.STORAGE.BUNNY_SECURITY_KEY;
+        this.libsID = CST.STORAGE.BUNNY_LIBS_ID!;
+
         // @ts-ignore
         this.tokenExpiration = parseInt(CST.STORAGE.TOKEN_EXPIRATION);
         if (!this.tokenExpiration || !this.securityKey || !this.storageZoneName || !this.accessKey || !this.cdnUrl) {
@@ -87,6 +92,60 @@ class StorageCdn {
             });
 
             return {bunnyFilePath: destinationPath, duration: duration};
+        } catch (error: Error | any) {
+            console.error(`Erreur upload BunnyCDN:`, error.response?.data || error.message);
+            throw new Error("Upload vers BunnyCDN échoué");
+        }
+    }
+
+    /**
+     * Upload de fichier sur BunnyCDN
+     * @param path path du fichier
+     * @param originalName Nom original du fichier
+     */
+    async uploadVideoFile(path: string, originalName: string): Promise<IStreamResponse> {
+        try {
+            let videoIDResponse = await axios.post(`https://video.bunnycdn.com/library/${this.libsID}/videos`, {
+                title: originalName
+            }, {
+                headers: {
+                    AccessKey: this.accessKeyStream,
+                    'Content-Type': 'application/json',
+                },
+            })
+            let videoGuid = null;
+            if (videoIDResponse && videoIDResponse.data && videoIDResponse.data.guid) {
+                videoGuid = videoIDResponse.data.guid;
+            }
+            if (!videoGuid) {
+                throw new Error("Erreur lors de la création de la vidéo");
+            }
+            let duration: number = await new Promise<number>((resolve, reject) => {
+                ffmpeg.ffprobe(path, (err: any, metadata: FfprobeData) => {
+                    if (err) {
+                        console.error(err);
+                        resolve(0);
+                    } else {
+                        // @ts-ignore
+                        resolve(metadata.format.duration);
+                    }
+                });
+            });
+            const fileBuffer = fs.readFileSync(path);
+            await axios.put(`https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`, fileBuffer, {
+                headers: {
+                    AccessKey: this.accessKeyStream,
+                    'Content-Type': 'application/octet-stream',
+                },
+            });
+            await Resource.create({
+                pathFile: videoGuid,
+                video: true,
+                duration,
+                originalName,
+            });
+
+            return {bunnyFilePath: videoGuid, duration: duration};
         } catch (error: Error | any) {
             console.error(`Erreur upload BunnyCDN:`, error.response?.data || error.message);
             throw new Error("Upload vers BunnyCDN échoué");

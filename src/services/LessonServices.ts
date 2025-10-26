@@ -7,6 +7,7 @@ import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
 import StorageCdn from "../utils/StorageCdn.js";
 import Planet from "../model/learning/Planet.js";
 import HolyProject from "../model/learning/HolyProject.js";
+import CST from '../server/constants.js';
 
 class LessonServices {
   constructor() {
@@ -210,6 +211,7 @@ class LessonServices {
         // @ts-ignore
         lesson.finished = true;
       }
+      lesson.cdnVideoContent = `https://iframe.mediadelivery.net/embed/${CST.STORAGE.BUNNY_LIBS_ID}/${lesson.cdnVideoContent}`;
 
       return {
         success: true,
@@ -269,15 +271,9 @@ class LessonServices {
         throw new Error("Missing mandatory fields description, url, title");
       }
       if (req.file) {
-        const identifier = await StorageCdn.generateRandomFilename(
-          req.file.originalname
-        );
-        let filePath = `upload/${identifier}`;
-        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
+        let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
           req.file.path,
-          filePath,
-          req.file.originalname,
-          true
+          req.file.originalname
         );
         req.body.cdnVideoContent = bunnyFilePath;
         req.body.duration = duration;
@@ -313,15 +309,9 @@ class LessonServices {
       let lesson = await Lesson.findOne({ _id: id });
       if (!lesson) throw new Error("No Lesson has been found with this ID !");
       if (req.file) {
-        const identifier = await StorageCdn.generateRandomFilename(
-          req.file.originalname
-        );
-        let filePath = `upload/${identifier}`;
-        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
+        let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
           req.file.path,
-          filePath,
-          req.file.originalname,
-          true
+          req.file.originalname
         );
         req.body.cdnVideoContent = bunnyFilePath;
         req.body.duration = duration;

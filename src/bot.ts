@@ -373,11 +373,6 @@ client.once('ready', async () => {
         } catch (error) {
             console.error('Erreur lors du déploiement de la commande:', error);
         }
-        const commands = await rest.get(Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string));
-        // @ts-ignore
-        for (const command of commands) {
-            await rest.delete(`${Routes.applicationGuildCommands(CLIENT_ID as string, GUILD_ID as string)}/${command.id}`);
-        }
     })();
 
     let refreshTime = 30 * 1000;

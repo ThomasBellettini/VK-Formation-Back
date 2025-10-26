@@ -9,7 +9,6 @@ import { Request } from "express";
 import mongoose from "mongoose";
 import StorageCdn from "../utils/StorageCdn.js";
 import Evaluation, { IEvaluation } from "../model/learning/Evaluation.js";
-import CST from "../server/constants.js";
 import holyProject from "../model/learning/HolyProject.js";
 import axios from "axios";
 import Resource, { IResource } from "../model/Resource.js";
@@ -18,6 +17,7 @@ import Planet, { IPlanet } from "../model/learning/Planet.js";
 import Polaris, { IPolaris } from "../model/learning/Polaris.js";
 import { getUserLevelForPolaris } from "../utils/utils.js";
 import Lesson from "../model/learning/Lesson.js";
+import CST from '../server/constants.js';
 
 interface IHolyGraph {
   _id: mongoose.Types.ObjectId;
@@ -234,7 +234,7 @@ class HolyServices {
         cost: holyProjectDatabase.cost,
         content: holyProjectDatabase.content,
         evaluationText: holyProjectDatabase.evaluationText,
-        cdnVideoContent: holyProjectDatabase.cdnVideoContent,
+        cdnVideoContent: `https://iframe.mediadelivery.net/embed/${CST.STORAGE.BUNNY_LIBS_ID}/${holyProjectDatabase.cdnVideoContent}`,
         cdnAudioContent: holyProjectDatabase.cdnAudioContent,
         hasPermission: hasPermission,
         projectDone: projectDone,
@@ -281,15 +281,9 @@ class HolyServices {
       }
 
       if (req.file) {
-        const identifier = await StorageCdn.generateRandomFilename(
-          req.file.originalname
-        );
-        let filePath = `upload/${identifier}`;
-        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
+        let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
           req.file.path,
-          filePath,
-          req.file.originalname,
-          true
+          req.file.originalname
         );
         req.body.cdnVideoContent = bunnyFilePath;
       }
@@ -355,15 +349,9 @@ class HolyServices {
       }
 
       if (req.file) {
-        const identifier = await StorageCdn.generateRandomFilename(
-          req.file.originalname
-        );
-        let filePath = `upload/${identifier}`;
-        let { bunnyFilePath, duration } = await StorageCdn.uploadFile(
+        let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
           req.file.path,
-          filePath,
           req.file.originalname,
-          true
         );
         req.body.cdnVideoContent = bunnyFilePath;
       }
