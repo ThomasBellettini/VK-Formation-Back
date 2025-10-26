@@ -103,7 +103,7 @@ class StorageCdn {
      * @param path path du fichier
      * @param originalName Nom original du fichier
      */
-    async uploadVideo(path: string, originalName: string) {
+    async uploadVideoFile(path: string, originalName: string) {
         try {
             const videoIDResponse = await axios.post(
                 `https://video.bunnycdn.com/library/${this.libsID}/videos`,
