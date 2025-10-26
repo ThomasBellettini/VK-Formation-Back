@@ -103,41 +103,45 @@ class StorageCdn {
      * @param path path du fichier
      * @param originalName Nom original du fichier
      */
-    async uploadVideoFile(path: string, originalName: string): Promise<IStreamResponse> {
+    async uploadVideo(path: string, originalName: string) {
         try {
-            let videoIDResponse = await axios.post(`https://video.bunnycdn.com/library/${this.libsID}/videos`, {
-                title: originalName
-            }, {
-                headers: {
-                    AccessKey: this.accessKeyStream,
-                    'Content-Type': 'application/json',
-                },
-            })
-            let videoGuid = null;
-            if (videoIDResponse && videoIDResponse.data && videoIDResponse.data.guid) {
-                videoGuid = videoIDResponse.data.guid;
-            }
-            if (!videoGuid) {
-                throw new Error("Erreur lors de la création de la vidéo");
-            }
-            let duration: number = await new Promise<number>((resolve, reject) => {
-                ffmpeg.ffprobe(path, (err: any, metadata: FfprobeData) => {
-                    if (err) {
-                        console.error(err);
-                        resolve(0);
-                    } else {
-                        // @ts-ignore
-                        resolve(metadata.format.duration);
-                    }
+            const videoIDResponse = await axios.post(
+                `https://video.bunnycdn.com/library/${this.libsID}/videos`,
+                { title: originalName },
+                {
+                    headers: {
+                        AccessKey: this.accessKeyStream,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const videoGuid = videoIDResponse.data?.guid;
+            if (!videoGuid) throw new Error("Erreur lors de la création de la vidéo");
+
+            const duration = await new Promise((resolve) => {
+                ffmpeg.ffprobe(path, (err, metadata) => {
+                    if (err) return resolve(0);
+                    resolve(metadata.format.duration);
                 });
             });
-            const fileBuffer = fs.readFileSync(path);
-            await axios.put(`https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`, fileBuffer, {
-                headers: {
-                    AccessKey: this.accessKeyStream,
-                    'Content-Type': 'application/octet-stream',
-                },
-            });
+
+            const stream = fs.createReadStream(path);
+
+            await axios.put(
+                `https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`,
+                stream,
+                {
+                    headers: {
+                        AccessKey: this.accessKeyStream,
+                        "Content-Type": "application/octet-stream",
+                        "Transfer-Encoding": "chunked",
+                    },
+                    maxBodyLength: Infinity,
+                    maxContentLength: Infinity,
+                }
+            );
+
             await Resource.create({
                 pathFile: videoGuid,
                 video: true,
@@ -145,9 +149,9 @@ class StorageCdn {
                 originalName,
             });
 
-            return {bunnyFilePath: videoGuid, duration: duration};
-        } catch (error: Error | any) {
-            console.error(`Erreur upload BunnyCDN:`, error.response?.data || error.message);
+            return { bunnyFilePath: videoGuid, duration };
+        } catch (error: any) {
+            console.error("Erreur upload BunnyCDN:", error.response?.data || error.message);
             throw new Error("Upload vers BunnyCDN échoué");
         }
     }
