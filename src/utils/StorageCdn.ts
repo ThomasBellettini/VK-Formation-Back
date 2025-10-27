@@ -118,95 +118,63 @@ class StorageCdn {
         return guid;
     }
 
-    startUploadVideoWithGuid(
-        videoGuid: string,
-        filePath: string,
-        originalName: string
-    ): void {
-
-        const httpsAgent = new https.Agent({
-            keepAlive: false,
-            minVersion: "TLSv1.2",
-            maxVersion: "TLSv1.3",
-            lookup: (host, opts, cb) => dns.lookup(host, { family: 4 }, cb), // ← force IPv4
-        });
-
+    startUploadVideoWithGuid(videoGuid: string, filePath: string, originalName: string): void {
         setImmediate(async () => {
             try {
-                const duration: number = await new Promise<number>((resolve) => {
-                    ffmpeg.ffprobe(filePath, (err: any, metadata: FfprobeData) => {
-                        if (err) return resolve(0);
-                        // @ts-ignore
-                        resolve(Number(metadata?.format?.duration || 0));
-                    });
-                });
-
-                const { size } = fs.statSync(filePath);
-                const putUrl = `https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`;
-                const stream = fs.createReadStream(filePath);
-
-                console.log(
-                    "⬆️ Upload BunnyCDN en cours pour",
-                    originalName,
-                    `(${(size / (1024 * 1024)).toFixed(2)} MB)...`
+                const duration: number = await new Promise<number>((resolve) =>
+                    ffmpeg.ffprobe(filePath, (_err: any, meta: FfprobeData) =>
+                        resolve(Number(meta?.format?.duration || 0))
+                    )
                 );
 
-                // Progression
+                const size = fs.statSync(filePath).size;
+                const stream = fs.createReadStream(filePath);
+
+                console.log(`⬆️ Upload Bunny → ${originalName} (${(size / 1024 / 1024).toFixed(2)} MB)`);
+
                 let uploaded = 0;
-                let lastLog = 0;
-                const logInterval = 10 * 1024 * 1024; // 10 Mo
+                let last = 0;
+                const step = 10 * 1024 * 1024; // log tous les 10 Mo
 
                 stream.on("data", (chunk) => {
                     uploaded += chunk.length;
-                    if (uploaded - lastLog >= logInterval || uploaded === size) {
+                    if (uploaded - last >= step || uploaded === size) {
                         const pct = ((uploaded / size) * 100).toFixed(1);
                         console.log(
-                            `📦 ${originalName} → ${pct}% (${(uploaded / (1024 * 1024)).toFixed(1)} / ${(size / (1024 * 1024)).toFixed(1)} MB)`
+                            `📦 ${originalName} → ${pct}% (${(uploaded / 1024 / 1024).toFixed(1)} / ${(size / 1024 / 1024).toFixed(1)} MB)`
                         );
-                        lastLog = uploaded;
+                        last = uploaded;
                     }
                 });
 
-                // Important: Content-Length exact + Connection: close pour éviter des soucis TLS à la fin
-                await axios.put(putUrl, stream, {
-                    headers: {
-                        AccessKey: this.accessKeyStream,
-                        "Content-Type": "application/octet-stream",
-                        "Content-Length": size,
-                        Connection: "close",
-                        Accept: "application/json",
-                    },
-                    httpsAgent,
-                    proxy: false,
-                    maxBodyLength: Infinity,
-                    maxContentLength: Infinity,
-                    decompress: false,
-                    timeout: 0,
-                    validateStatus: (s) => s >= 200 && s < 300,
-                });
+                await axios.put(
+                    `https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`,
+                    stream,
+                    {
+                        headers: {
+                            AccessKey: this.accessKeyStream,
+                            "Content-Type": "application/octet-stream",
+                            "Content-Length": size,
+                            Connection: "close",
+                        },
+                        httpsAgent: new https.Agent({ keepAlive: false, minVersion: "TLSv1.2" }),
+                        proxy: false,
+                        maxBodyLength: Infinity,
+                        maxContentLength: Infinity,
+                        timeout: 0,
+                        validateStatus: (s) => s >= 200 && s < 300,
+                    }
+                );
 
-                console.log("✅ Upload BunnyCDN réussi pour", originalName);
+                console.log(`✅ Upload terminé: ${originalName} (${videoGuid})`);
 
-                await Resource.create({
-                        pathFile: videoGuid,
-                        video: true,
-                        duration,
-                        originalName
-                });
-
-
-                console.log(`✅ Upload Bunny terminé pour ${originalName} (${videoGuid})`);
-
-                try { fs.unlinkSync(filePath); } catch { /* noop */ }
+                await Resource.create({ pathFile: videoGuid, video: true, duration, originalName });
+                fs.unlink(filePath, () => {}); // supprime le fichier local après
             } catch (e: any) {
-                console.error("❌ Upload BunnyCDN en arrière-plan échoué:", {
+                console.error("❌ Upload BunnyCDN échoué:", {
                     message: e?.message,
                     code: e?.code,
                     status: e?.response?.status,
-                    data:
-                        typeof e?.response?.data === "string"
-                            ? e.response.data.slice(0, 1000)
-                            : e?.response?.data,
                 });
             }
         });
