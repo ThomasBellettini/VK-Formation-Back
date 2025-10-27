@@ -234,7 +234,7 @@ class HolyServices {
         cost: holyProjectDatabase.cost,
         content: holyProjectDatabase.content,
         evaluationText: holyProjectDatabase.evaluationText,
-        cdnVideoContent: `https://iframe.mediadelivery.net/embed/${CST.STORAGE.BUNNY_LIBS_ID}/${holyProjectDatabase.cdnVideoContent}`,
+        cdnVideoContent: holyProjectDatabase.cdnVideoContent ? `https://iframe.mediadelivery.net/embed/${CST.STORAGE.BUNNY_LIBS_ID}/${holyProjectDatabase.cdnVideoContent}` : null,
         cdnAudioContent: holyProjectDatabase.cdnAudioContent,
         hasPermission: hasPermission,
         projectDone: projectDone,
