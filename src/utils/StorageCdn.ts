@@ -110,6 +110,7 @@ class StorageCdn {
     ) {
         const detached = options?.detached !== false;
         const persist  = options?.persist  !== false;
+        console.log("🚀 Démarrage upload Bunny pour", originalName, ` (détaché: ${detached}, persister: ${persist})`);
 
         const httpsAgent = new https.Agent({
             keepAlive: false,
@@ -146,6 +147,7 @@ class StorageCdn {
             const { size } = fs.statSync(path);
             const putUrl = `https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`;
             const stream = fs.createReadStream(path);
+            console.log("⬆️ Upload BunnyCDN en cours pour", originalName, `(${(size / (1024 * 1024)).toFixed(2)} MB)...`);
 
             await axios.put(putUrl, stream, {
                 headers: {
@@ -162,6 +164,7 @@ class StorageCdn {
                 timeout: 0,
                 validateStatus: (s) => s >= 200 && s < 300,
             });
+            console.log("✅ Upload BunnyCDN réussi pour", originalName);
 
             if (persist) {
                 await Resource.create({
