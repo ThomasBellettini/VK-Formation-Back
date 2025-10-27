@@ -271,16 +271,14 @@ class LessonServices {
         throw new Error("Missing mandatory fields description, url, title");
       }
       if (req.file) {
-        let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
-          req.file.path,
-          req.file.originalname,
-            {
-              persist: true,
-              detached: true
-            }
+        let bunnyFilePath = await StorageCdn.createBunnyVideoGuid(req.file.originalname);
+        StorageCdn.startUploadVideoWithGuid(
+            bunnyFilePath,
+            req.file.path,
+            req.file.originalname
         );
         req.body.cdnVideoContent = bunnyFilePath;
-        req.body.duration = duration;
+        req.body.duration = 0;
       }
       if (req.body.links) req.body.links = JSON.parse(req.body.links);
       let lesson = await Lesson.create(req.body);
@@ -313,12 +311,14 @@ class LessonServices {
       let lesson = await Lesson.findOne({ _id: id });
       if (!lesson) throw new Error("No Lesson has been found with this ID !");
       if (req.file) {
-        let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
+        let bunnyFilePath = await StorageCdn.createBunnyVideoGuid(req.file.originalname);
+        StorageCdn.startUploadVideoWithGuid(
+          bunnyFilePath,
           req.file.path,
           req.file.originalname
         );
         req.body.cdnVideoContent = bunnyFilePath;
-        req.body.duration = duration;
+        req.body.duration = 0;
       }
       if (req.body.links) req.body.links = JSON.parse(req.body.links);
       lesson = await Lesson.findOneAndUpdate({ _id: id }, req.body);

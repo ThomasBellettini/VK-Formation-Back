@@ -281,9 +281,11 @@ class HolyServices {
       }
 
       if (req.file) {
-        let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
-          req.file.path,
-          req.file.originalname
+        let bunnyFilePath = await StorageCdn.createBunnyVideoGuid(req.file.originalname);
+        StorageCdn.startUploadVideoWithGuid(
+            bunnyFilePath,
+            req.file.path,
+            req.file.originalname
         );
         req.body.cdnVideoContent = bunnyFilePath;
       }
@@ -349,9 +351,11 @@ class HolyServices {
       }
 
       if (req.file) {
-        let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
-          req.file.path,
-          req.file.originalname,
+        let bunnyFilePath = await StorageCdn.createBunnyVideoGuid(req.file.originalname);
+        StorageCdn.startUploadVideoWithGuid(
+            bunnyFilePath,
+            req.file.path,
+            req.file.originalname
         );
         req.body.cdnVideoContent = bunnyFilePath;
       }

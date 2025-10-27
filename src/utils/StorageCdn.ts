@@ -8,6 +8,7 @@ import * as fs from "node:fs";
 import ffmpeg, {FfprobeData} from "fluent-ffmpeg";
 import * as https from "node:https";
 import * as ftp from "basic-ftp";
+import * as dns from "node:dns";
 
 dotenv.config();
 
@@ -98,28 +99,8 @@ class StorageCdn {
         }
     }
 
-    /**
-     * Upload de fichier sur BunnyCDN
-     * @param path path du fichier
-     * @param originalName Nom original du fichier
-     */
-    async uploadVideoFile(
-        path: string,
-        originalName: string,
-        options?: { detached?: boolean; persist?: boolean }
-    ) {
-        const detached = options?.detached !== false;
-        const persist  = options?.persist  !== false;
-        console.log("🚀 Démarrage upload Bunny pour", originalName, `(détaché: ${detached}, persister: ${persist})`);
-
-        const httpsAgent = new https.Agent({
-            keepAlive: false,
-            minVersion: "TLSv1.2",
-            maxVersion: "TLSv1.3",
-        });
-
-        // 1️⃣ Création du GUID vidéo Bunny
-        const createRes = await axios.post(
+    async createBunnyVideoGuid(originalName: string): Promise<string> {
+        const res = await axios.post(
             `https://video.bunnycdn.com/library/${this.libsID}/videos`,
             { title: originalName },
             {
@@ -132,106 +113,103 @@ class StorageCdn {
                 proxy: false,
             }
         );
+        const guid = res.data?.guid;
+        if (!guid) throw new Error("Erreur lors de la création de la vidéo (guid manquant)");
+        return guid;
+    }
 
-        const videoGuid = createRes.data?.guid;
-        if (!videoGuid) throw new Error("Erreur lors de la création de la vidéo (guid manquant)");
+    startUploadVideoWithGuid(
+        videoGuid: string,
+        filePath: string,
+        originalName: string
+    ): void {
 
-        // 2️⃣ Fonction d'upload réelle
-        const doUpload = async () => {
-            const duration: number = await new Promise<number>((resolve) => {
-                ffmpeg.ffprobe(path, (err: any, metadata: FfprobeData) => {
-                    if (err) return resolve(0);
-                    // @ts-ignore
-                    resolve(Number(metadata?.format?.duration || 0));
-                });
-            });
+        const httpsAgent = new https.Agent({
+            keepAlive: false,
+            minVersion: "TLSv1.2",
+            maxVersion: "TLSv1.3",
+            lookup: (host, opts, cb) => dns.lookup(host, { family: 4 }, cb), // ← force IPv4
+        });
 
-            const { size } = fs.statSync(path);
-            const putUrl = `https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`;
-            const stream = fs.createReadStream(path);
-
-            console.log("⬆️ Upload BunnyCDN en cours pour", originalName, `(${(size / (1024 * 1024)).toFixed(2)} MB)...`);
-
-            // Variables pour le suivi
-            let uploaded = 0;
-            let lastLog = 0;
-            const logInterval = 10 * 1024 * 1024; // tous les 10 Mo
-
-            stream.on("data", (chunk) => {
-                uploaded += chunk.length;
-                if (uploaded - lastLog >= logInterval || uploaded === size) {
-                    const percent = ((uploaded / size) * 100).toFixed(1);
-                    console.log(`📦 ${originalName} → ${percent}% (${(uploaded / (1024 * 1024)).toFixed(1)} / ${(size / (1024 * 1024)).toFixed(1)} MB)`);
-                    lastLog = uploaded;
-                }
-            });
-
-            await axios.put(putUrl, stream, {
-                headers: {
-                    AccessKey: this.accessKeyStream,
-                    "Content-Type": "application/octet-stream",
-                    "Content-Length": size,
-                    Accept: "application/json",
-                },
-                httpsAgent,
-                proxy: false,
-                maxBodyLength: Infinity,
-                maxContentLength: Infinity,
-                decompress: false,
-                timeout: 0,
-                validateStatus: (s) => s >= 200 && s < 300,
-            });
-
-            console.log("✅ Upload BunnyCDN réussi pour", originalName);
-
-            if (persist) {
-                await Resource.create({
-                    pathFile: videoGuid,
-                    video: true,
-                    duration,
-                    originalName,
-                });
-            }
-
-            console.log(`✅ Upload Bunny terminé pour ${originalName} (${videoGuid})`);
-            return { bunnyFilePath: videoGuid, duration };
-        };
-
-        // 3️⃣ Mode détaché (fire-and-forget)
-        if (detached) {
-            setImmediate(() => {
-                doUpload().catch((e) => {
-                    console.error("❌ Upload BunnyCDN en arrière-plan échoué:", {
-                        message: e?.message,
-                        code: e?.code,
-                        status: e?.response?.status,
-                        data:
-                            typeof e?.response?.data === "string"
-                                ? e.response.data.slice(0, 1000)
-                                : e?.response?.data,
+        setImmediate(async () => {
+            try {
+                const duration: number = await new Promise<number>((resolve) => {
+                    ffmpeg.ffprobe(filePath, (err: any, metadata: FfprobeData) => {
+                        if (err) return resolve(0);
+                        // @ts-ignore
+                        resolve(Number(metadata?.format?.duration || 0));
                     });
                 });
-            });
 
-            return { bunnyFilePath: videoGuid, duration: 0 };
-        }
+                const { size } = fs.statSync(filePath);
+                const putUrl = `https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`;
+                const stream = fs.createReadStream(filePath);
 
-        // 4️⃣ Mode bloquant
-        try {
-            return await doUpload();
-        } catch (error: any) {
-            console.error("Erreur upload BunnyCDN (détails):", {
-                message: error?.message,
-                code: error?.code,
-                status: error?.response?.status,
-                headers: error?.response?.headers,
-                data:
-                    typeof error?.response?.data === "string"
-                        ? error.response.data.slice(0, 1000)
-                        : error?.response?.data,
-            });
-            throw new Error("Upload vers BunnyCDN échoué");
-        }
+                console.log(
+                    "⬆️ Upload BunnyCDN en cours pour",
+                    originalName,
+                    `(${(size / (1024 * 1024)).toFixed(2)} MB)...`
+                );
+
+                // Progression
+                let uploaded = 0;
+                let lastLog = 0;
+                const logInterval = 10 * 1024 * 1024; // 10 Mo
+
+                stream.on("data", (chunk) => {
+                    uploaded += chunk.length;
+                    if (uploaded - lastLog >= logInterval || uploaded === size) {
+                        const pct = ((uploaded / size) * 100).toFixed(1);
+                        console.log(
+                            `📦 ${originalName} → ${pct}% (${(uploaded / (1024 * 1024)).toFixed(1)} / ${(size / (1024 * 1024)).toFixed(1)} MB)`
+                        );
+                        lastLog = uploaded;
+                    }
+                });
+
+                // Important: Content-Length exact + Connection: close pour éviter des soucis TLS à la fin
+                await axios.put(putUrl, stream, {
+                    headers: {
+                        AccessKey: this.accessKeyStream,
+                        "Content-Type": "application/octet-stream",
+                        "Content-Length": size,
+                        Connection: "close",
+                        Accept: "application/json",
+                    },
+                    httpsAgent,
+                    proxy: false,
+                    maxBodyLength: Infinity,
+                    maxContentLength: Infinity,
+                    decompress: false,
+                    timeout: 0,
+                    validateStatus: (s) => s >= 200 && s < 300,
+                });
+
+                console.log("✅ Upload BunnyCDN réussi pour", originalName);
+
+                await Resource.create({
+                        pathFile: videoGuid,
+                        video: true,
+                        duration,
+                        originalName
+                });
+
+
+                console.log(`✅ Upload Bunny terminé pour ${originalName} (${videoGuid})`);
+
+                try { fs.unlinkSync(filePath); } catch { /* noop */ }
+            } catch (e: any) {
+                console.error("❌ Upload BunnyCDN en arrière-plan échoué:", {
+                    message: e?.message,
+                    code: e?.code,
+                    status: e?.response?.status,
+                    data:
+                        typeof e?.response?.data === "string"
+                            ? e.response.data.slice(0, 1000)
+                            : e?.response?.data,
+                });
+            }
+        });
     }
 
     /**
