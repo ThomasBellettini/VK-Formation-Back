@@ -110,7 +110,7 @@ class StorageCdn {
     ) {
         const detached = options?.detached !== false;
         const persist  = options?.persist  !== false;
-        console.log("🚀 Démarrage upload Bunny pour", originalName, ` (détaché: ${detached}, persister: ${persist})`);
+        console.log("🚀 Démarrage upload Bunny pour", originalName, `(détaché: ${detached}, persister: ${persist})`);
 
         const httpsAgent = new https.Agent({
             keepAlive: false,
@@ -118,6 +118,7 @@ class StorageCdn {
             maxVersion: "TLSv1.3",
         });
 
+        // 1️⃣ Création du GUID vidéo Bunny
         const createRes = await axios.post(
             `https://video.bunnycdn.com/library/${this.libsID}/videos`,
             { title: originalName },
@@ -135,6 +136,7 @@ class StorageCdn {
         const videoGuid = createRes.data?.guid;
         if (!videoGuid) throw new Error("Erreur lors de la création de la vidéo (guid manquant)");
 
+        // 2️⃣ Fonction d'upload réelle
         const doUpload = async () => {
             const duration: number = await new Promise<number>((resolve) => {
                 ffmpeg.ffprobe(path, (err: any, metadata: FfprobeData) => {
@@ -147,7 +149,22 @@ class StorageCdn {
             const { size } = fs.statSync(path);
             const putUrl = `https://video.bunnycdn.com/library/${this.libsID}/videos/${videoGuid}`;
             const stream = fs.createReadStream(path);
+
             console.log("⬆️ Upload BunnyCDN en cours pour", originalName, `(${(size / (1024 * 1024)).toFixed(2)} MB)...`);
+
+            // Variables pour le suivi
+            let uploaded = 0;
+            let lastLog = 0;
+            const logInterval = 10 * 1024 * 1024; // tous les 10 Mo
+
+            stream.on("data", (chunk) => {
+                uploaded += chunk.length;
+                if (uploaded - lastLog >= logInterval || uploaded === size) {
+                    const percent = ((uploaded / size) * 100).toFixed(1);
+                    console.log(`📦 ${originalName} → ${percent}% (${(uploaded / (1024 * 1024)).toFixed(1)} / ${(size / (1024 * 1024)).toFixed(1)} MB)`);
+                    lastLog = uploaded;
+                }
+            });
 
             await axios.put(putUrl, stream, {
                 headers: {
@@ -164,6 +181,7 @@ class StorageCdn {
                 timeout: 0,
                 validateStatus: (s) => s >= 200 && s < 300,
             });
+
             console.log("✅ Upload BunnyCDN réussi pour", originalName);
 
             if (persist) {
@@ -179,6 +197,7 @@ class StorageCdn {
             return { bunnyFilePath: videoGuid, duration };
         };
 
+        // 3️⃣ Mode détaché (fire-and-forget)
         if (detached) {
             setImmediate(() => {
                 doUpload().catch((e) => {
@@ -197,6 +216,7 @@ class StorageCdn {
             return { bunnyFilePath: videoGuid, duration: 0 };
         }
 
+        // 4️⃣ Mode bloquant
         try {
             return await doUpload();
         } catch (error: any) {
@@ -213,6 +233,7 @@ class StorageCdn {
             throw new Error("Upload vers BunnyCDN échoué");
         }
     }
+
     /**
      * Upload de fichier sur BunnyCDN
      * @param path path du fichier
