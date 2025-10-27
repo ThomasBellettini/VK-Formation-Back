@@ -273,7 +273,11 @@ class LessonServices {
       if (req.file) {
         let { bunnyFilePath, duration } = await StorageCdn.uploadVideoFile(
           req.file.path,
-          req.file.originalname
+          req.file.originalname,
+            {
+              persist: true,
+              detached: true
+            }
         );
         req.body.cdnVideoContent = bunnyFilePath;
         req.body.duration = duration;
