@@ -31,7 +31,7 @@ class AuthServices {
       let userData = userDb.toObject();
 
       const allPolaris = await Polaris.find({}).lean();
-      const polarisLevels: { polaris: string; level: number, allProject: number }[] = [];
+      const polarisLevels: { polaris: string; level: number, allPlanet: number }[] = [];
 
       for (let hInit of userData.holyProjects) {
         let project = hInit.project as IHolyProject;
@@ -47,12 +47,12 @@ class AuthServices {
         if (!polaris.identifier) continue;
         const level = await getUserLevelForPolaris(userDb, polaris.identifier);
 
-        const allProject = await HolyProject.countDocuments() ?? 0;
+        const allPlanet = await Planet.countDocuments({polaris: polaris._id}) ?? 0;
 
         polarisLevels.push({
           polaris: polaris.identifier,
           level: level,
-          allProject
+          allPlanet
         });
       }
 
