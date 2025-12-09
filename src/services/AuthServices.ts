@@ -6,7 +6,7 @@ import axios from "axios";
 import Polaris from "../model/learning/Polaris.js";
 import { getUserLevelForPolaris } from "../utils/utils.js";
 import Notification from "../model/Notification.js";
-import { IHolyProject } from "../model/learning/HolyProject.js";
+import HolyProject, { IHolyProject } from "../model/learning/HolyProject.js";
 import Planet from "../model/learning/Planet.js";
 
 class AuthServices {
@@ -31,7 +31,7 @@ class AuthServices {
       let userData = userDb.toObject();
 
       const allPolaris = await Polaris.find({}).lean();
-      const polarisLevels: { polaris: string; level: number }[] = [];
+      const polarisLevels: { polaris: string; level: number, allProject: number }[] = [];
 
       for (let hInit of userData.holyProjects) {
         let project = hInit.project as IHolyProject;
@@ -47,9 +47,12 @@ class AuthServices {
         if (!polaris.identifier) continue;
         const level = await getUserLevelForPolaris(userDb, polaris.identifier);
 
+        const allProject = await HolyProject.countDocuments() ?? 0;
+
         polarisLevels.push({
           polaris: polaris.identifier,
           level: level,
+          allProject
         });
       }
 
