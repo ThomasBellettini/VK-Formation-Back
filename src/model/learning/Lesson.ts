@@ -15,6 +15,7 @@ export interface ILesson extends Document {
 
     cdnVideoContent: string | null;
     cdnAudioContent: string | null;
+    thumbnail: string;
 
     duration: number | null;
 
@@ -50,6 +51,10 @@ const lessonSchema: Schema<ILesson> = new mongoose.Schema({
         default: 0
     },
     cdnVideoContent: {
+        type: String,
+        required: false
+    },
+    thumbnail: {
         type: String,
         required: false
     },

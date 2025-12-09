@@ -188,8 +188,14 @@ router.get("/courses/info/:url", authJwt, CourseController.info)
 router.delete("/courses/delete/:id", authJwt, checkRole("admin"), CourseController.delete)
 
 router.get("/lessons/list", authJwt, checkRole("admin"), LessonController.list)
-router.post("/lessons/add", authJwt, checkRole("admin"), upload.single("video"), LessonController.add)
-router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.single("video"), LessonController.update)
+router.post("/lessons/add", authJwt, checkRole("admin"), upload.fields([
+  { name: "video", maxCount: 1 },
+  { name: "thumbnail", maxCount: 1 }
+]), LessonController.add)
+router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.fields([
+  { name: "video", maxCount: 1 },
+  { name: "thumbnail", maxCount: 1 }
+]), LessonController.update)
 router.get("/lessons/info/:url", authJwt, LessonController.info)
 router.patch("/lessons/complete/:url", authJwt, LessonController.completeLesson)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)

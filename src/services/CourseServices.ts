@@ -168,6 +168,11 @@ class CourseServices {
           if (lesson.duration && lesson.duration > 0) duration += lesson.duration;
           totalLessons++;
           if (finished) completedLessons++;
+          if (lesson.thumbnail && lesson.thumbnail !== "") {
+            lesson.thumbnail = StorageCdn.generateSecureLink(lesson.thumbnail);
+          } else {
+            lesson.thumbnail = null;
+          }
 
           return {
             _id: lesson._id,
@@ -178,6 +183,7 @@ class CourseServices {
             order: lesson.order,
             cdnVideoContent: lesson.cdnVideoContent,
             cdnAudioContent: lesson.cdnAudioContent,
+            thumbnail: lesson.thumbnail,
             finished
           };
         });

@@ -267,21 +267,52 @@ class LessonServices {
   async add(req: Request) {
     try {
       const { description, url, title } = req.body;
+
       if (!description || !url || !title) {
         throw new Error("Missing mandatory fields description, url, title");
       }
-      if (req.file) {
-        let bunnyFilePath = await StorageCdn.createBunnyVideoGuid(req.file.originalname);
+      const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      } | undefined;
+
+      const videoFile = files?.video?.[0];
+      const imageFile = files?.thumbnail?.[0];
+
+      if (videoFile) {
+        const bunnyFilePath = await StorageCdn.createBunnyVideoGuid(
+            videoFile.originalname
+        );
+
         StorageCdn.startUploadVideoWithGuid(
             bunnyFilePath,
-            req.file.path,
-            req.file.originalname
+            videoFile.path,
+            videoFile.originalname
         );
+
         req.body.cdnVideoContent = bunnyFilePath;
         req.body.duration = 0;
       }
-      if (req.body.links) req.body.links = JSON.parse(req.body.links);
-      let lesson = await Lesson.create(req.body);
+
+      if (imageFile) {
+        const identifier = await StorageCdn.generateRandomFilename(
+            imageFile.originalname
+        );
+
+        const filePath = `images/${identifier}`;
+        const { bunnyFilePath } = await StorageCdn.uploadFile(
+            imageFile.path,
+            filePath,
+            imageFile.originalname,
+            false
+        );
+        req.body.thumbnail = bunnyFilePath;
+      }
+
+      if (req.body.links) {
+        req.body.links = JSON.parse(req.body.links);
+      }
+
+      const lesson = await Lesson.create(req.body);
 
       return {
         success: true,
@@ -292,7 +323,7 @@ class LessonServices {
           lesson,
         },
       };
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
       return {
         success: false,
@@ -300,7 +331,7 @@ class LessonServices {
         errors: err,
         token: null,
         data: {
-          message: err,
+          message: err?.message || err,
         },
       };
     }
@@ -310,18 +341,55 @@ class LessonServices {
     try {
       let lesson = await Lesson.findOne({ _id: id });
       if (!lesson) throw new Error("No Lesson has been found with this ID !");
-      if (req.file) {
-        let bunnyFilePath = await StorageCdn.createBunnyVideoGuid(req.file.originalname);
-        StorageCdn.startUploadVideoWithGuid(
-          bunnyFilePath,
-          req.file.path,
-          req.file.originalname
+
+      const files = req.files as
+          | {
+        [fieldname: string]: Express.Multer.File[];
+      }
+          | undefined;
+
+      const videoFile = files?.video?.[0];
+      const imageFile = files?.thumbnail?.[0];
+
+      if (videoFile) {
+        const bunnyFilePath = await StorageCdn.createBunnyVideoGuid(
+            videoFile.originalname
         );
+
+        StorageCdn.startUploadVideoWithGuid(
+            bunnyFilePath,
+            videoFile.path,
+            videoFile.originalname
+        );
+
         req.body.cdnVideoContent = bunnyFilePath;
         req.body.duration = 0;
       }
-      if (req.body.links) req.body.links = JSON.parse(req.body.links);
-      lesson = await Lesson.findOneAndUpdate({ _id: id }, req.body);
+
+      if (imageFile) {
+        const identifier = await StorageCdn.generateRandomFilename(
+            imageFile.originalname
+        );
+
+        const filePath = `images/${identifier}`;
+
+        const { bunnyFilePath } = await StorageCdn.uploadFile(
+            imageFile.path,
+            filePath,
+            imageFile.originalname,
+            false
+        );
+
+        req.body.thumbnail = bunnyFilePath;
+      }
+
+      if (req.body.links) {
+        req.body.links = JSON.parse(req.body.links);
+      }
+
+      lesson = await Lesson.findOneAndUpdate({ _id: id }, req.body, {
+        new: true,
+      });
 
       return {
         success: true,
