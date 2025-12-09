@@ -88,7 +88,7 @@ class HolyServices {
     await axios.delete(`${CST.DISCORD.API_URL}/evaluation/finish/0`, {
       data: {
         userId: user.discordId,
-        level: userLevel,
+        level: userLevel - 1,
       },
     });
   }
@@ -950,9 +950,11 @@ class HolyServices {
         }
       }
 
+      let userLevel = await getUserLevelForPolaris(user, polaris.identifier);
+
       await axios.delete(
           `${CST.DISCORD.API_URL}/evaluation/finish/${evaluation.channelId && evaluation.channelId !== "" ? evaluation.channelId : 0}`,
-          { data: { userId: user.discordId, level: 0 } }
+          { data: { userId: user.discordId, level: userLevel - 1 } }
       );
 
       await Evaluation.findByIdAndDelete(id);
