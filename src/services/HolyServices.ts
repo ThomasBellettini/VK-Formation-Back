@@ -893,7 +893,7 @@ class HolyServices {
       // 3) Projet (source de vérité pour la planète)
       const project = await HolyProject.findById(evaluation.project)
           .select("_id planet cost evaluationType")
-          .populate("planet")
+          .populate("planet planet.polaris")
           .lean<IHolyProject>();
       if (!project) throw new Error("No project found !");
 
@@ -910,7 +910,7 @@ class HolyServices {
       }
 
       // @ts-ignore
-      const polarisId = project.planet.polaris as unknown as mongoose.Types.ObjectId;
+      const polarisId = new  mongoose.Types.ObjectId(project.planet.polaris._id);
       // @ts-ignore
       console.log(project.planet.polaris);
       // @ts-ignore
