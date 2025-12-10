@@ -914,7 +914,7 @@ class HolyServices {
       // @ts-ignore
       console.log(project.planet.polaris);
       // @ts-ignore
-      const polaris = Polaris.findById(polarisId).lean() as IPolaris;
+      const polaris = await Polaris.findById(polarisId).lean() as IPolaris;
       if (!polaris) throw new Error("No polaris found for this project !");
 
       await User.updateOne(
