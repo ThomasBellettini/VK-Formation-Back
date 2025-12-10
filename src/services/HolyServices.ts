@@ -910,7 +910,7 @@ class HolyServices {
       }
 
       // @ts-ignore
-      const polarisId = new  mongoose.Types.ObjectId(project.planet.polaris._id);
+      const polarisId = new  mongoose.Types.ObjectId(project.planet.polaris);
       // @ts-ignore
       console.log(project.planet.polaris);
       // @ts-ignore
