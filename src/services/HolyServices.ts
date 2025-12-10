@@ -909,6 +909,8 @@ class HolyServices {
         }
       }
       // @ts-ignore
+      console.log(project.planet.polaris);
+      // @ts-ignore
       const polaris = Polaris.findById(project.planet.polaris).lean() as IPolaris;
       if (!polaris) throw new Error("No polaris found for this project !");
 
