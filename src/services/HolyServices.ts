@@ -910,7 +910,7 @@ class HolyServices {
       }
 
       // @ts-ignore
-      const polarisId = project.planet.polariss as unknown as mongoose.Types.ObjectId;
+      const polarisId = project.planet.polaris as unknown as mongoose.Types.ObjectId;
       // @ts-ignore
       console.log(project.planet.polaris);
       // @ts-ignore
