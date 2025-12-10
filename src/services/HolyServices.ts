@@ -908,10 +908,13 @@ class HolyServices {
           }
         }
       }
+
+      // @ts-ignore
+      const polarisId = project.planet.polariss as unknown as mongoose.Types.ObjectId;
       // @ts-ignore
       console.log(project.planet.polaris);
       // @ts-ignore
-      const polaris = Polaris.findById(project.planet.polaris).lean() as IPolaris;
+      const polaris = Polaris.findById(polarisId).lean() as IPolaris;
       if (!polaris) throw new Error("No polaris found for this project !");
 
       await User.updateOne(
