@@ -50,11 +50,10 @@ export const EvaluationButton = {
                     const project = evaluation.project as IHolyProject;
                     const student = evaluation.user as IUser;
 
-                    const parent = interaction.channel;
+                    const parent = await client.channels.fetch("1450927089460187166");
                     if (!parent || parent.type !== ChannelType.GuildText) {
                         return interaction.reply({
-                            content:
-                                "❌ Cette action doit être exécutée dans un salon texte (pas en DM / pas dans un thread).",
+                            content: "❌ Le salon d’évaluations est introuvable ou invalide.",
                             ephemeral: true,
                         });
                     }
@@ -80,6 +79,8 @@ export const EvaluationButton = {
                         name: threadName,
                         autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
                         reason: `Evaluation claim ${evaluation._id}`,
+                        type: ChannelType.PrivateThread,
+                        invitable: false
                     });
 
                     // Ajoute les membres au thread (discret)
