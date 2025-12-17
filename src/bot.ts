@@ -1,11 +1,11 @@
 import {
-    ActionRowBuilder, ButtonBuilder, ButtonStyle,
+    ActionRowBuilder, AnyThreadChannel, ButtonBuilder, ButtonStyle, ChannelType,
     ChatInputCommandInteraction,
     Client,
     EmbedBuilder,
     GatewayIntentBits,
     REST,
-    Routes,
+    Routes, TextBasedChannel,
     TextChannel
 } from 'discord.js';
 import express from 'express';
@@ -353,10 +353,24 @@ const refreshDeletionChannel = async () => {
     for (const entry of deletionList) {
         if (entry.deleteAt <= now) {
             try {
-                const channel = await client.channels.fetch(entry.channelId);
-                if (channel) await channel.delete("Suppression planifiée après fin d’évaluation");
+                const channel = await client.channels.fetch(entry.channelId).catch(() => null);
+                if (!channel) continue;
+                if (
+                    channel.type === ChannelType.PublicThread ||
+                    channel.type === ChannelType.PrivateThread ||
+                    channel.type === ChannelType.AnnouncementThread
+                ) {
+                    const thread = channel as AnyThreadChannel;
+
+                    await thread.setArchived(true, "Fin d’évaluation").catch(() => {});
+                    await thread.setLocked(true, "Fin d’évaluation").catch(() => {});
+                }
+                else if (channel.isTextBased()) {
+                    const textChannel = channel as TextChannel;
+                    await textChannel.send("Ce salon est désormais verrouillé.").catch(() => {});
+                }
             } catch (err) {
-                console.error(`Erreur suppression channel ${entry.channelId} :`, err);
+                console.error(`Erreur lock thread ${entry.channelId} :`, err);
             }
         } else {
             remaining.push(entry);
@@ -406,13 +420,13 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
     const guild = client.guilds.cache.get(GUILD_ID as string);
 
     if (!userId) {
-        return res.status(400).json({ error: 'Missing user ID' });
+        return res.status(400).json({error: 'Missing user ID'});
     }
     if (level === undefined || level === null) {
-        return res.status(400).json({ error: 'Missing level' });
+        return res.status(400).json({error: 'Missing level'});
     }
     if (!guild) {
-        return res.status(500).json({ error: 'Guild not found' });
+        return res.status(500).json({error: 'Guild not found'});
     }
 
     try {
@@ -425,10 +439,17 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
             const deletionList: ChannelDeletionEntry[] = JSON.parse(fs.readFileSync(deletionFilePath, 'utf-8') || '[]');
             deletionList.push({ channelId, deleteAt: Date.now() + 24 * 60 * 60 * 1000 });
             fs.writeFileSync(deletionFilePath, JSON.stringify(deletionList, null, 2));
-            const channel = await client.channels.fetch(channelId) as TextChannel;
-            if (channel && channel.isTextBased()) {
-                await channel.setName(`terminée-${channel.name}`);
-                await channel.send("Le channel sera supprimé dans 24h.");
+            const ch = await client.channels.fetch(channelId).catch(() => null);
+
+            // Thread (public/private)
+            if (ch && (ch.type === ChannelType.PublicThread || ch.type === ChannelType.PrivateThread || ch.type === ChannelType.AnnouncementThread)) {
+                const thread = ch as AnyThreadChannel;
+
+                await thread.setName(`terminée-${thread.name}`.slice(0, 100)).catch(() => {});
+                await thread.send("Évaluation terminée. Ce thread sera verrouillé dans 24h.").catch(() => {});
+            } else if (ch && ch.isTextBased()) {
+                const channel = ch as TextChannel;
+                await channel.send("Évaluation terminée. Ce salon sera verrouillé/archivé dans 24h.").catch(() => {});
             }
         }
         const member = await guild.members.fetch(userId);
