@@ -86,6 +86,8 @@ export const EvaluationButton = {
                     // Ajoute les membres au thread (discret)
                     await thread.members.add(interaction.user.id).catch(() => {});
                     await thread.members.add("264954587583086592").catch(() => {});
+                    await thread.members.add("651455437048250379").catch(() => {});
+                    await thread.members.add("236154912361152512").catch(() => {});
                     if (student?.discordId) {
                         await thread.members.add(student.discordId).catch(() => {});
                     }
