@@ -77,7 +77,7 @@ export const EvaluationButton = {
 
                     const thread = await (parent as TextChannel).threads.create({
                         name: threadName,
-                        autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
+                        autoArchiveDuration: ThreadAutoArchiveDuration.ThreeDays,
                         reason: `Evaluation claim ${evaluation._id}`,
                         type: ChannelType.PrivateThread,
                         invitable: false
