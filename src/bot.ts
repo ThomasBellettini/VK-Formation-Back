@@ -373,6 +373,11 @@ client.once('ready', async () => {
         } catch (error) {
             console.error('Erreur lors du déploiement de la commande:', error);
         }
+        const cmds = (await rest.get(Routes.applicationCommands(CLIENT_ID as string))) as any[];
+        console.log("Commands on Discord:");
+        for (const c of cmds) {
+            console.log(`- ${c.name} type=${c.type} default_perm=${c.default_member_permissions}`);
+        }
     })();
 
     let refreshTime = 30 * 1000;
