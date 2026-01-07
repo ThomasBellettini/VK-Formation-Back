@@ -989,9 +989,6 @@ class HolyServices {
         update.$push.timeHistory = timeSpentSec;
       }
 
-      await User.updateOne({ _id: evaluator._id }, update);
-
-
       await Evaluation.findByIdAndDelete(id);
       await User.findByIdAndUpdate(requestUser._id, update);
 
