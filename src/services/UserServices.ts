@@ -25,6 +25,8 @@ class UserServices {
     this.banByDiscord = this.banByDiscord.bind(this);
     this.sioFormContact = this.sioFormContact.bind(this);
     this.getEvaluationUserInfo = this.getEvaluationUserInfo.bind(this);
+    this.validatePopup = this.validatePopup.bind(this);
+    this.spawnPopup = this.spawnPopup.bind(this);
   }
 
   async list(req: Request) {
@@ -579,6 +581,78 @@ class UserServices {
       };
     }
   }
+
+  async spawnPopup(user: IUser) {
+    try {
+      const userDb = await User.findByIdAndUpdate(
+          user._id,
+          {
+            $set: {
+              lastPopup: new Date(),
+            },
+          },
+          { new: true }
+      );
+
+      if (!userDb) throw new Error("No user found !");
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: userDb,
+        },
+      };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error, no user found !",
+        },
+      };
+    }
+  }
+
+  async validatePopup(user: IUser) {
+    try {
+      const userDb = await User.findByIdAndUpdate(
+          user._id,
+          {
+            $set: {
+              completePopup: true,
+            },
+          },
+          { new: true }
+      );
+
+      if (!userDb) throw new Error("No user found !");
+
+      return {
+        success: true,
+        statusCode: 201,
+        errors: null,
+        data: {
+          user: userDb,
+        },
+      };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error, no user found !",
+        },
+      };
+    }
+  }
+
+
 }
 
 export default UserServices;

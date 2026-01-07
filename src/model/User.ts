@@ -34,6 +34,9 @@ export interface IUser extends Document {
     messagesHistory: number[];
     timeHistory: number[];
 
+    lastPopup: Date;
+    completePopup: boolean;
+
     holyProjects: {
         project: mongoose.Types.ObjectId | IHolyProject;
         resultPercent: number;
@@ -148,7 +151,17 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         type: Number,
         required: false,
         default: []
-    }]
+    }],
+    lastPopup: {
+        type: Date,
+        required: false,
+        default: null
+    },
+    completePopup: {
+        type: Boolean,
+        required: false,
+        default: false
+    }
 
 }, {
     timestamps: true

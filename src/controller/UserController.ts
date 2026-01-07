@@ -24,6 +24,8 @@ class UserController {
     this.sioFormContact = this.sioFormContact.bind(this);
     this.giveMoney = this.giveMoney.bind(this);
     this.getEvaluationUserInfo = this.getEvaluationUserInfo.bind(this);
+    this.spawnPopup = this.spawnPopup.bind(this);
+    this.validatePopup = this.validatePopup.bind(this);
   }
 
   public async list(req: Request, res: any) {
@@ -94,6 +96,22 @@ class UserController {
 
   public async getEvaluationUserInfo(req: Request, res: any) {
     const r = await this.service.getEvaluationUserInfo();
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async validatePopup(req: Request, res: any) {
+    const r = await this.service.validatePopup(
+        // @ts-ignore
+        req.user
+    );
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async spawnPopup(req: Request, res: any) {
+    const r = await this.service.spawnPopup(
+        // @ts-ignore
+        req.user
+    );
     return res.status(r.statusCode).send(r);
   }
 
