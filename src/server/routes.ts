@@ -187,6 +187,8 @@ router.patch("/courses/update/:id", authJwt, checkRole("admin"), upload.single('
 router.get("/courses/info/:url", authJwt, CourseController.info)
 router.delete("/courses/delete/:id", authJwt, checkRole("admin"), CourseController.delete)
 
+router.get("/admin/evaluations/dashboard", authJwt, checkRole("admin"), UserController.getEvaluationUserInfo)
+
 router.get("/lessons/list", authJwt, checkRole("admin"), LessonController.list)
 router.post("/lessons/add", authJwt, checkRole("admin"), upload.fields([
   { name: "video", maxCount: 1 },

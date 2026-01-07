@@ -430,6 +430,7 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
     }
 
     try {
+        let messageCount = 0;
         if (channelId !== "0") {
             const deletionFilePath = './data/channels.json';
             if (!fs.existsSync(deletionFilePath)) {
@@ -444,6 +445,8 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
             // Thread (public/private)
             if (ch && (ch.type === ChannelType.PublicThread || ch.type === ChannelType.PrivateThread || ch.type === ChannelType.AnnouncementThread)) {
                 const thread = ch as AnyThreadChannel;
+
+                messageCount = thread.messageCount ?? 0;
 
                 await thread.setName(`terminée-${thread.name}`.slice(0, 100)).catch(() => {});
                 await thread.send("Évaluation terminée. Ce thread sera verrouillé dans 24h.").catch(() => {});
@@ -487,7 +490,7 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
                 break;
         }
 
-        return res.status(200).json({ message: `Channel supprimé et role ajoutés.` });
+        return res.status(200).json({ message: `Channel supprimé et role ajoutés.`, messageCount });
     } catch (error) {
         console.error(`Erreur suppression channel Discord:`, error);
         return res.status(500).json({ error: 'Erreur lors de la suppression du channel' });

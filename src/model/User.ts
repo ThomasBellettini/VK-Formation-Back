@@ -30,6 +30,10 @@ export interface IUser extends Document {
     lessonsFinished: (mongoose.Types.ObjectId | ILesson)[];
     planetsFinished: (mongoose.Types.ObjectId | IPlanet)[];
 
+    evalCount: number;
+    messagesHistory: number[];
+    timeHistory: number[];
+
     holyProjects: {
         project: mongoose.Types.ObjectId | IHolyProject;
         resultPercent: number;
@@ -129,7 +133,22 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         type: Boolean,
         required: false,
         default: false
-    }
+    },
+    evalCount: {
+        type: Number,
+        required: false,
+        default: 0
+    },
+    messagesHistory: [{
+        type: Number,
+        required: false,
+        default: []
+    }],
+    timeHistory: [{
+        type: Number,
+        required: false,
+        default: []
+    }]
 
 }, {
     timestamps: true

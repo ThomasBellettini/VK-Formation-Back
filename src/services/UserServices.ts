@@ -8,6 +8,7 @@ import Evaluation from "../model/learning/Evaluation.js";
 import { IHolyProject } from "../model/learning/HolyProject.js";
 import Planet from "../model/learning/Planet.js";
 import axios from "axios";
+import { randomUUID } from "crypto";
 
 class UserServices {
   constructor() {
@@ -23,6 +24,7 @@ class UserServices {
     this.connectedAs = this.connectedAs.bind(this);
     this.banByDiscord = this.banByDiscord.bind(this);
     this.sioFormContact = this.sioFormContact.bind(this);
+    this.getEvaluationUserInfo = this.getEvaluationUserInfo.bind(this);
   }
 
   async list(req: Request) {
@@ -518,6 +520,61 @@ class UserServices {
         errors: err,
         data: {
           message: "Error in user creation !",
+        },
+      };
+    }
+  }
+
+  async getEvaluationUserInfo() {
+    try {
+      const users = await User.find({
+        evalCount: { $exists: true, $gt: 0 },
+      })
+          .select("_id email evalCount messagesHistory timeHistory")
+          .lean();
+
+      const avg = (arr: number[]) =>
+          arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
+      const allMessages = users.flatMap((u) => u.messagesHistory ?? []);
+      const allTimes = users.flatMap((u) => u.timeHistory ?? []);
+
+      const evaluators = users.map((u) => {
+        const mh = u.messagesHistory ?? [];
+        const th = u.timeHistory ?? [];
+
+        return {
+          id: u._id.toString(),
+          name: (u as any).email ?? "Unknown",
+          avgMessages: avg(mh),
+          evalCount: u.evalCount ?? 0,
+          avgTimeDays: avg(th),
+          messagesHistory: mh.map((v) => ({ value: v, label: randomUUID() })),
+          timeHistory: th.map((v) => ({ value: v, label: randomUUID() })),
+        };
+      });
+
+      return {
+        success: true,
+        statusCode: 200,
+        errors: null,
+        data: {
+          avgMessages: avg(allMessages),
+          evalCount: users.reduce((acc, u) => acc + (u.evalCount ?? 0), 0),
+          avgTimeDays: avg(allTimes),
+          messagesHistory: allMessages.map((v) => ({ value: v, label: randomUUID() })),
+          timeHistory: allTimes.map((v) => ({ value: v, label: randomUUID() })),
+          evaluators,
+        },
+      };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: {
+          message: "Error while computing evaluation stats",
         },
       };
     }

@@ -23,6 +23,7 @@ class UserController {
     this.banByDiscord = this.banByDiscord.bind(this);
     this.sioFormContact = this.sioFormContact.bind(this);
     this.giveMoney = this.giveMoney.bind(this);
+    this.getEvaluationUserInfo = this.getEvaluationUserInfo.bind(this);
   }
 
   public async list(req: Request, res: any) {
@@ -88,6 +89,11 @@ class UserController {
 
   public async sioFormContact(req: Request, res: any) {
     const r = await this.service.sioFormContact(req);
+    return res.status(r.statusCode).send(r);
+  }
+
+  public async getEvaluationUserInfo(req: Request, res: any) {
+    const r = await this.service.getEvaluationUserInfo();
     return res.status(r.statusCode).send(r);
   }
 

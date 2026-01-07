@@ -957,14 +957,43 @@ class HolyServices {
 
       let userLevel = await getUserLevelForPolaris(user, polaris.identifier);
 
-      await axios.delete(
-          `${CST.DISCORD.API_URL}/evaluation/finish/${evaluation.channelId && evaluation.channelId !== "" ? evaluation.channelId : 0}`,
-          { data: { userId: user.discordId, level: userLevel - 1 } }
+      const response = await axios.delete(
+          `${CST.DISCORD.API_URL}/evaluation/finish/${
+              evaluation.channelId && evaluation.channelId !== ""
+                  ? evaluation.channelId
+                  : 0
+          }`,
+          {
+            data: {
+              userId: user.discordId,
+              level: userLevel - 1,
+            },
+          }
       );
+      const messageCount = response?.data?.messageCount;
+      const createdAt = evaluation.createdAt ? new Date(evaluation.createdAt) : null;
+      const timeSpentSec = createdAt ? Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 1000)) : null;
+      const cost = (project.cost || 1) + 200;
+
+      const update: any = {
+        $inc: { evalCount: 1, coin: cost }
+      };
+
+      if (typeof messageCount === "number" && messageCount > 0) {
+        update.$push = update.$push ?? {};
+        update.$push.messagesHistory = messageCount;
+      }
+
+      if (typeof timeSpentSec === "number" && timeSpentSec > 0) {
+        update.$push = update.$push ?? {};
+        update.$push.timeHistory = timeSpentSec;
+      }
+
+      await User.updateOne({ _id: evaluator._id }, update);
+
 
       await Evaluation.findByIdAndDelete(id);
-      const cost = (project.cost || 1) + 200;
-      await User.findByIdAndUpdate(requestUser._id, { $inc: { coin: cost } });
+      await User.findByIdAndUpdate(requestUser._id, update);
 
       return {
         success: true,
