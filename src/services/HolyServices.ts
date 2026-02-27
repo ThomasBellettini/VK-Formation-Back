@@ -18,6 +18,7 @@ import Polaris, { IPolaris } from "../model/learning/Polaris.js";
 import { getUserLevelForPolaris } from "../utils/utils.js";
 import Lesson from "../model/learning/Lesson.js";
 import CST from '../server/constants.js';
+import EvaluationStat, {EvalStatSource} from "../model/learning/EvaluationStat.js";
 
 interface IHolyGraph {
   _id: mongoose.Types.ObjectId;
@@ -976,19 +977,22 @@ class HolyServices {
       const cost = (project.cost || 1) + 200;
 
       const update: any = {
-        $inc: { evalCount: 1, coin: cost }
+        $inc: { coin: cost }
       };
 
-      if (typeof messageCount === "number" && messageCount > 0) {
-        update.$push = update.$push ?? {};
-        update.$push.messagesHistory = messageCount;
-      }
+      const statDoc = {
+        evaluator: requestUser._id,
+        evaluatedUser: user._id,
+        project: project._id,
+        planetId: project.planet ? (project.planet as any) : undefined,
+        polarisIdentifier: polaris.identifier,
+        resultPercent: percent,
+        messageCount: typeof messageCount === "number" ? messageCount : undefined,
+        timeSpentSec: typeof timeSpentSec === "number" ? timeSpentSec : undefined,
+        source: EvalStatSource.LIVE
+      };
 
-      if (typeof timeSpentSec === "number" && timeSpentSec > 0) {
-        update.$push = update.$push ?? {};
-        update.$push.timeHistory = timeSpentSec;
-      }
-
+      await EvaluationStat.create(statDoc);
       await Evaluation.findByIdAndDelete(id);
       await User.findByIdAndUpdate(requestUser._id, update);
 

@@ -6,6 +6,7 @@ import AuthController from "../controller/AuthController.js";
 import HolyController from "../controller/HolyController.js";
 import CourseController from "../controller/CourseController.js";
 import LessonController from "../controller/LessonController.js";
+import CommentController from "../controller/CommentController.js";
 import multer from 'multer';
 import ResourceController from "../controller/ResourceController.js";
 import UserController from "../controller/UserController.js";
@@ -203,6 +204,13 @@ router.patch("/lessons/update/:id", authJwt, checkRole("admin"), upload.fields([
 router.get("/lessons/info/:url", authJwt, LessonController.info)
 router.patch("/lessons/complete/:url", authJwt, LessonController.completeLesson)
 router.delete("/lessons/delete/:id", authJwt, checkRole("admin"), LessonController.delete)
+
+router.get("/lessons/:id/comments", authJwt, CommentController.list)
+router.post("/lessons/:id/comments", authJwt, CommentController.add)
+
+router.delete("/comments/:id", authJwt, CommentController.delete)
+router.post("/comments/:id/like", authJwt, CommentController.like)
+router.delete("/comments/:id/like", authJwt, CommentController.unlike)
 
 router.get("/actuality/list", authJwt, ActualityController.list)
 router.post("/actuality/add", authJwt, checkRole("admin"), upload.single('image'), ActualityController.add)

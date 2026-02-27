@@ -16,7 +16,7 @@ async function main() {
     try {
         console.log(chalk.blue("> Init admin"));
         console.log(chalk.blue("> Init Cron"));
-        // startCronJob();
+        startCronJob();
         console.log(chalk.blue("> Init done"));
 
     } catch (e: any) {

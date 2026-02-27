@@ -9,6 +9,7 @@ import { IHolyProject } from "../model/learning/HolyProject.js";
 import Planet from "../model/learning/Planet.js";
 import axios from "axios";
 import { randomUUID } from "crypto";
+import EvaluationStat from "../model/learning/EvaluationStat.js";
 
 class UserServices {
   constructor() {
@@ -527,32 +528,119 @@ class UserServices {
     }
   }
 
-  async getEvaluationUserInfo() {
+  async getEvaluationUserInfo(req: Request) {
     try {
-      const users = await User.find({
-        evalCount: { $exists: true, $gt: 0 },
-      })
-          .select("_id email evalCount messagesHistory timeHistory")
-          .lean();
+      const from = req.query.from ? new Date(req.query.from as string) : null;
+      const to = req.query.to ? new Date(req.query.to as string) : null;
+      const includeLegacy = req.query.includeLegacy === "true";
 
-      const avg = (arr: number[]) =>
-          arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+      const match: any = {}
 
-      const allMessages = users.flatMap((u) => u.messagesHistory ?? []);
-      const allTimes = users.flatMap((u) => u.timeHistory ?? []);
+      if (from || to) {
+        match.createdAt = {};
+        if (from) match.createdAt.$gte = from;
+        if (to) match.createdAt.$lte = to;
+      }
 
-      const evaluators = users.map((u) => {
-        const mh = u.messagesHistory ?? [];
-        const th = u.timeHistory ?? [];
+      if (!includeLegacy) {
+        match.source = "live";
+      } else {
+        match.source = { $in: ["live", "legacy"] };
+      }
+
+      const pipeline: any[] = [
+        { $match: match },
+
+        {
+          $group: {
+            _id: "$evaluator",
+            evalCount: { $sum: 1 },
+
+            avgMessages: { $avg: "$messageCount" },
+            avgTimeSec: { $avg: "$timeSpentSec" },
+
+            messagesHistory: { $push: "$messageCount" },
+            timeHistory: { $push: "$timeSpentSec" },
+          },
+        },
+
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "evaluatorUser",
+          },
+        },
+        { $unwind: { path: "$evaluatorUser", preserveNullAndEmptyArrays: true } },
+
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: "$_id" },
+            name: { $ifNull: ["$evaluatorUser.email", "Unknown"] },
+            evalCount: 1,
+            avgMessages: { $ifNull: ["$avgMessages", 0] },
+            avgTimeSec: { $ifNull: ["$avgTimeSec", 0] },
+            messagesHistory: 1,
+            timeHistory: 1,
+          },
+        },
+        { $sort: { evalCount: -1 } },
+      ];
+
+      const users = await EvaluationStat.aggregate(pipeline);
+
+      const globalPipeline: any[] = [
+        { $match: match },
+        {
+          $group: {
+            _id: null,
+            evalCount: { $sum: 1 },
+            avgMessages: { $avg: "$messageCount" },
+            avgTimeSec: { $avg: "$timeSpentSec" },
+            messagesHistory: { $push: "$messageCount" },
+            timeHistory: { $push: "$timeSpentSec" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            evalCount: 1,
+            avgMessages: { $ifNull: ["$avgMessages", 0] },
+            avgTimeSec: { $ifNull: ["$avgTimeSec", 0] },
+            messagesHistory: 1,
+            timeHistory: 1,
+          },
+        },
+      ];
+
+      const globalArr = await EvaluationStat.aggregate(globalPipeline);
+      const global = globalArr[0] ?? {
+        evalCount: 0,
+        avgMessages: 0,
+        avgTimeSec: 0,
+        messagesHistory: [],
+        timeHistory: [],
+      };
+
+      const toLabeled = (arr: any[]) =>
+        (arr ?? [])
+          .filter((v) => typeof v === "number" && Number.isFinite(v))
+          .map((v) => ({ value: v, label: randomUUID() }));
+
+      const evaluators = users.map((u: any) => {
+        const mh = (u.messagesHistory ?? []).filter((v: any) => typeof v === "number");
+        const th = (u.timeHistory ?? []).filter((v: any) => typeof v === "number");
 
         return {
-          id: u._id.toString(),
-          name: (u as any).email ?? "Unknown",
-          avgMessages: avg(mh),
+          id: u.id,
+          name: u.name,
           evalCount: u.evalCount ?? 0,
-          avgTimeDays: avg(th),
-          messagesHistory: mh.map((v) => ({ value: v, label: randomUUID() })),
-          timeHistory: th.map((v) => ({ value: v, label: randomUUID() })),
+          avgMessages: u.avgMessages ?? 0,
+          avgTimeDays: (u.avgTimeSec ?? 0) / 86400,
+          messagesHistory: toLabeled(mh),
+          timeHistory: toLabeled(th.map((s: number) => s / 86400)),
         };
       });
 
@@ -561,11 +649,19 @@ class UserServices {
         statusCode: 200,
         errors: null,
         data: {
-          avgMessages: avg(allMessages),
-          evalCount: users.reduce((acc, u) => acc + (u.evalCount ?? 0), 0),
-          avgTimeDays: avg(allTimes),
-          messagesHistory: allMessages.map((v) => ({ value: v, label: randomUUID() })),
-          timeHistory: allTimes.map((v) => ({ value: v, label: randomUUID() })),
+          evalCount: global.evalCount ?? 0,
+          avgMessages: global.avgMessages ?? 0,
+          avgTimeDays: (global.avgTimeSec ?? 0) / 86400,
+
+          messagesHistory: toLabeled(
+            (global.messagesHistory ?? []).filter((v: any) => typeof v === "number")
+          ),
+          timeHistory: toLabeled(
+            (global.timeHistory ?? [])
+              .filter((v: any) => typeof v === "number")
+              .map((s: number) => s / 86400)
+          ),
+
           evaluators,
         },
       };

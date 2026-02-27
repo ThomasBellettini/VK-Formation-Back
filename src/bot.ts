@@ -412,6 +412,39 @@ app.get('/discord/messages', async (req, res) => {
     res.json(cachedMessages);
 });
 
+app.post("/discord/users", async (req, res) => {
+    const { ids } = req.body as { ids: string[] };
+    if (!Array.isArray(ids) || ids.length === 0) return res.json([]);
+
+    const guild = client.guilds.cache.get(GUILD_ID as string);
+    if (!guild) return res.status(500).json({ error: "Guild not found" });
+
+    const concurrency = 3;
+    const results: { id: string; username: string; avatar?: string }[] = [];
+    let i = 0;
+
+    async function worker() {
+        while (i < ids.length) {
+            const id = ids[i++];
+            try {
+                // @ts-ignore
+                const member = await guild.members.fetch(id);
+                // console.log(`\x1b[32m[${i}/${ids.length}] Fetching user ${member.user.username}\x1b[0m`);
+                results.push({
+                    id: member.id,
+                    username: member.user.username,
+                    avatar: member.user.displayAvatarURL(),
+                });
+            } catch {
+                // console.log(`\x1b[31m[${i}/${ids.length}] user ${id} not found in guild\x1b[0m`);
+            }
+        }
+    }
+
+    await Promise.all(Array.from({ length: concurrency }, () => worker()));
+    res.json(results);
+});
+
 app.delete('/evaluation/finish/:channelId', async (req, res) => {
     const channelId = req.params.channelId as string;
     const userId = req.body.userId;

@@ -95,7 +95,7 @@ class UserController {
   }
 
   public async getEvaluationUserInfo(req: Request, res: any) {
-    const r = await this.service.getEvaluationUserInfo();
+    const r = await this.service.getEvaluationUserInfo(req);
     return res.status(r.statusCode).send(r);
   }
 

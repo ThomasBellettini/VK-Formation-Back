@@ -22,6 +22,8 @@ export interface IUser extends Document {
     discordAccess: boolean;
     discordId: string;
     discordLinkCode: string;
+    discordUsername?: string;
+    discordAvatar?: string;
 
     lastLogin: Date;
 
@@ -124,6 +126,14 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         required: false
     },
     discordLinkCode: {
+        type: String,
+        required: false
+    },
+    discordUsername: {
+        type: String,
+        required: false
+    },
+    discordAvatar: {
         type: String,
         required: false
     },
