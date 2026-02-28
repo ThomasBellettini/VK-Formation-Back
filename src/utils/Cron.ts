@@ -28,7 +28,7 @@ export const startCronJob = () => {
   cron.schedule("0 4 * * *", async () => {
   })
 
-  cron.schedule("45 14 * * *", async () => {
+  cron.schedule("45 15 * * *", async () => {
     console.log("Launching cron: updating Discord usernames and avatars...");
     const users = await User.find(
       {discordId: {$exists: true, $ne: null}},
@@ -56,7 +56,7 @@ export const startCronJob = () => {
    * Cron job idempotent pour migrer les données d'évaluation legacy des users vers la collection EvaluationStat, et supprimer les champs legacy des users.
    * TODO à delete lors de la prochaine mise à jour
    */
-  cron.schedule("45 14 * * *", async () => {
+  cron.schedule("45 15 * * *", async () => {
     console.log("Launching cron: Migrating legacy evaluation data to EvaluationStat collection...");
     const BATCH_SIZE = 200;
 
