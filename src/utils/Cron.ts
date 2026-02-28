@@ -28,7 +28,8 @@ export const startCronJob = () => {
   cron.schedule("0 4 * * *", async () => {
   })
 
-  cron.schedule("0 0 1 * *", async () => {
+  cron.schedule("45 14 * * *", async () => {
+    console.log("Launching cron: updating Discord usernames and avatars...");
     const users = await User.find(
       {discordId: {$exists: true, $ne: null}},
       {discordId: 1, _id: 0}
@@ -55,7 +56,8 @@ export const startCronJob = () => {
    * Cron job idempotent pour migrer les données d'évaluation legacy des users vers la collection EvaluationStat, et supprimer les champs legacy des users.
    * TODO à delete lors de la prochaine mise à jour
    */
-  cron.schedule("0 0 1 * *", async () => {
+  cron.schedule("45 14 * * *", async () => {
+    console.log("Launching cron: Migrating legacy evaluation data to EvaluationStat collection...");
     const BATCH_SIZE = 200;
 
     function ignoreDuplicateKeyErrors(err: any) {
@@ -107,13 +109,13 @@ export const startCronJob = () => {
         }
       }
 
-      const ops = users.map((u: any) => ({
-        updateOne: {
-          filter: { _id: u._id },
-          update: { $unset: { evalCount: "", messagesHistory: "", timeHistory: "" } },
-        },
-      }));
-      await User.bulkWrite(ops, { ordered: false });
+      // const ops = users.map((u: any) => ({
+      //   updateOne: {
+      //     filter: { _id: u._id },
+      //     update: { $unset: { evalCount: "", messagesHistory: "", timeHistory: "" } },
+      //   },
+      // }));
+      // await User.bulkWrite(ops, { ordered: false });
     }
   });
 
