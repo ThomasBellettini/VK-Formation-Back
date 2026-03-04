@@ -1,8 +1,10 @@
 import Lesson from "../model/learning/Lesson.js";
 import Comment from "../model/learning/Comment.js";
 import CommentLike from "../model/learning/CommentLike.js";
+import CST from "../server/constants.js";
 import { Request } from "express";
 import mongoose from "mongoose";
+import axios from "axios";
 
 class CommentServices {
   constructor() {
@@ -73,7 +75,7 @@ class CommentServices {
       const authUser = req.user;
       let lesson = await Lesson.findById(id).lean();
       if (!lesson) throw new Error("No lesson was found !");
-      const { content, parentId } = req.body;
+      const { content, parentId, url } = req.body;
       if (!content) throw new Error("Missing mandatory field content");
 
       if (parentId) {
@@ -88,6 +90,18 @@ class CommentServices {
         content,
         parentId: parentId || null
       });
+
+      const { data } = await axios.post(`${CST.DISCORD.API_URL}/discord/comment`, {
+        authorDiscordId: authUser.discordId,
+        authorEmail: authUser.email,
+        lessonName: lesson.title,
+        lessonUrl: url,
+        comment: content,
+      });
+
+      if (data.error) {
+        console.log("Failed to send comment notification to Discord:", data.error);
+      }
 
       return {
         success: true,

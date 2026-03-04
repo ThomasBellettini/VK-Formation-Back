@@ -445,6 +445,66 @@ app.post("/discord/users", async (req, res) => {
     res.json(results);
 });
 
+app.post("/discord/comment", async (req, res) => {
+
+    function truncate(str: string, max: number) {
+        if (str.length <= max) return { text: str, truncated: false };
+        return { text: str.slice(0, Math.max(0, max - 1)) + "…", truncated: true };
+    }
+
+    try {
+        const {
+            authorDiscordId,
+            authorEmail,
+            lessonName,
+            lessonUrl,
+            comment,
+        } = req.body ?? {};
+
+        if (!lessonName || !lessonUrl || !comment || !authorEmail) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        const channel = await client.channels.fetch("1478518745805623396") as TextChannel;
+        if (!channel || !channel.isTextBased()) {
+            return res.status(500).json({ error: "Target channel not found or not text based" });
+        }
+
+        const mention = authorDiscordId ? `<@${authorDiscordId}>` : null;
+        const authorLine = mention ? `${mention}` : authorEmail;
+
+        const MAX_EMBED_DESC = 2048;
+        const { text: desc, truncated: isTruncated } = truncate(String(comment), MAX_EMBED_DESC);
+
+        const embed = new EmbedBuilder()
+          .setTitle("Nouveau commentaire")
+          .setDescription(authorLine + ": " + desc)
+
+        if (isTruncated) {
+            embed.addFields({
+                name: "⚠️ Contenu tronqué",
+                value: "Le commentaire est trop long pour Discord.",
+                inline: false,
+            });
+        }
+
+        embed.addFields({
+            name: "Leçon",
+            value: `[${lessonName}](${lessonUrl})`,
+            inline: false
+        })
+
+        await channel.send({
+            embeds: [embed]
+        });
+
+        return res.json({ success: true });
+    } catch (err) {
+        console.error("POST /discord/comments error:", err);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 app.delete('/evaluation/finish/:channelId', async (req, res) => {
     const channelId = req.params.channelId as string;
     const userId = req.body.userId;
