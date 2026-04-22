@@ -958,19 +958,39 @@ class HolyServices {
 
       let userLevel = await getUserLevelForPolaris(user, polaris.identifier);
 
-      const response = await axios.delete(
-          `${CST.DISCORD.API_URL}/evaluation/finish/${
-              evaluation.channelId && evaluation.channelId !== ""
-                  ? evaluation.channelId
-                  : 0
-          }`,
-          {
-            data: {
-              userId: user.discordId,
-              level: userLevel - 1,
-            },
-          }
-      );
+      let response;
+
+      if (polaris.identifier != "vkstudio") {
+        response = await axios.delete(
+            `${CST.DISCORD.API_URL}/evaluation/finish/${
+                evaluation.channelId && evaluation.channelId !== ""
+                    ? evaluation.channelId
+                    : 0
+            }`,
+            {
+              data: {
+                userId: user.discordId,
+                level: -1,
+              },
+            }
+        );
+      } else {
+        response = await axios.delete(
+            `${CST.DISCORD.API_URL}/evaluation/finish/${
+                evaluation.channelId && evaluation.channelId !== ""
+                    ? evaluation.channelId
+                    : 0
+            }`,
+            {
+              data: {
+                userId: user.discordId,
+                level: userLevel - 1,
+              },
+            }
+        );
+      }
+
+
       const messageCount = response?.data?.messageCount;
       const createdAt = evaluation.createdAt ? new Date(evaluation.createdAt) : null;
       const timeSpentSec = createdAt ? Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 1000)) : null;
