@@ -958,14 +958,30 @@ class HolyServices {
       }
 
       let userLevel = await getUserLevelForPolaris(user, polaris.identifier);
-      const skipDiscordFinish =
-        req.body?.skipDiscordFinish === true ||
-        req.body?.skipDiscordFinish === "true";
-      let messageCount: number | undefined = undefined;
 
-      if (!skipDiscordFinish && user.discordId && evaluation.channelId) {
-        const response = await axios.delete(
-            `${CST.DISCORD.API_URL}/evaluation/finish/${evaluation.channelId}`,
+      let response;
+
+      if (polaris.identifier != "vkstudio") {
+        response = await axios.delete(
+            `${CST.DISCORD.API_URL}/evaluation/finish/${
+                evaluation.channelId && evaluation.channelId !== ""
+                    ? evaluation.channelId
+                    : 0
+            }`,
+            {
+              data: {
+                userId: user.discordId,
+                level: -1,
+              },
+            }
+        );
+      } else {
+        response = await axios.delete(
+            `${CST.DISCORD.API_URL}/evaluation/finish/${
+                evaluation.channelId && evaluation.channelId !== ""
+                    ? evaluation.channelId
+                    : 0
+            }`,
             {
               data: {
                 userId: user.discordId,
@@ -973,9 +989,10 @@ class HolyServices {
               },
             }
         );
-        messageCount = response?.data?.messageCount;
       }
 
+
+      const messageCount = response?.data?.messageCount;
       const createdAt = evaluation.createdAt ? new Date(evaluation.createdAt) : null;
       const timeSpentSec = createdAt ? Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 1000)) : null;
       const cost = (project.cost || 1) + 200;

@@ -636,6 +636,8 @@ app.delete('/evaluation/finish/:channelId', async (req, res) => {
                 await member.roles.add("1359186018313703547");
                 await member.roles.add("1359186092301090931");
                 break;
+            default:
+                break;
         }
 
         return res.status(200).json({ message: `Channel supprimé et role ajoutés.`, messageCount });
