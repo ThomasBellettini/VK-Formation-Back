@@ -2,6 +2,7 @@ import cron from "node-cron";
 import axios from "axios";
 import CST from "../server/constants.js";
 import User from "../model/User.js";
+import { runDailyCoalitionJobs } from "./coalitionCron.js";
 
 interface ITranscript {
   text: string;
@@ -26,6 +27,16 @@ export const startCronJob = () => {
 
   cron.schedule("0 4 * * *", async () => {
   })
+
+  cron.schedule("0 0 * * *", async () => {
+    try {
+      console.log("Launching cron: coalition daily jobs...");
+      await runDailyCoalitionJobs();
+      console.log("Coalition daily jobs completed.");
+    } catch (e) {
+      console.error("coalition cron error", e);
+    }
+  });
 
   cron.schedule("0 0 * * *", async () => {
     console.log("Launching cron: updating Discord usernames and avatars...");

@@ -4,6 +4,9 @@ import { Request } from "express";
 import CST from "../server/constants.js";
 import axios from "axios";
 import {getOrCreateDiscordData} from "../model/Discord.js";
+import { recordCoinGain } from "./CoalitionCoinService.js";
+import { syncDiscordCoalitionRoles } from "./CoalitionAssignmentService.js";
+import { isCoalitionId } from "../model/coalition/constants.js";
 
 class DiscordServices {
   constructor() {
@@ -14,6 +17,35 @@ class DiscordServices {
     this.updateRegex = this.updateRegex.bind(this);
     this.getShopItems = this.getShopItems.bind(this);
     this.getRegex = this.getRegex.bind(this);
+    this.syncCoalitionRoles = this.syncCoalitionRoles.bind(this);
+  }
+
+  async syncCoalitionRoles(req: Request) {
+    try {
+      const discordId = req.body?.discordId as string | undefined;
+      if (!discordId) throw new Error("discordId requis.");
+      const user = await User.findOne({ discordId });
+      if (!user) throw new Error("Utilisateur introuvable.");
+      const cid =
+        user.coalitionId && isCoalitionId(user.coalitionId)
+          ? user.coalitionId
+          : null;
+      const r = await syncDiscordCoalitionRoles(discordId, cid);
+      return {
+        success: r.ok,
+        statusCode: 201,
+        errors: null,
+        data: r,
+      };
+    } catch (err: any) {
+      console.log(err);
+      return {
+        success: false,
+        statusCode: 500,
+        errors: err,
+        data: { message: err.message ?? "Error" },
+      };
+    }
   }
 
   async uploadDailyStat(req: Request) {
@@ -27,19 +59,24 @@ class DiscordServices {
       let join = (req.body.join as number) || 0;
       let vocal = (req.body.voice as number) || 0;
       if (req.query.full && req.query.full === "true") {
-        Object.entries(fullStats).map(async ([key, value]) => {
-          let user = await User.findOne({ discordId: key }) as IUser;
-          if (user) {
-            let points = value as number || 0;
-            let additionalVK = points * 0.0277;
-            let newVK = 0;
-            if (additionalVK > 100) {
-              newVK =  additionalVK + (Math.random() * 40 - 20);
+        await Promise.all(
+          Object.entries(fullStats).map(async ([key, value]) => {
+            let user = await User.findOne({ discordId: key }) as IUser;
+            if (user) {
+              let points = (value as number) || 0;
+              let additionalVK = points * 0.0277;
+              let newVK = 0;
+              if (additionalVK > 100) {
+                newVK = additionalVK + (Math.random() * 40 - 20);
+              }
+              user.coin = user.coin + newVK;
+              await user.save();
+              if (newVK > 0) {
+                await recordCoinGain(user._id, newVK);
+              }
             }
-            user.coin = user.coin + newVK;
-            await user.save();
-          }
-        });
+          })
+        );
       } else {
         let discordStats = await DiscordStats.findOne({date: date});
         if (!discordStats) {

@@ -8,6 +8,13 @@ import { getUserLevelForPolaris } from "../utils/utils.js";
 import Notification from "../model/Notification.js";
 import HolyProject, { IHolyProject } from "../model/learning/HolyProject.js";
 import Planet from "../model/learning/Planet.js";
+import UserDailyCoinLedger from "../model/coalition/UserDailyCoinLedger.js";
+import UserSeasonStats from "../model/coalition/UserSeasonStats.js";
+import { getSeasonInfoAt } from "../utils/coalitionSeason.js";
+import {
+  assignCoalitionForEligibleUser,
+  ensurePublicSlug,
+} from "./CoalitionAssignmentService.js";
 
 class AuthServices {
   constructor() {
@@ -28,6 +35,17 @@ class AuthServices {
         .populate("lessonsFinished")
         .populate("holyProjects.project");
       if (!userDb) throw "No user found !";
+      if (!userDb.publicSlug) {
+        ensurePublicSlug(userDb);
+        await userDb.save();
+      }
+
+      await assignCoalitionForEligibleUser(userDb._id);
+      userDb = await User.findOne({ email: user.email })
+        .populate("lessonsFinished")
+        .populate("holyProjects.project");
+      if (!userDb) throw "No user found !";
+
       let userData = userDb.toObject();
 
       const allPolaris = await Polaris.find({}).lean();
@@ -60,14 +78,47 @@ class AuthServices {
         .sort({ createdAt: -1 })
         .lean();
 
+      const userDailyCoinLedgers = await UserDailyCoinLedger.find({
+        user: userDb._id,
+      })
+        .sort({ dateKey: -1 })
+        .limit(2000)
+        .select({ dateKey: 1, coinsEarned: 1, _id: 0 })
+        .lean();
+
+      let coalitionRank: number | null = null;
+      const currentSeason = await getSeasonInfoAt();
+      if (currentSeason && userDb.coalitionId) {
+        const coalitionRows = await UserSeasonStats.find({
+          seasonKey: currentSeason.seasonKey,
+          coalitionId: userDb.coalitionId,
+        })
+          .sort({ points: -1, _id: 1 })
+          .select({ user: 1, _id: 0 })
+          .lean();
+
+        const currentUserId = userDb._id.toString();
+        const index = coalitionRows.findIndex(
+          (row) => row.user?.toString() === currentUserId
+        );
+        coalitionRank = index >= 0 ? index + 1 : null;
+      }
+
       return {
         success: true,
         statusCode: 201,
         errors: null,
         data: {
-          user: userData,
+          user: {
+            ...userData,
+            coalitionRank,
+          },
           polarisLevels,
           notifications,
+          userDailyCoinLedgers: userDailyCoinLedgers.map((l) => ({
+            dateKey: l.dateKey,
+            coinsEarned: l.coinsEarned ?? 0,
+          })),
         },
       };
     } catch (err) {
@@ -128,7 +179,9 @@ class AuthServices {
       if (user) {
         if (user.permission === "ban") {
           user.permission = "user";
+          ensurePublicSlug(user);
           await user.save();
+          await assignCoalitionForEligibleUser(user._id);
           return {
             success: true,
             statusCode: 201,
@@ -150,6 +203,10 @@ class AuthServices {
           Math.random().toString(36) + Math.random().toString(36),
         resetCode: Math.random().toString(36) + Math.random().toString(36),
       });
+      ensurePublicSlug(newUser);
+      await newUser.save();
+
+      await assignCoalitionForEligibleUser(newUser._id);
 
       let response = await axios.get(
         `https://api.systeme.io/api/contacts?email=${email}`,
@@ -246,7 +303,9 @@ class AuthServices {
       if (user) {
         if (user.permission === "ban") {
           user.permission = "user";
+          ensurePublicSlug(user);
           await user.save();
+          await assignCoalitionForEligibleUser(user._id);
           return {
             success: true,
             statusCode: 201,
@@ -267,6 +326,12 @@ class AuthServices {
         resetCode: Math.random().toString(36) + Math.random().toString(36),
         discordAccess: fullAccess,
       });
+      ensurePublicSlug(newUser);
+      await newUser.save();
+
+      if (fullAccess) {
+        await assignCoalitionForEligibleUser(newUser._id);
+      }
 
       await sendTemplateEmail(
         1,

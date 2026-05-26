@@ -8,6 +8,7 @@ import StorageCdn from "../utils/StorageCdn.js";
 import Planet from "../model/learning/Planet.js";
 import HolyProject from "../model/learning/HolyProject.js";
 import CST from '../server/constants.js';
+import { recordCoinGain } from "./CoalitionCoinService.js";
 
 class LessonServices {
   constructor() {
@@ -74,6 +75,10 @@ class LessonServices {
           { _id: databaseUser._id, lessonsFinished: { $ne: lessonId } },
           { $addToSet: { lessonsFinished: lessonId }, $inc: { coin: 25 } }
       );
+
+      if (addLessonRes.modifiedCount > 0) {
+        await recordCoinGain(databaseUser._id, 25);
+      }
 
       // @ts-ignore pour la réponse
       (lesson as any).finished = true;

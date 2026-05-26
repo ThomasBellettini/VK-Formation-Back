@@ -17,6 +17,12 @@ class DiscordController {
     this.updateShopItems = this.updateShopItems.bind(this);
     this.updateRegex = this.updateRegex.bind(this);
     this.getRegex = this.getRegex.bind(this);
+    this.syncCoalitionRoles = this.syncCoalitionRoles.bind(this);
+  }
+
+  public async syncCoalitionRoles(req: Request, res: any) {
+    const r = await this.service.syncCoalitionRoles(req);
+    return res.status(r.statusCode).send(r);
   }
 
   public async uploadDailyStat(req: Request, res: any) {

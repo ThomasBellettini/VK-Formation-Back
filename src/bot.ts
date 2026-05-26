@@ -22,6 +22,7 @@ import { config } from "dotenv";
 import {IRecruitment} from "./model/Recruitment.js";
 import OpenAI from "openai";
 import * as repl from "node:repl";
+import CST from "./server/constants.js";
 config();
 
 type ChannelDeletionEntry = {
@@ -410,6 +411,60 @@ app.get('/discord/schedule', async (req, res) => {
 
 app.get('/discord/messages', async (req, res) => {
     res.json(cachedMessages);
+});
+
+type CoalitionIdSlug = "orion" | "noctis" | "pulse";
+
+app.post("/discord/coalition/sync", async (req, res) => {
+    try {
+        const { discordId, coalitionId } = req.body as {
+            discordId?: string;
+            coalitionId?: CoalitionIdSlug | null;
+        };
+        if (!discordId) {
+            return res.status(400).json({ ok: false, error: "discordId requis" });
+        }
+
+        const rOrion = CST.DISCORD.ROLE_ORION;
+        const rNoctis = CST.DISCORD.ROLE_NOCTIS;
+        const rPulse = CST.DISCORD.ROLE_PULSE;
+        if (!rOrion || !rNoctis || !rPulse) {
+            return res.status(503).json({
+                ok: false,
+                error: "Rôles coalition non configurés (DISCORD_ROLE_ORION / NOCTIS / PULSE)",
+            });
+        }
+
+        const coalitionRoleIds = [rOrion, rNoctis, rPulse];
+        const guild = client.guilds.cache.get(GUILD_ID as string);
+        if (!guild) {
+            return res.status(500).json({ ok: false, error: "Guild introuvable" });
+        }
+
+        const member = await guild.members.fetch(discordId).catch(() => null);
+        if (!member) {
+            return res.status(404).json({ ok: false, error: "Membre introuvable sur le serveur" });
+        }
+
+        for (const rid of coalitionRoleIds) {
+            if (member.roles.cache.has(rid)) {
+                await member.roles.remove(rid).catch(() => {});
+            }
+        }
+
+        if (coalitionId === "orion") {
+            await member.roles.add(rOrion);
+        } else if (coalitionId === "noctis") {
+            await member.roles.add(rNoctis);
+        } else if (coalitionId === "pulse") {
+            await member.roles.add(rPulse);
+        }
+
+        return res.json({ ok: true });
+    } catch (err) {
+        console.error("POST /discord/coalition/sync:", err);
+        return res.status(500).json({ ok: false, error: "Erreur serveur" });
+    }
 });
 
 app.post("/discord/users", async (req, res) => {

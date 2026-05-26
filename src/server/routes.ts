@@ -21,6 +21,7 @@ import UserPlanetController from "../controller/UserPlanetController.js";
 import NotificationController from "../controller/NotificationController.js";
 import DriveResourceController from "../controller/DriveResourceController.js";
 import HomeController from "../controller/HomeController.js";
+import CoalitionController from "../controller/CoalitionController.js";
 
 const router = Router();
 
@@ -238,6 +239,7 @@ router.patch("/discord/items/update", authJwt, checkRole("admin"), DiscordContro
 router.patch("/discord/regex/update", authJwt, checkRole("admin"), DiscordController.updateRegex)
 
 router.post("/discord/link", authAPI, UserController.linkDiscord)
+router.post("/discord/coalition/sync", authAPI, DiscordController.syncCoalitionRoles)
 router.get("/discord/user/:id", authAPI, UserController.userByDiscord)
 router.post("/discord/buy", authAPI, UserController.makeTransaction)
 
@@ -279,6 +281,19 @@ router.post("/resources/add", authJwt, checkRole("admin"), DriveResourceControll
 router.get("/resources/info/:id", authJwt, DriveResourceController.info)
 router.patch("/resources/update/:id", authJwt, checkRole("admin"), DriveResourceController.update)
 router.delete("/resources/delete/:id", authJwt, checkRole("admin"), DriveResourceController.delete)
+
+// Coalitions (Guerre des coalitions)
+router.get("/coalitions/overview", authJwtNotMandatory, CoalitionController.getOverview)
+router.post("/coalitions/candidacy", authJwt, CoalitionController.submitCandidacy)
+router.post("/coalitions/vote", authJwt, CoalitionController.castVote)
+router.get("/coalitions/candidates/:coalitionId", authJwt, CoalitionController.listCandidates)
+router.get("/coalitions/leaderboard", authJwtNotMandatory, CoalitionController.getLeaderboard)
+router.get("/coalitions/history", authJwtNotMandatory, CoalitionController.getHistory)
+router.get("/coalitions/season/:seasonKey", authJwtNotMandatory, CoalitionController.getSeasonByKey)
+router.get("/public/profile/:slug", CoalitionController.getPublicProfile)
+router.post("/coalitions/admin/remove/:userId", authJwt, checkRole("admin"), CoalitionController.adminRemoveCoalition)
+router.post("/coalitions/admin/points/:userId", authJwt, checkRole("admin"), CoalitionController.adminAddCoalitionPoints)
+router.post("/coalitions/admin/exclude/:userId", authJwt, checkRole("admin"), CoalitionController.adminExcludeFromSystem)
 
 
 export default router;

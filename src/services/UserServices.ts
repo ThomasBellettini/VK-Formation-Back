@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import User, { IUser } from "../model/User.js";
 import { Request } from "express";
 import Transaction from "../model/Transaction.js";
@@ -10,6 +11,8 @@ import Planet from "../model/learning/Planet.js";
 import axios from "axios";
 import { randomUUID } from "crypto";
 import EvaluationStat from "../model/learning/EvaluationStat.js";
+import { recordCoinGain } from "./CoalitionCoinService.js";
+import { assignCoalitionForEligibleUser } from "./CoalitionAssignmentService.js";
 
 class UserServices {
   constructor() {
@@ -178,6 +181,8 @@ class UserServices {
 
       await userDb.save();
 
+      await assignCoalitionForEligibleUser(userDb._id);
+
       return {
         success: true,
         statusCode: 201,
@@ -233,6 +238,9 @@ class UserServices {
       if (!userDb) throw new Error("Aucun utilisateur trouvé lié à cet id !");
       userDb.coin += money;
       await userDb.save();
+      if (money > 0) {
+        await recordCoinGain(userDb._id, money);
+      }
       return {
         success: true,
         statusCode: 201,

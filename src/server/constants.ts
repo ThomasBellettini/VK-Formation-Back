@@ -30,6 +30,9 @@ export default {
   DISCORD: {
     MODULE: process.env.DISCORD_MODULE_URL,
     API_URL: process.env.DISCORD_MODULE_URL,
+    ROLE_ORION: process.env.DISCORD_ROLE_ORION,
+    ROLE_NOCTIS: process.env.DISCORD_ROLE_NOCTIS,
+    ROLE_PULSE: process.env.DISCORD_ROLE_PULSE,
   },
   URL: {
     REDIRECT: process.env.URL_REDIRECT

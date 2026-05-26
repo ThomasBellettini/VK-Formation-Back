@@ -19,6 +19,7 @@ import { getUserLevelForPolaris } from "../utils/utils.js";
 import Lesson from "../model/learning/Lesson.js";
 import CST from '../server/constants.js';
 import EvaluationStat, {EvalStatSource} from "../model/learning/EvaluationStat.js";
+import { recordCoinGain } from "./CoalitionCoinService.js";
 
 interface IHolyGraph {
   _id: mongoose.Types.ObjectId;
@@ -957,21 +958,24 @@ class HolyServices {
       }
 
       let userLevel = await getUserLevelForPolaris(user, polaris.identifier);
+      const skipDiscordFinish =
+        req.body?.skipDiscordFinish === true ||
+        req.body?.skipDiscordFinish === "true";
+      let messageCount: number | undefined = undefined;
 
-      const response = await axios.delete(
-          `${CST.DISCORD.API_URL}/evaluation/finish/${
-              evaluation.channelId && evaluation.channelId !== ""
-                  ? evaluation.channelId
-                  : 0
-          }`,
-          {
-            data: {
-              userId: user.discordId,
-              level: userLevel - 1,
-            },
-          }
-      );
-      const messageCount = response?.data?.messageCount;
+      if (!skipDiscordFinish && user.discordId && evaluation.channelId) {
+        const response = await axios.delete(
+            `${CST.DISCORD.API_URL}/evaluation/finish/${evaluation.channelId}`,
+            {
+              data: {
+                userId: user.discordId,
+                level: userLevel - 1,
+              },
+            }
+        );
+        messageCount = response?.data?.messageCount;
+      }
+
       const createdAt = evaluation.createdAt ? new Date(evaluation.createdAt) : null;
       const timeSpentSec = createdAt ? Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 1000)) : null;
       const cost = (project.cost || 1) + 200;
@@ -995,6 +999,8 @@ class HolyServices {
       await EvaluationStat.create(statDoc);
       await Evaluation.findByIdAndDelete(id);
       await User.findByIdAndUpdate(requestUser._id, update);
+
+      await recordCoinGain(requestUser._id, cost);
 
       return {
         success: true,

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import {ILesson} from "./learning/Lesson.js";
 import {IHolyProject} from "./learning/HolyProject.js";
 import { IPlanet } from './learning/Planet.js';
+import type { CoalitionId } from "./coalition/constants.js";
 
 const saltRounds = 10;
 
@@ -24,6 +25,10 @@ export interface IUser extends Document {
     discordLinkCode: string;
     discordUsername?: string;
     discordAvatar?: string;
+
+    coalitionId?: CoalitionId | null;
+    coalitionOptOut?: boolean;
+    publicSlug?: string | null;
 
     lastLogin: Date;
 
@@ -136,6 +141,22 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     discordAvatar: {
         type: String,
         required: false
+    },
+    coalitionId: {
+        type: String,
+        required: false,
+        default: null,
+    },
+    coalitionOptOut: {
+        type: Boolean,
+        default: false,
+    },
+    publicSlug: {
+        type: String,
+        required: false,
+        default: null,
+        sparse: true,
+        unique: true,
     },
     lastLogin: {
         type: Date,
