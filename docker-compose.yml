@@ -5,9 +5,6 @@ services:
     hostname: mongodb
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: LmNbGv4y77
     volumes:
       - ./data:/data/db
     restart: unless-stopped
